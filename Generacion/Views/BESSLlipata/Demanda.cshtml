@@ -1,0 +1,889 @@
+﻿@using Generacion.Models.Bess;
+@using Generacion.Models.DataCoes;
+@using Newtonsoft.Json;
+@using System.Globalization;
+@{
+    bool requiereArchivos = (bool)ViewData["requiereArchivos"];
+    Dictionary<string, List<Demanda>> datosCoes = ViewData["datosCoes"] as Dictionary<string, List<Demanda>>;
+    Demanda demandaCoindicente = ViewData["demandaCoindicente"] as Demanda;
+
+    Dictionary<string, Demanda> diasCoincidentesDia = ViewData["diasCoincidentesDia"] as Dictionary<string, Demanda>;
+    Dictionary<string, Demanda> diasCoincidentesHora = ViewData["diasCoincidentesHora"] as Dictionary<string, Demanda>;
+    List<Demanda> detalleFechaSeleccionado = ViewData["detallePorFechaSeleccionado"] as List<Demanda>;
+    List<DBDataBess> datosBESS = ViewData["listaDataBESS"] as List<DBDataBess>;
+
+
+    string[] fechaCoincidente = new string[diasCoincidentesHora.Count];
+    decimal[] valorCoincidente = new decimal[diasCoincidentesHora.Count];
+    decimal[] valorHPCoincidente = new decimal[diasCoincidentesHora.Count];
+
+    List<decimal> promedioUsoBaterias = new List<decimal>();
+    List<decimal> usoBaterias = new List<decimal>();
+    List<DBDataBess> datosBessPorHora = new List<DBDataBess>();
+
+
+}
+<style>
+    table thead tr th {
+        color: white;
+        background: deepskyblue;
+        text-align: center;
+    }
+
+    .table-Blue thead tr th {
+        background: dodgerblue !important;
+        padding: 0;
+        display: grid;
+        width: 50vh;
+    }
+
+    .table-Blue tbody tr td {
+        display: grid;
+        padding: 0;
+        width: 40vh;
+        text-align: center;
+    }
+
+    .table-Blue {
+        display: flex;
+    }
+
+    table body tr td {
+        text-align: center;
+    }
+
+    .color-boton-opciones-selected {
+        background-color: rgb(243, 112, 33);
+    }
+
+    .color-boton-opciones {
+        background-color: #f8f9fc;
+        border-block-end-color: red;
+    }
+
+    .ocultar-vista {
+        display: none;
+    }
+
+    .boton-flotante {
+        position: fixed;
+        bottom: 1rem;
+    }
+
+    .btn-light:hover {
+        background-color: #dde2f1;
+        border-color: none;
+        border-block-end-color: red;
+    }
+
+    .btn-light.focus, .btn-light:focus {
+        background-color: rgb(243, 112, 33);
+        border-color: none;
+        border-block-end-color: red;
+    }
+
+    .tabla-grafico-bess thead tr th {
+        color: black;
+        background: none !important;
+        text-align: center;
+        padding: 0 !important;
+        font-weight: bold;
+    }
+
+    .tabla-grafico-bess tbody tr td {
+        text-align: right;
+        color: black;
+        padding: 0;
+        width: 55vh;
+        border: none;
+    }
+
+    .tabla-grafico-bess tbody tr th {
+        text-align: left;
+        color: black;
+        padding: 0;
+        width: 20vh;
+        font-weight: normal;
+        border: none;
+    }
+
+    .division-graficos {
+        display: flex;
+    }
+
+    .contendor-graficos {
+        width: 50%;
+        display: flex;
+    }
+</style>
+
+<div>
+
+    <div class="boton-flotante">
+        <button class="btn btn-light  color-boton-opciones-selected " id="btn-data-coes-formato">
+            <i id="btn-data-coes-formato-mostrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+                </svg>
+            </i>
+            <i class="ocultar-vista" id="btn-data-coes-formato-ocultar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+                </svg>
+            </i>
+            Data Coes Formato
+        </button>
+
+        <button class="btn btn-light  color-boton-opciones  " id="btn-dia-coincidente">
+            <i class="ocultar-vista" id="btn-dia-coincidente-mostrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+                </svg>
+            </i>
+            <i id="btn-dia-coincidente-ocultar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+                </svg>
+            </i>
+            Dia Coincidente
+        </button>
+        <button class="btn btn-light  color-boton-opciones " id="btn-detalle-baterias">
+            <i class="ocultar-vista" id="btn-detalle-baterias-mostrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+                </svg>
+            </i>
+            <i id="btn-detalle-baterias-ocultar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+                </svg>
+            </i>
+            Detalle Baterias
+        </button>
+
+        <button class="btn btn-light  color-boton-opciones  " id="btn-ver-graficos">
+            <i class="ocultar-vista" id="btn-ver-graficos-mostrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+                </svg>
+            </i>
+            <i id="btn-ver-graficos-ocultar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+                </svg>
+            </i>
+            Ver Graficos
+        </button>
+    </div>
+
+    <div>
+        <div id="data-coes-formato">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>NRO</th>
+                        <th>FECHA</th>
+                        <th>HORA</>
+                        <th>EJECUTADO</th>
+                        <th>PROG. DIARIO</th>
+                        <th>PROG. SEMANAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var lista in datosCoes.Values)
+                        {
+                            foreach (var datos in lista)
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@datos.Fecha</td>
+                                    <td>@datos.Hora</td>
+                                    <td>@datos.Ejecutado</td>
+                                    <td>@datos.ProgramacionDiaria</td>
+                                    <td>@datos.ProgramacionSemanal</td>
+                                </tr>
+                                index++;
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div id="dia-coincidente" class="ocultar-vista ">
+
+            <table class=" table table-bordered table-Blue">
+                <thead>
+                    <tr>
+                        <th>
+                            hora de coincidente
+                        </th>
+                        <th>
+                            inicio de mes
+                        </th>
+                        <th>
+                            Potencia MW
+                        </th>
+                        <th>
+                            Fecha coincidente
+                        </th>
+                        <th>
+                            Promedio de descarga
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        if (demandaCoindicente != null)
+                        {
+                            <tr>
+                                <td>@(demandaCoindicente.Hora.Substring(0, 5))</td>
+                                <td>@(datosCoes.Count > 0 ? datosCoes.Keys.FirstOrDefault() : string.Empty)</td>
+                                <td>@(demandaCoindicente.Ejecutado.ToString("N2"))</td>
+                                <td>@(demandaCoindicente.Fecha.ToString("dd/MM/yyyy"))</td>
+                                <td>1000</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>FECHA</th>
+                        <th>MAX VALOR HP</th>
+                        <th>MAX VALOR DIA</th>
+                        <th>Coincidente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        if (diasCoincidentesHora != null)
+                        {
+                            var posicionCoindicenteDia = 0;
+                            foreach (var item in diasCoincidentesHora.Values)
+                            {
+                                fechaCoincidente[posicionCoindicenteDia] = item.Fecha.ToString("dd/MM/yyyy");
+                                valorHPCoincidente[posicionCoindicenteDia] = item.Ejecutado;
+                                valorCoincidente[posicionCoindicenteDia] = demandaCoindicente.Ejecutado;
+                                <tr>
+                                    <td>@(item.Fecha.ToString("dd/MM/yyyy"))</td>
+                                    <td>@(item.Ejecutado.ToString("N2"))</td>
+                                    <td>@(diasCoincidentesDia[item.Fecha.ToString("dd/MM/yyyy")].Ejecutado.ToString("N2"))</td>
+                                    <td>@(demandaCoindicente != null ? demandaCoindicente.Ejecutado.ToString("N2") : string.Empty)</td>
+                                </tr>
+
+                                posicionCoindicenteDia++;
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div id="detalle-baterias" class="ocultar-vista ">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>
+                            FECHA Y HORA
+                        </th>
+                        <th>
+                            FECHA
+                        </th>
+                        <th>
+                            HORA
+                        </th>
+                        <th>
+                            EJECUTADO
+                        </th>
+                        <th>
+                            BATERIAS
+                        </th>
+                        <th>
+                            POTENCIA MARCONA
+                        </th>
+                        <th>
+                            DESCARGA
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        if (detalleFechaSeleccionado.Count > 0 && datosBESS.Count > 0)
+                        {
+                            for (int i = 0; i < detalleFechaSeleccionado.Count(); i++)
+                            {
+                                decimal valorCoindicente = datosBESS.Where(x => x.Hora.Equals(detalleFechaSeleccionado[i].Hora)).Select(x => x.LLIXI633_PV).FirstOrDefault();
+                                decimal descarga = valorCoindicente * -1 * 1000;
+                                <tr>
+                                    <td>@(detalleFechaSeleccionado[i].Fecha)</td>
+                                    <td>@(detalleFechaSeleccionado[i].Fecha.ToString("dd/MM/yyyy"))</td>
+                                    <td>@(detalleFechaSeleccionado[i].Fecha.ToString("HH:mm"))</td>
+                                    <td>@(detalleFechaSeleccionado[i].Ejecutado)</td>
+                                    <td>@(valorCoindicente)</td>
+                                    <td>@(datosBESS.Where(x => x.Hora.Equals(detalleFechaSeleccionado[i].Hora)).Select(x => x.LLIXI625_PV).FirstOrDefault())</td>
+                                    <td>@(descarga)</td>
+                                </tr>
+                                usoBaterias.Add(Math.Max(descarga, 0));
+
+
+                                DBDataBess dBDataBess = datosBESS.Where(x => x.Hora.Equals(detalleFechaSeleccionado[i].Hora)).Select(x => x).FirstOrDefault();
+                                if (dBDataBess != null)
+                                {
+                                datosBessPorHora.Add(dBDataBess);
+                                }
+                                if (TimeSpan.TryParse(detalleFechaSeleccionado[i].Hora, out TimeSpan hora))
+                                {
+                                    if (hora > TimeSpan.Parse("18:00") && hora <= TimeSpan.Parse("20:00"))
+                                    {
+                                        promedioUsoBaterias.Add(valorCoindicente);
+                                    }
+                                }
+                            }
+                            var primerElemento = datosBessPorHora[0];
+                            datosBessPorHora.RemoveAt(0);
+                            datosBessPorHora.Add(primerElemento);
+
+
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>@(promedioUsoBaterias.Count>0 ? promedioUsoBaterias.Average() : 0)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div id="ver-graficos" class="ocultar-vista ">
+            <div>
+
+                <div class="division-graficos">
+                    <div>
+                        <div>
+                            <table class="table table-bordered tabla-grafico-bess">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2">
+                                            Max demanda (Coincidente)
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (demandaCoindicente!= null)
+                                    {
+                                        <tr>
+                                            <th>
+                                                Demanda
+                                            </th>
+                                            <td>@(demandaCoindicente.Ejecutado.ToString("N2"))</td>
+                                        </tr>
+                                        <tr>
+                                            <th>
+                                                Día/Hora
+                                            </th>
+                                            <td>@(demandaCoindicente.Fecha.ToString("dd/MM/yyyy HH:mm"))</td>
+                                        </tr>
+                                        <tr>
+                                            <th>
+                                                Día
+                                            </th>
+                                            @{
+                                                CultureInfo culture = new CultureInfo("es-ES");
+                                                <td>@($"{culture.DateTimeFormat.GetDayName(demandaCoindicente.Fecha.DayOfWeek)}, {demandaCoindicente.Fecha.ToString("dd 'de' MMMM 'de' yyyy")}")</td>
+                                            }
+                                        </tr>
+                                    }
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2">
+                                            Generación (KW)
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            BESS LLIPATA
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="contendor-graficos">
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow mb-4" style="width: 135%;">
+                                <!-- Card Header - Dropdown -->
+                                <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary" id="tituloGraficoDemandavsCoindicente"></h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <div class="chartjs-size-monitor-shrink">
+                                            <div class=""></div>
+                                        </div>
+                                        <canvas id="DemandavsCoincidente" style="display: block;  height: 180px !important;   width: 100%;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="contendor-graficos">
+                        <div class="col-xl-8 col-lg-7" style="">
+                            <div class="card shadow mb-4" style="width: 135%;">
+                                <!-- Card Header - Dropdown -->
+                                <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary" id="tituloGraficoDemandaCoesVSBess">
+                                        Demanda COES vs BESS
+                                    </h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <div class="chartjs-size-monitor-shrink">
+                                            <div class=""></div>
+                                        </div>
+                                        <canvas id="DemandavsCoincidente2" style="display: block;  height: 180px !important;   width: 100%;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-8 col-lg-7" style="margin:0 0 0 18.5vh;">
+                            <div class="card shadow mb-4" style="width: 135%;">
+                                <!-- Card Header - Dropdown -->
+                                <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary" id="tituloGraficoPortenciaMarconaVSBess">
+                                        POTENCIA MARCONA vs BESS
+                                    </h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <div class="chartjs-size-monitor-shrink">
+                                            <div class=""></div>
+                                        </div>
+                                        <canvas id="PortenciaMarconaVSBess" style="display: block;  height: 180px !important;   width: 100%;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contendor-graficos">
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow mb-4" style="width: 135%;">
+                                <!-- Card Header - Dropdown -->
+                                <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary" id="tituloGraficoCargaDescarga">
+                                        Grafico de carga y descarga BESS LLIPATA
+                                    </h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <div class="chartjs-size-monitor-shrink">
+                                            <div class=""></div>
+                                        </div>
+                                        <canvas id="CargaDescarga" style="display: block;  height: 180px !important;   width: 100%;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (requiereArchivos)
+            {
+                <div style="position: fixed;bottom: 4rem;">
+                    <button class="btn btn-primary " id="GuardarDatos"><i class="fas fa-download fa-sm text-white-50"></i>Conformidad de Datos</button>
+                </div>
+            }
+            
+        </div>
+
+
+    </div>
+</div>
+
+
+<script src="/vendor/chart.js/Chart.js"></script>
+
+<script>
+    /*
+        List<string> fechaCoincidente = new List<string>();
+        List<decimal> valorCoincidente = new List<decimal>();
+        List<decimal> valorHPCoincidente = new List<decimal>();
+    */
+           
+    var datosCargaDescarga = {
+        hora: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.Hora).ToArray())),
+        LLIXI633_PV: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.LLIXI633_PV).ToArray()))
+        }
+
+    var ctxCargaDescarga = document.getElementById("CargaDescarga");
+    var myLineChart = new Chart(ctxCargaDescarga, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.Hora).ToArray())),
+            datasets: [
+                {
+                    label: 'BATERIAS',
+                    data: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.LLIXI633_PV).ToArray())),
+                    borderColor: 'Blue',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y-axis-2'
+                }
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        id: 'y-axis-2',
+                        ticks: {
+                            min: -1.2,
+                            max: 0.6
+                        }
+                    }
+                ]
+            },
+            legend: {
+                position: 'bottom',
+                align: 'start',
+                labels: {
+                    usePointStyle: true
+                }
+            }
+        }
+    });
+           
+    var datosPortenciaMarconaVSBess = {
+        hora: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.Hora).ToArray())),
+        LLIXI625_PV: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.LLIXI625_PV).ToArray())),
+        LLIXI633_PV: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.LLIXI633_PV).ToArray()))
+            }
+    var ctxMarcona = document.getElementById("PortenciaMarconaVSBess");
+    var myLineChart = new Chart(ctxMarcona, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.Hora).ToArray())),
+            datasets: [
+                {
+                    label: 'POTENCIA MARCONA',
+                    data: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.LLIXI625_PV).ToArray())),
+                    borderColor: 'blue',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y-axis-1'
+                },
+                {
+                    label: 'BATERIAS',
+                    data: @Html.Raw(JsonConvert.SerializeObject(datosBessPorHora.Select(x => x.LLIXI633_PV).ToArray())),
+                    borderColor: 'orange',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y-axis-2'
+                }
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        id: 'y-axis-1',
+                        ticks: {
+                            min: 0,
+                            max: 35
+                        }
+                    },
+                    {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        id: 'y-axis-2',
+                        ticks: {
+                            min: -2,
+                            max: 3
+                        }
+                    }
+                ]
+            },
+            legend: {
+                position: 'bottom',
+                align: 'start',
+                labels: {
+                    usePointStyle: true
+                }
+            }
+        }
+    });
+        
+    var datosDemandavsCoincidente2 = {
+        hora: @Html.Raw(JsonConvert.SerializeObject(detalleFechaSeleccionado.Select(x => x.Hora).ToArray())),
+        ejecutado: @Html.Raw(JsonConvert.SerializeObject(detalleFechaSeleccionado.Select(x => x.Ejecutado).ToArray())),
+        usoBaterias: @Html.Raw(JsonConvert.SerializeObject(usoBaterias))
+        }
+    var ctx2 = document.getElementById("DemandavsCoincidente2");
+    var myLineChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(JsonConvert.SerializeObject(detalleFechaSeleccionado.Select(x => x.Hora).ToArray())),
+            datasets: [
+                {
+                    label: 'Ejecutado',
+                    data: @Html.Raw(JsonConvert.SerializeObject(detalleFechaSeleccionado.Select(x => x.Ejecutado).ToArray())),
+                    borderColor: 'blue',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y-axis-1',
+                    ticks: {
+                        min: 5000,
+                        max: 8000
+                    }
+                },
+                {
+                    label: 'Descarga',
+                    data: @Html.Raw(JsonConvert.SerializeObject(usoBaterias)),
+                    borderColor: 'orange',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y-axis-2'
+
+                }
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        id: 'y-axis-1',
+                        ticks: {
+                            min: 5000,
+                            max: 8000
+                        }
+                    },
+                    {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        id: 'y-axis-2'
+                    }
+                ]
+            },
+            legend: {
+                position: 'bottom',
+                align: 'start',
+                labels: {
+                    usePointStyle: true
+                }
+            }
+        }
+    });
+
+    var datosDemandavsCoincidente = {
+        fecha: @Html.Raw(JsonConvert.SerializeObject(fechaCoincidente)),
+        valorHPCoincidente: @Html.Raw(JsonConvert.SerializeObject(valorHPCoincidente)),
+        valorCoincidente: @Html.Raw(JsonConvert.SerializeObject(valorCoincidente))
+        }
+    var ctx = document.getElementById("DemandavsCoincidente");
+    var myLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(JsonConvert.SerializeObject(fechaCoincidente)),
+            datasets: [
+                {
+                    label: 'Dataset',
+                    data: @Html.Raw(JsonConvert.SerializeObject(valorHPCoincidente)),
+                    borderColor: 'blue',
+                    backgroundColor: 'transparent'
+                },
+                {
+                    label: 'Dataset',
+                    data: @Html.Raw(JsonConvert.SerializeObject(valorCoincidente)),
+                    borderColor: 'orange',
+                    backgroundColor: 'transparent'
+                }
+            ]
+        },
+        options: {
+            legend: {
+                display: false
+            }
+        }
+    });
+
+
+</script>
+
+
+
+<script>
+    ///btn-ver-graficos btn-detalle-baterias btn-dia-coincidente btn-data-coes-formato
+
+    $(document).ready(function () {
+        var fechaSeleccionadoView = @Html.Raw(JsonConvert.SerializeObject(ViewData["fechaSeleccionado"]));
+
+        var nombreMes = obtenerMesTitulo(fechaSeleccionadoView.split('/')[1]);
+
+        var tituloGrafico = document.getElementById("tituloGraficoDemandavsCoindicente");
+        tituloGrafico.innerText = "Gráfico Max. demanda vs Coincidente-" + capitalizarPrimeraLetra(nombreMes) + " " + fechaSeleccionadoView.split('/')[2] + " (MW)";
+
+        $("#btn-dia-coincidente").click(function () {
+            $("#btn-data-coes-formato").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-ver-graficos").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-detalle-baterias").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $(this).removeClass("color-boton-opciones").addClass("color-boton-opciones-selected");
+
+
+            //class="ocultar-vista" id="btn-data-coes-formato-ocultar"
+            $("#btn-data-coes-formato-mostrar").addClass("ocultar-vista");
+            $("#btn-ver-graficos-mostrar").addClass("ocultar-vista");
+            $("#btn-detalle-baterias-mostrar").addClass("ocultar-vista");
+            $("#btn-dia-coincidente-mostrar").removeClass("ocultar-vista");
+            $("#btn-data-coes-formato-ocultar").removeClass("ocultar-vista");
+            $("#btn-ver-graficos-ocultar").removeClass("ocultar-vista");
+            $("#btn-dia-coincidente-ocultar").addClass("ocultar-vista");
+            $("#btn-detalle-baterias-ocultar").removeClass("ocultar-vista");
+
+            $("#data-coes-formato").addClass("ocultar-vista");
+            $("#ver-graficos").addClass("ocultar-vista");
+            $("#detalle-baterias").addClass("ocultar-vista");
+            $("#dia-coincidente").removeClass("ocultar-vista");
+        });
+        $("#btn-detalle-baterias").click(function () {
+            $("#btn-data-coes-formato").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-ver-graficos").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-dia-coincidente").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $(this).removeClass("color-boton-opciones").addClass("color-boton-opciones-selected");
+            //class="ocultar-vista" id="btn-data-coes-formato-ocultar"
+            $("#btn-data-coes-formato-mostrar").addClass("ocultar-vista");
+            $("#btn-ver-graficos-mostrar").addClass("ocultar-vista");
+            $("#btn-detalle-baterias-mostrar").removeClass("ocultar-vista");
+            $("#btn-dia-coincidente-mostrar").addClass("ocultar-vista");
+            $("#btn-data-coes-formato-ocultar").removeClass("ocultar-vista");
+            $("#btn-ver-graficos-ocultar").removeClass("ocultar-vista");
+            $("#btn-dia-coincidente-ocultar").removeClass("ocultar-vista");
+            $("#btn-detalle-baterias-ocultar").addClass("ocultar-vista");
+
+            //class="ocultar-vista" id="btn-data-coes-formato-ocultar"
+            $("#data-coes-formato").addClass("ocultar-vista");
+            $("#ver-graficos").addClass("ocultar-vista");
+            $("#detalle-baterias").removeClass("ocultar-vista");
+            $("#dia-coincidente").addClass("ocultar-vista");
+        });
+        $("#btn-ver-graficos").click(function () {
+            $("#btn-data-coes-formato").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-dia-coincidente").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-detalle-baterias").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $(this).removeClass("color-boton-opciones").addClass("color-boton-opciones-selected");
+
+            //class="ocultar-vista" id="btn-data-coes-formato-ocultar"
+            $("#btn-data-coes-formato-mostrar").addClass("ocultar-vista");
+            $("#btn-ver-graficos-mostrar").removeClass("ocultar-vista");
+            $("#btn-detalle-baterias-mostrar").addClass("ocultar-vista");
+            $("#btn-dia-coincidente-mostrar").addClass("ocultar-vista");
+            $("#btn-data-coes-formato-ocultar").removeClass("ocultar-vista");
+            $("#btn-ver-graficos-ocultar").addClass("ocultar-vista");
+            $("#btn-dia-coincidente-ocultar").removeClass("ocultar-vista");
+            $("#btn-detalle-baterias-ocultar").removeClass("ocultar-vista");
+
+            //class="ocultar-vista" id="btn-data-coes-formato"
+            $("#data-coes-formato").addClass("ocultar-vista");
+            $("#ver-graficos").removeClass("ocultar-vista");
+            $("#detalle-baterias").addClass("ocultar-vista");
+            $("#dia-coincidente").addClass("ocultar-vista");
+        });
+        $("#btn-data-coes-formato").click(function () {
+            $("#btn-dia-coincidente").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-ver-graficos").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $("#btn-detalle-baterias").removeClass("color-boton-opciones-selected").addClass("color-boton-opciones");
+            $(this).removeClass("color-boton-opciones").addClass("color-boton-opciones-selected");
+
+            //class="ocultar-vista" id="btn-data-coes-formato-ocultar"
+            $("#btn-data-coes-formato-mostrar").removeClass("ocultar-vista");
+            $("#btn-ver-graficos-mostrar").addClass("ocultar-vista");
+            $("#btn-detalle-baterias-mostrar").addClass("ocultar-vista");
+            $("#btn-dia-coincidente-mostrar").addClass("ocultar-vista");
+            $("#btn-data-coes-formato-ocultar").addClass("ocultar-vista");
+            $("#btn-ver-graficos-ocultar").removeClass("ocultar-vista");
+            $("#btn-dia-coincidente-ocultar").removeClass("ocultar-vista");
+            $("#btn-detalle-baterias-ocultar").removeClass("ocultar-vista");
+
+            //class="ocultar-vista" id="data-coes-formato"
+            $("#data-coes-formato").removeClass("ocultar-vista");
+            $("#ver-graficos").addClass("ocultar-vista");
+            $("#detalle-baterias").addClass("ocultar-vista");
+            $("#dia-coincidente").addClass("ocultar-vista");
+        });
+
+
+
+
+        var respuestaInformacion = @Html.Raw(JsonConvert.SerializeObject(ViewData["requiereArchivos"]));
+
+
+        var botonArchivos = document.getElementById("btn-subir-archivos");
+        botonArchivos.style.display = "initial";
+
+
+        if (!respuestaInformacion) {
+            alert("No existe datos, Subir la información correspondiente.");
+        }
+
+        $('#GuardarDatos').on('click', function () {
+
+            var datosPortenciaMarconaVSBessJson = JSON.stringify(datosPortenciaMarconaVSBess);
+            var datosDemandavsCoincidente2Json = JSON.stringify(datosDemandavsCoincidente2);
+            var datosDemandavsCoincidenteJson = JSON.stringify(datosDemandavsCoincidente);
+            localStorage.setItem("datosPortenciaMarconaVSBessJson", datosPortenciaMarconaVSBessJson);
+            localStorage.setItem("datosDemandavsCoincidente2Json", datosDemandavsCoincidente2Json);
+            localStorage.setItem("datosDemandavsCoincidenteJson", datosDemandavsCoincidenteJson);
+            
+            window.location.href = "@Url.Action("Index", "BESSLlipata")" + "?fecha=" + fechaSeleccionadoView;
+        });
+    });
+
+
+</script>

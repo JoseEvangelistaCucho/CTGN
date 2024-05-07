@@ -1,0 +1,94 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = null;
+
+
+
+
+}
+
+
+<div>
+
+    <button class="bnt btn-primary" id="GuardarDatos"> Generar Archivo</button>
+
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        document.getElementById("GuardarDatos").addEventListener("click", function () {
+            var DBRAM = obtenerDatosProduccion();
+            //var datosRAM = GuardarDatos();
+            var detalleObtenerdatosOil = obtenerdatosOil();
+
+            var datos = {
+                DBRAM: DBRAM,
+                listaViewOil: detalleObtenerdatosOil
+            }
+            console.log("datos", datos);
+
+            guardarDatosControl('@Url.Action("ObtenerReporte", "DescargaReportes")', datos);
+
+        });
+
+        function guardarDatosControl(url, datos) {
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        // Si la respuesta no está bien, mostrar un error
+                        mostrarError();
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.arrayBuffer(); // Devolver el contenido como un ArrayBuffer
+                })
+                .then(function (buffer) {
+                    var blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    mostrarMensaje(blob);
+                })
+                .catch(function (error) {
+                    // Capturar y manejar cualquier error
+                    console.error("Error:", error);
+                    mostrarError();
+                });
+        }
+
+        function descargarArchivo(blob) {
+            //var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            var fechaSeleccionadoView = obtenerFecha("fechaVista");
+            var nombreMes = obtenerMesTitulo(fechaSeleccionadoView.split('/')[1]);
+            var nombreArchivo = 'RAM CGD ' + datosOperario.IdSitio + ' ' + nombreMes + ' ' + fechaSeleccionadoView.split('/')[2] + '.xlsx';
+
+
+            var link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = nombreArchivo;
+            link.click();
+        }
+
+        function mostrarMensaje(blob) {
+            Swal.fire({
+                title: "Desea Descargar el Excel?",
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: "SI",
+                denyButtonText: `NO`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    descargarArchivo(blob);
+                    Swal.fire("Exportado!", "", "success");
+                }
+            });
+        }
+
+    });
+
+</script>

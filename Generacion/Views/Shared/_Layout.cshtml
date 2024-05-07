@@ -1,0 +1,1289 @@
+﻿@using Generacion.Models.ReporteModulacion;
+@using Generacion.Models.Usuario;
+@using Newtonsoft.Json;
+
+
+@{
+    bool enableUpload = ViewBag.mostrarSubirArchivo ?? false;
+    string display = enableUpload ? "initial" : "none";
+    bool enableInputDate = ViewBag.mostrarIngresoFecha ?? false;
+
+
+
+
+    DetalleOperario datosOperario = ViewData["DetalleOperario"] as DetalleOperario;
+
+    List<string> CargosOp = new List<string>()
+    {
+        "op-3","op-4"
+    };
+
+
+
+}
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Etiquetas meta para controlar la caché -->
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+
+    <title>@ViewBag.Title</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+          rel="stylesheet">
+
+    <!-- Mensajes de alerta-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.js"></script>
+    <!-- Custom styles for this template-->
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+
+    <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Descarga  PDF-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>-->
+    <script src="~/js/PDF/jspdf.min.js"></script>
+    <script src="~/js/site.js"></script>
+
+
+
+
+    <!-- desactivar en caso falle el datepiker y validar el navbar al dar click
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    -->
+</head>
+<style>
+    .body table {
+        color: #004055;
+    }
+
+    .modal-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1050;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        outline: 0;
+        backdrop-filter: blur(1px);
+    }
+
+        .modal-loader img {
+            position: fixed;
+            top: 10%;
+            left: 30%;
+            z-index: 1050;
+            width: 40%;
+        }
+
+    body {
+        color: black;
+    }
+
+    #wrapper #content-wrapper #content {
+        flex: none;
+    }
+
+    footer.sticky-footer {
+        position: inherit;
+        bottom: 0;
+        width: 100%;
+    }
+
+
+    .div-container label {
+        display: flex;
+        align-items: center;
+        margin-top: -30px;
+    }
+
+        .div-container label p {
+            margin-top: revert;
+        }
+
+        .div-container label input {
+            margin-right: 10px;
+        }
+
+    .custom-file-upload {
+        border: 1px solid #ccc;
+        display: inline-block;
+        padding: 6px 12px;
+        cursor: pointer;
+        background-color: #f7f7f7;
+        color: #333;
+        border-radius: 5px;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .form-modal-upload {
+        display: flex;
+    }
+
+    .form-input-modal-upload {
+        width: 95%;
+    }
+
+    .upload-body {
+        display: flex;
+    }
+
+    @@media (min-width: 576px) {
+        .modal-dialog {
+            max-width: 90%;
+            margin: 1.75rem auto;
+        }
+    }
+
+    @@media (max-width: 602px) {
+        .modal-dialog {
+            margin: 1.75rem auto;
+        }
+
+        .upload-body {
+            display: initial;
+        }
+
+            .upload-body img {
+                width: 100%;
+            }
+
+        .form-input-modal-upload {
+            width: 100%;
+        }
+
+        .container-load {
+            width: 100% !important;
+        }
+    }
+
+    .container-load {
+        width: 50%;
+    }
+
+    .modal-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1050;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        outline: 0;
+        backdrop-filter: blur(1px);
+    }
+
+        .modal-loader img {
+            position: fixed;
+            top: 10%;
+            left: 30%;
+            z-index: 1050;
+            width: 40%;
+        }
+
+    .boton-eliminar {
+        /*border: groove;
+                                                                                                                                            color: black;
+                                                                                                                                            font-weight: bold;
+                                                                                                                                            border-radius: 5px;
+                                                                                                                                            background: red;*/
+        position: absolute;
+    }
+
+    /*******ESTILOS GENERALES*******/
+    .content-report {
+        border: solid;
+        padding: 40px;
+    }
+
+    .header-detail-report div, p {
+        border: solid black 1.5px;
+    }
+
+    .header-detail-report p1 {
+        width: 60%;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .header-detail-report p {
+        width: 100%;
+        text-align: center;
+        height: 100%;
+    }
+
+    .title-report {
+        width: 100%;
+        text-align: center;
+    }
+
+    .image-logo {
+        height: 225px;
+        margin: 0 0 0 20px;
+        width: 440px;
+    }
+
+    .content-img-logo {
+        width: 280px;
+        background: white;
+        justify-content: center;
+        align-items: center;
+        height: 84% !important;
+    }
+
+    .col-md-6 div {
+        display: flex;
+        height: 16.8%;
+        width: 100%;
+        padding: 0 0 0 0;
+    }
+
+    .col-md-6 {
+        padding: 0 0 0 0;
+        height: 230px;
+    }
+
+
+    input:disabled {
+        border: none;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Desactiva los spinners en Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+    /*******ESTILOS GENERALES*******/
+
+
+    .floating-button {
+        left: 10px;
+        bottom: 10px;
+        /* color: #fff;
+                                                                                                       position: fixed;
+                                                                                                            border: none;
+                                                                                               */
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+</style>
+<body id="page-top">
+
+    <div id="wrapper">
+
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="">
+                <div class="sidebar-brand-icon" style="padding: 0 0 0 15px;">
+                    <img src="~/img/logo_elec.png" style="width: 95px;height: 70px;" />
+                </div>
+                <div class="sidebar-brand-text mx-3">PORTAL GENERACION </div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            <li class="nav-item active">
+                <a class="nav-link" href="@Url.Action("Index", "Home")">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-heading">
+                Reportes
+            </div>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+                   aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>Diario</span>
+                </a>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Reportes:</h6>
+                        <a class="collapse-item" href="@Url.Action("Index", "RegMantenimiento")">Mantenimiento</a>
+                        <a class="collapse-item" href="@Url.Action("Index", "ReporteGAS")">Reporte Diario de Gas</a>
+                        <a id="btnMGD" class="collapse-item" @*href="Url.Action("Index", "MGD")"*@>Reporte MGD</a>
+                        <a class="collapse-item" href="@Url.Action("Index", "InformePerturbacion")">Informe Perturbacion</a>
+                        <h6 class="collapse-header">BESS Llipata</h6>
+                        <a id="btnDataCoes" class="collapse-item" @*href="Url.Action("DataCoes", "BESSLlipata")"*@>Data Coes</a>
+                        <a id="btnDataBess" class="collapse-item" @*href="@Url.Action("DataBess", "BESSLlipata")"*@>Data Bess</a>
+                        <a id="btnDemanda" class="collapse-item" @*href="Url.Action("Demanda", "BESSLlipata")"*@>Demanda</a>
+                        @*<a id="btnBessLlipata" class="collapse-item" href="@Url.Action("Index", "BESSLlipata")">BESS LLipata</a>*@
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCapex"
+                   aria-expanded="true" aria-controls="collapseCapex">
+                    <i class="fas fa-fw fa-wrench"></i>
+                    <span>Formatos</span>
+                </a>
+                <div id="collapseCapex" class="collapse" aria-labelledby="headingUtilities"
+                     data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Ingreso de Datos</h6>
+                        <a id="btnDatosConsola" class="collapse-item" @*href="@Url.Action("Index", "DatosConsola")"*@> Lecturas de Consola</a>
+                        <a id="btnLecturasCampo" class="collapse-item" @*href="@Url.Action("Index", "LecturasCampo")"*@> Lecturas de Campo</a>
+
+                        <h6 class="collapse-header">Descarga de datos</h6>
+                        <a id="btnION" class="collapse-item" @*href="Url.Action("Index", "ION")"*@>Reporte ION</a>
+                    </div>
+                </div>
+
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseOpex"
+                   aria-expanded="true" aria-controls="collapseOpex">
+                    <i class="fas fa-fw fa-wrench"></i>
+                    <span>Reportes</span>
+                </a>
+                <div id="collapseOpex" class="collapse" aria-labelledby="headingUtilities"
+                     data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">General</h6>
+                        <a class="collapse-item" href="@Url.Action("Index", "ReporteProduccion")" value='Reporte Produccion'>Reporte Produccion</a>
+                        <a id="btnRAM" class="collapse-item" href="@Url.Action("Index", "RAM")">RAM CGD</a>
+                        <a id="btnFtVol" class="collapse-item" @*href="@Url.Action("Index", "Fotovoltaica")"*@>FotoVoltaica</a>
+
+                        @{
+                            if (datosOperario != null && CargosOp.Contains(datosOperario.IdCargo))
+                            {
+                                <a class="collapse-item" href="@Url.Action("Index", "ReporteModulacion")" value='Reporte Modulacion'>Reporte Modulacion</a>
+                            }
+                        }
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages2"
+                   aria-expanded="true" aria-controls="collapsePages2">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Semanales</span>
+                </a>
+                <div id="collapsePages2" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">OTHERS</h6>
+                        <a class="collapse-item" href="@Url.Action("SistemaContraIncendios", "PruebasSemanales")">Sistema Contra Incendios</a>
+                        <a class="collapse-item" href="@Url.Action("Index", "PruebasSemanales")">Black Start</a>
+                        <div class="collapse-divider"></div>
+                    </div>
+                </div>
+            </li>
+
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-heading">
+                Almacen
+            </div>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages1"
+                   aria-expanded="true" aria-controls="collapsePages1">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Almacen</span>
+                </a>
+                <div id="collapsePages1" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Registro</h6>
+                        <a class="collapse-item" href="@Url.Action("Index", "RegistroComponentes")">Componentes</a>
+                        <div class="collapse-divider"></div>
+
+                        <h6 class="collapse-header">Utilizados</h6>
+                        <a class="collapse-item" href="@Url.Action("Index", "Bujias")">Bujias</a>
+                        <div class="collapse-divider"></div>
+                    </div>
+                </div>
+            </li>
+
+
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-heading">
+                Control Cambio y/o Mantenimiento
+            </div>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages"
+                   aria-expanded="true" aria-controls="collapsePages">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Componentes</span>
+                </a>
+                <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Bujias</h6>
+                        <!--<a class="collapse-item" href="@Url.Action("Index", "Bujias")">Bujias</a>-->
+                        <a class="collapse-item" href="@Url.Action("ControlCambio", "Bujias")">Control Cambio</a>
+                        <a class="collapse-item" href="@Url.Action("RegistroControlCambio", "Bujias")">Registro Control</a>
+                        <div class="collapse-divider"></div>
+
+
+                        <h6 class="collapse-header">Registro Mantenimiento</h6>
+                        <a class="collapse-item" href="@Url.Action("Index", "FiltroCentrifugo")">Filtro Centrifugo</a>
+                        <a class="collapse-item" href="@Url.Action("Index", "FiltroAutomatico")">Filtro Automatico</a>
+                        <div class="collapse-divider"></div>
+                    </div>
+            </li>
+
+
+            <hr class="sidebar-divider d-none d-md-block">
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <a class="collapse-item" data-toggle="modal" data-target="#ModalSubirArchivos">
+                        <button style="display:@display;" id="btn-subir-archivos" type="button" class="btn btn-info">Subir Archivos</button>
+                    </a>
+
+                    <button style="display:none;" type="button" class="btn btn-outline-secondary" id="ocultarNav">Ocultar Detalles</button>
+                    <!--FECHA-->
+                    <input style="width: 25vh !important;" type="text" id="datepicker" class="form-control datepicker" placeholder="Selecciona una fecha">
+                    <script>
+                        $(document).ready(function () {
+                            $('.datepicker').datepicker({
+                                format: 'dd/mm/yyyy',
+                                language: 'es',
+                                autoclose: true
+                            });
+                        });
+                    </script>
+
+                    <ul class="navbar-nav ml-auto">
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small" id="nombreCompleto"></span>
+                                <img class="img-profile rounded-circle" src="~/img/Operador.jpg">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                @* <a class="dropdown-item" href="#">
+                                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Profile
+                                </a>
+                                <a class="dropdown-item" href="#">
+                                <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Settings
+                                </a>*@
+                                <a class="dropdown-item" href="@Url.Action("Index", "Historial")">
+                                    <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Log de Actividad
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="@Url.Action("Index", "Login")" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+
+            </div>
+            <!-- /.container-fluid -->
+            <!-- Begin Page Content -->
+            <div id="contenedor-general-vistas" class="container-fluid">
+                @RenderBody()
+            </div>
+            <!-- End of Main Content -->
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; Your Website 2021</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Deseá cerrar sesión.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a onclick="CerrarSession()" class="btn btn-primary">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    
+
+
+<div class="modal-loader" id="loader">
+    <img src="~/GIF/download.gif" alt="Cargando...">
+</div>
+
+
+<div style="display:none;" class="modal fade" id="ModalSubirArchivos" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Elementos Eliminados</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body upload-body">
+                <div class="container-fluid container-load">
+                    <!-- Page Heading -->
+                    <h1 class="h3 mb-2 text-gray-800">Tablas</h1>
+                    <p class="mb-4">
+                        Solo suba archivos CSV. <br />
+                        La carga del archivo puede demorar deacuerdo a la cantidad e registros que contenga. <br />
+                    </p>
+                    <!-- DataTales Example -->
+                    <div>
+                        <select id="seleccion-CSV" onchange="mostrarSeleccion()">
+                            <option tipo-archivo="" value="0">--SELECCIONE--</option>
+                            <option tipo-archivo="xlsx" value="1">Costos Marginales</option>
+                            <option tipo-archivo="xlsx" value="3">Factura Modulación</option>
+                            <option tipo-archivo="xlsx" value="4">Data COES</option>
+                            <option tipo-archivo="txt" value="5">Data Bess</option>
+                            <option tipo-archivo="xlsx" value="99">OTROS</option>
+                        </select>
+                    </div>
+                    <div id="updateCSV" class="card shadow mb-4 form-input-modal-upload" style="width: 70%;display:none;">
+                        <form class="form-modal-upload" id="upload-form">
+
+                            <div style="width: 30%">
+                                <label class="custom-file-upload">
+                                    <input type="file" id="file-input" accept=".csv" style="display: none;">
+                                    <span>Elegir archivo</span>
+                                </label>
+                            </div>
+                            <div style="width: 70%;">
+                                <span id="file-name-display"></span>
+                            </div>
+                            <button class="btn btn-success" type="submit">Cargar</button>
+                        </form>
+                    </div>
+
+                    <div id="updateXLSX" class="card shadow mb-4 form-input-modal-upload" style="width: 70%;display:none;">
+                        <div class="form-group form-modal-upload" style="width: 30%">
+                            <label for="file-Xlsx-input" class="custom-file-upload">
+                                <input type="file" class="form-control" accept=".xlsx" style="display: none;" id="file-Xlsx-input">
+                                <span>Elegir archivo</span>
+                            </label>
+                        </div>
+                        <div style="width: 70%;">
+                            <span id="file-name-display2"></span>
+                        </div>
+                        <button class="btn btn-success" onclick="cargarArchivo()">Cargar</button>
+                    </div>
+
+                    <div id="updateTxt" class="card shadow mb-4 form-input-modal-upload" style="width: 70%;display:none;">
+                        <div class="form-group form-modal-upload" style="width: 30%">
+                            <label class="custom-file-upload">
+                                <input type="file" class="form-control" accept=".txt" style="display: none;" id="file-txt-input">
+                                <span>Elegir archivo</span>
+                            </label>
+                        </div>
+                        <div style="width: 70%;">
+                            <span id="file-name-display2"></span>
+                        </div>
+                        <button class="btn btn-success" onclick="cargarArchivo()">Cargar</button>
+                    </div>
+
+                    <img id="imgEjemploCSV" src="" />
+                    <div class="div-container" id="Div-Container">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <!-- <script src="../js/PDF/jspdf.min.js"></script>-->
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="~/js/sb-admin-2.min.js"></script>
+
+
+    <!-- Page level plugins -->
+    <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="~/js/demo/datatables-demo.js"></script>
+
+
+</body>
+
+
+
+
+
+</html>
+<!--<script src="../FileXLSX/script.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+
+    var valoresNecesarios = false;
+
+    var loader = document.getElementById('loader');
+    loader.style.display = 'none';
+
+    function updateFileName2() {
+        console.log("Entró a updateFileName");
+        var fileInput = document.getElementById("file-Xlsx-input");
+        var fileNameDisplay = document.getElementById("file-name-display2");
+
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = fileInput.files[0].name;
+        } else {
+            fileNameDisplay.textContent = "";
+        }
+    }
+
+    var fileInput = document.getElementById("file-Xlsx-input");
+    fileInput.addEventListener("change", function () {
+        console.log("Entró al evento de cambio");
+        updateFileName2();
+    });
+
+
+
+
+
+
+
+    function updateFileName() {
+        var fileInput = document.getElementById("file-input");
+        var fileNameDisplay = document.getElementById("file-name-display");
+
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = fileInput.files[0].name;
+        } else {
+            fileNameDisplay.textContent = "";
+        }
+    }
+
+
+    // Agregar un evento de cambio al input de archivo
+    var fileInput = document.getElementById("file-input");
+    fileInput.addEventListener("change", updateFileName);
+
+
+
+
+    function cargarArchivo() {
+
+
+        var seleccion = document.getElementById("seleccion-CSV");
+
+        if (seleccion.value === '0') {
+            alert("Seleccione un tipo.");
+
+            return;
+        } else {
+
+             var path ="";
+             var formData ={};
+            if(seleccion.value == "5"){
+
+
+                path = "@Url.Action("SubirArchivoText", "ReportesGenerales")";
+
+                fileInput = document.getElementById("file-txt-input");
+                var formData = new FormData();
+                if (fileInput.files.length === 0) {
+                    alert("Por favor seleccione un archivo.");
+                    return;
+                }
+                formData.append("Archivo", fileInput.files[0]);
+            }else{
+
+                path = "@Url.Action("SubirArchivo", "ReportesGenerales")";
+
+                 fileInput = document.getElementById("file-Xlsx-input");
+                formData = new FormData();
+                if (fileInput.files.length === 0) {
+                    alert("Por favor seleccione un archivo.");
+                    return;
+                }
+                formData.append("ArchivoXLSX", fileInput.files[0]);
+            }
+            formData.append("seleccion", seleccion.value);
+            
+            realizarPeticionGuardado(path,formData);
+        }
+    }
+
+
+    function realizarPeticionGuardado(path,formData){
+        loader.style.display = 'block';
+
+        fetch(path, {
+                method: "POST",
+                body: formData
+            })
+                .then(response => {
+                loader.style.display = 'none';
+
+                    if (!response.ok) {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.respuesta.mensaje,
+                            icon: "error",
+                            button: "OK",
+                        });
+                    } else {
+                        valoresNecesarios = true;
+
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                            willClose: () => {
+                                //  location.reload();
+                            }
+                        });
+
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log("La respuesta del servidor es:", data);
+                    loader.style.display = 'none';
+
+                    if (seleccion.value === "4" ||seleccion.value === "5") {
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                loader.style.display = 'none';
+
+                    console.error("Error:", error);
+                });
+    }
+
+
+</script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.es.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+
+        $('#btnLecturasCampo').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("Index", "LecturasCampo")' + '?fecha=' + fecha;
+        });
+
+        $('#btnDatosConsola').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+                window.location.href = '@Url.Action("Index", "DatosConsola")' + '?fecha=' + fecha;
+        });
+
+        $('#btnION').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            if (fecha === '' || fecha == null) {
+                alert('Por favor, ingrese una Fecha Valida.');
+                fechaInput.focus();
+            } else {
+                window.location.href = '@Url.Action("Index", "ION")' + '?fecha=' + fecha;
+            }
+        });
+
+
+        $('#btnMGD').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            if (fecha === '' || fecha == null) {
+                alert('Por favor, ingrese una Fecha Valida.');
+                fechaInput.focus();
+            } else {
+                window.location.href = '@Url.Action("Index", "MGD")' + '?fecha=' + fecha;
+            }
+        });
+
+        $('#btnDataCoes').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("DataCoes", "BESSLlipata")' + '?fecha=' + fecha;
+        });
+
+        $('#btnDataBess').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("DataBess", "BESSLlipata")' + '?fecha=' + fecha;
+        });
+
+
+        $('#btnDemanda').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("Demanda", "BESSLlipata")' + '?fecha=' + fecha;
+        });
+
+        $('#btnBessLlipata').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("Index", "BESSLlipata")' + '?fecha=' + fecha;
+        }); 
+
+         $('#btnFtVol').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("Index", "Fotovoltaica")' + '?fecha=' + fecha;
+        }); 
+
+
+        /*$('#btnRAM').on('click', function () {
+            var fechaInput = $('#datepicker');
+            var fecha = fechaInput.val();
+
+            window.location.href = '@Url.Action("Index", "RAM")' + '?fecha=' + fecha;
+        }); */
+
+    });
+</script>
+<script>
+
+    var fecha = new Date();
+    var horaActual = fecha.getHours();
+
+
+
+
+    function mostrarSeleccion() {
+        var subirTxt = document.getElementById("updateTxt");
+        var subirXLSX = document.getElementById("updateXLSX");
+        var subirCSV = document.getElementById("updateCSV");
+        var seleccion = document.getElementById("seleccion-CSV");
+        var selectedOption = seleccion.options[seleccion.selectedIndex];
+        var tipoArchivo = selectedOption.getAttribute("tipo-archivo");
+
+
+        if (tipoArchivo === 'csv') {
+            subirCSV.style.display = 'initial';
+            subirTxt.style.display = 'none';
+            subirXLSX.style.display = 'none';
+        }
+        if (tipoArchivo === 'xlsx') {
+            subirXLSX.style.display = 'initial';
+            subirTxt.style.display = 'none';
+            subirCSV.style.display = 'none';
+        }
+         if (tipoArchivo === 'txt') {
+            subirXLSX.style.display = 'none';
+            subirCSV.style.display = 'none';
+            subirTxt.style.display = 'initial';
+        }
+
+    }
+</script>
+<script>
+
+
+
+    var objetoJson = localStorage.getItem("DetalleUsuario");
+    var datosOperario = objetoJson ? JSON.parse(objetoJson) : null;
+
+    if (datosOperario) {
+        var valor = datosOperario.Nombre + ' ' + datosOperario.Apellidos;
+        var divNombre = document.getElementById("nombreCompleto");
+        divNombre.textContent = valor;
+    } else {
+        datosOperario = @Html.Raw(JsonConvert.SerializeObject(datosOperario));
+        localStorage.setItem("DetalleUsuario", JSON.stringify(datosOperario));
+
+        var valor = datosOperario.Nombre + ' ' + datosOperario.Apellidos;
+        var divNombre = document.getElementById("nombreCompleto");
+        divNombre.textContent = valor;
+    }
+
+    /*
+    function obtenerDetalleOperario() {
+        var datosOperario = JSON.parse(objetoJson);
+        return datosOperario;
+    }*/
+
+
+</script>
+<script>
+
+    var botonOcultarNav = document.getElementById('ocultarNav');
+    var ocultarNavegador = false;
+
+    botonOcultarNav.addEventListener('click', function () {
+        var botonOcultarNav = document.getElementById('ocultarNav');
+        var nav = document.getElementById('accordionSidebar');
+        var botones = document.querySelectorAll('body button');
+        var inputs = document.querySelectorAll('body input');
+
+        if (!ocultarNavegador) {
+            nav.style.display = "none";
+
+            // Ocultar todos los botones excepto el botónOcultarNav
+            botones.forEach(function (boton) {
+                if (boton !== botonOcultarNav) {
+                    boton.style.display = "none";
+                }
+            });
+            inputs.forEach(function (input) {
+                if (input !== botonOcultarNav) {
+                    input.disabled = true;
+                }
+            });
+
+            ocultarNavegador = true;
+            botonOcultarNav.innerText = "Mostrar Nav"
+        } else {
+            nav.style.display = "initial";
+
+            // Mostrar todos los botones excepto el botónOcultarNav
+            botones.forEach(function (boton) {
+                if (boton !== botonOcultarNav) {
+                    boton.style.display = "initial";
+                }
+            });
+            inputs.forEach(function (input) {
+                if (input !== botonOcultarNav) {
+                    input.disabled = false;
+                }
+            });
+            ocultarNavegador = false;
+            botonOcultarNav.innerText = "Ocultar Nav"
+        }
+    });
+
+
+</script>
+<script>
+    var loader = document.getElementById('loader');
+
+    loader.style.display = 'none';
+
+    function obtenerFecha(value) {
+        const fechaActual = new Date();
+        const hora = fechaActual.getHours();
+        if (hora < 2) {
+            fechaActual.setDate(fechaActual.getDate() - 1);
+        }
+        const dia = fechaActual.getDate().toString().padStart(2, '0');
+
+        const mes = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+        const año = fechaActual.getFullYear();
+
+        var fechaFormateada = "";
+        if (value == "format") {
+            fechaFormateada = dia + "_" + mes + "_" + año;
+        }
+        if (value == "fecha") {
+            fechaFormateada = `${año}-${mes}-${dia}`;
+        }
+        if (value == "fechaVista") {
+            fechaFormateada = `${dia}/${mes}/${año}`;
+        }
+        if (value == "fechaID") {
+            fechaFormateada = `${dia}${mes}${año}`;
+        }
+        return fechaFormateada;
+    }
+
+
+
+    async function realizarPeticion(confirmarMensaje) {
+        return new Promise((resolve, reject) => {
+            const confirmacion = confirm(confirmarMensaje);
+
+            if (confirmacion) {
+                resolve("Petición realizada");
+            } else {
+                reject("Petición cancelada");
+            }
+        });
+    }
+
+    function CerrarSession() {
+
+        $.ajax({
+            url: '@Url.Action("CerrarSession", "Login")',
+            type: 'POST',
+            success: function (result) {
+                console.log(result)
+                console.log("success : ", result.success)
+                if (result.success) {
+                    sessionBlock = false;
+                    localStorage.removeItem("DetalleUsuario");
+                    document.cookie = '.AspNetCore.Session=; expires = Thu, 01 Jan 1970 00: 00: 00 UTC; path = /;';
+                    window.location.href = result.redirectUrl;
+
+                }
+            },
+            error: function (error) {
+            }
+        });
+    }
+
+
+
+    function convertirYMostrarFecha(inputId) {
+        var numeroInput = document.getElementById(inputId);
+
+        var valorNumerico = numeroInput.value.replace(/[^0-9/]/g, '');
+        numeroInput.value = valorNumerico;
+        if (valorNumerico.length === 2 || valorNumerico.length === 5) {
+            numeroInput.value = valorNumerico + '/';
+        } else if (valorNumerico.length > 10) {
+            numeroInput.value = valorNumerico.slice(0, 10);
+        }
+
+        if (valorNumerico.charAt(valorNumerico.length - 1) === '/') {
+            numeroInput.value = valorNumerico.slice(0, -1);
+        }
+    }
+
+
+
+
+
+    function validarInputs() {
+        var respuesta = true;
+        var inputs = document.querySelectorAll('[id-tipo-referencia]');
+
+        inputs.forEach(function (input) {
+            var tipoReferencia = input.getAttribute('id-tipo-referencia');
+
+            if (respuesta) {
+                switch (tipoReferencia) {
+                    case 'numero':
+                        respuesta = validarNumero(input);
+                        break;
+                    case 'fecha':
+                        respuesta = validarFecha(input);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        return respuesta;
+    }
+
+    function validarNumero(input) {
+        var valor = input.value.trim();
+
+        var regex = /^[0-9]+([.,][0-9]+)?$/;
+
+        if (valor === '') {
+            alert('Por favor, ingrese un número en el campo.');
+            input.focus();
+            return false;
+        }
+        if (!regex.test(valor)) {
+            alert('Por favor, ingrese solo números en el campo.');
+            input.focus();
+            return false;
+        }
+        return true;
+    }
+
+    function validarFecha(input) {
+        var fechaRegex2 = /^(\d{1})\/(\d{2})\/(\d{4})$/;
+        var valor = input.value.trim();
+
+        if (fechaRegex2.test(valor)) {
+            input.value = '0' + input.value.trim();
+            valor = input.value.trim();
+        }
+
+
+        var fechaRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        if (!fechaRegex.test(valor)) {
+            alert('Por favor, ingrese una fecha válida en formato DD/MM/YYYY.');
+            input.focus();
+            return false;
+        }
+
+        var partesFecha = valor.match(fechaRegex);
+        var dia = parseInt(partesFecha[1], 10);
+        var mes = parseInt(partesFecha[2], 10);
+        var anio = parseInt(partesFecha[3], 10);
+
+        const fechaActual = new Date();
+        const mesActual = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+        const añoActual = fechaActual.getFullYear();
+
+        // Validar que los valores de día, mes y año sean correctos
+        if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 2000) {
+            alert('Por favor, ingrese una fecha válida en formato DD/MM/YYYY.');
+            input.focus();
+            return false;
+        }
+        if (mesActual < mes || anio > añoActual) {
+            alert('La fecha no puede ser mayor a la actual.');
+            input.focus();
+            return false;
+        }
+
+        return true;
+    }
+
+    function obtenerMesTitulo(mesActual) {
+        const fechaActual = new Date();
+        //const mesActual = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+
+        if (mesActual === null || mesActual === undefined) {
+            mesActual = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+        }
+
+
+
+        if (mesActual === "01") {
+            return "ENERO";
+        } else if (mesActual === "02") {
+            return "FEBRERO";
+        } else if (mesActual === "03") {
+            return "MARZO";
+        } else if (mesActual === "04") {
+            return "ABRIL";
+        } else if (mesActual === "05") {
+            return "MAYO";
+        } else if (mesActual === "06") {
+            return "JUNIO";
+        } else if (mesActual === "07") {
+            return "JULIO";
+        } else if (mesActual === "08") {
+            return "AGOSTO";
+        } else if (mesActual === "09") {
+            return "SETIEMBRE";
+        } else if (mesActual === "10") {
+            return "OCTUBRE";
+        } else if (mesActual === "11") {
+            return "NOVIEMBRE";
+        } else if (mesActual === "12") {
+            return "DICIEMBRE";
+        }
+
+    }
+
+    function capitalizarPrimeraLetra(cadena) {
+        return cadena.charAt(0).toUpperCase() + cadena.slice(1).toLowerCase();
+    }
+
+    $(document).ready(function () {
+        $(".input-limpiar").focus(function () {
+            var valor = $(this).val().trim();
+            if (valor === "-0") {
+                $(this).val("-");
+            } else if (valor === "0") {
+                $(this).val("");
+            }
+        });
+
+        $(".input-limpiar").blur(function () {
+            if ($(this).val().trim() === "") {
+                $(this).val("0");
+            }
+        });
+    });
+    function fechaActualSinFormato() {
+        var fechaActual = new Date();
+
+        var dia = fechaActual.getDate();
+        var mes = fechaActual.getMonth() + 1;
+        var anio = fechaActual.getFullYear();
+
+        var fechaFormateada = (dia < 10 ? '0' : '') + dia + '/' + (mes < 10 ? '0' : '') + mes + '/' + anio;
+
+        return fechaFormateada;
+    }
+
+
+</script>

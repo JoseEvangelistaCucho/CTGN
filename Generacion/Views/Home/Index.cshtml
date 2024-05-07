@@ -1,0 +1,2051 @@
+﻿@using Generacion.Models.Almacen.Bujias;
+@using Generacion.Models.CalibracionValvula;
+@using Generacion.Models.Mantenimiento;
+@using Generacion.Models.TurboCompresor;
+@using Generacion.Models.Usuario;
+@using Generacion.Models.Aceite;
+@using Generacion.Models.DashBoard;
+@using Generacion.Models.Usuario;
+@using Newtonsoft.Json;
+@using Generacion.Models.ControlGAS;
+@{
+    ViewBag.Title = "Dashboard";
+    bool mostrarAdvertencia = ViewBag.MostrarModal;
+    List<DetalleOperario> listaOperario = ViewData["ListaOperarios"] as List<DetalleOperario>;
+
+    Dictionary<decimal, DashboardDetalleFiltro> datosFiltroCentrifugo = ViewData["datosFiltroCentrifugo"] as Dictionary<decimal, DashboardDetalleFiltro>;
+    Dictionary<decimal, DashboardDetalleFiltro> datosFiltroAutomatico = ViewData["datosFiltroAutomatico"] as Dictionary<decimal, DashboardDetalleFiltro>;
+    Dictionary<int, DetalleControlAceite> detalleControlAceite = ViewData["detalleControlAceite"] as Dictionary<int, DetalleControlAceite>;
+    DatosTurboCompresor datosTurboCompresor = ViewData["datosTurboCompresor"] as DatosTurboCompresor;
+    Dictionary<int, Dictionary<string, Dictionary<int, Dictionary<string, DetalleTurboCompresor>>>> detalleTurboCompresor = ViewData["detalleTurboCompresor"] as Dictionary<int, Dictionary<string, Dictionary<int, Dictionary<string, DetalleTurboCompresor>>>>;
+    Dictionary<int, Dictionary<string, DetalleLavadoTurbo>> detalleLavadoTurbo = ViewData["detalleLavadoTurbo"] as Dictionary<int, Dictionary<string, DetalleLavadoTurbo>>;
+    Dictionary<int, DetalleCalibracionValvula> datosCalibracionValvula = ViewData["datosCalibracionValvula"] as Dictionary<int, DetalleCalibracionValvula>;
+    Dictionary<string, Dictionary<int, CilindroAceiteCarter>> datosTKVessel = ViewData["datosTKVessel"] as Dictionary<string, Dictionary<int, CilindroAceiteCarter>>;
+    Dictionary<int, RegistroBujias> datosDuracionBujias = ViewData["datosDuracionBujias"] as Dictionary<int, RegistroBujias>;
+
+
+
+
+    ContratoGas datoContrato = ViewData["datoContrato"] as ContratoGas;
+    ConsumoGas datosConsumo = ViewData["datosConsumo"] as ConsumoGas;
+    DetalleConsumoGas datodetalleConsumo = ViewData["datodetalleConsumo"] as DetalleConsumoGas;
+    Dictionary<int, Dictionary<string, ControlCambioAceite>> datosControlAceite = ViewData["datosControlAceite"] as Dictionary<int, Dictionary<string, ControlCambioAceite>>;
+
+    decimal cantidadContratoGas = datoContrato != null ? datoContrato.ConsumoContrato : 0;
+
+    int daysInMonth = DateTime.DaysInMonth(int.Parse(DateTime.Now.ToString("yyyy")), int.Parse(DateTime.Now.ToString("MM")));
+
+}
+<style>
+    .hidden {
+        display: none;
+    }
+
+    input, select {
+        height: 23px;
+        width: 100%;
+        border: none;
+    }
+
+    select {
+        background: aliceblue;
+    }
+
+    .table td, .table th {
+        padding: 0rem;
+    }
+
+    .table {
+        margin: 0;
+        color: black;
+    }
+
+        .table thead, .table tbody {
+            text-align: center;
+        }
+
+    .contendor-tablas-iguales {
+        display: flex;
+    }
+
+    #chart-container {
+        position: relative;
+    }
+
+    #custom-tooltip {
+        position: absolute;
+        display: none;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    p {
+        border: none;
+        margin: 0;
+    }
+
+    #detalle-gas input {
+        width: 60%;
+        text-align: center;
+    }
+
+    #detalle-gas1 input {
+        width: 60%;
+        text-align: right;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #controlCambioAceite tbody td {
+        border: none;
+        border-top: 1px solid #e3e6f0;
+    }
+
+    #controlCambioAceite input {
+        background: transparent;
+    }
+
+    .contenedor-turbocompresor td, .contenedor-turbocompresor th {
+        border: none;
+        border-left: 1px solid #000; /* Borde izquierdo de 2 píxeles sólido de color negro */
+        border-right: 1px solid #000; /* Borde derecho de 2 píxeles sólido de color negro */
+        border-top: none;
+    }
+
+    .table thead th {
+        border-bottom: none;
+    }
+
+    .separador-div {
+        border: 1px solid;
+        margin: 5px;
+    }
+
+    .rotated-text {
+        transform: rotate(-90deg);
+        padding: 0 0 0 24px;
+        width: 1%;
+    }
+
+    .calibracion-valvula input {
+        border-bottom: 1px solid #e3e6f0;
+    }
+
+    .calibracion-valvula tbody th {
+        width: 10vh;
+        white-space: nowrap;
+    }
+
+    .tk-vessel tbody {
+        display: flex;
+    }
+
+        .tk-vessel tbody tr {
+            display: grid;
+        }
+
+    #turbo-compresor input {
+        text-align: right;
+        width: 50px;
+    }
+
+    .titulo-Header-Dashboard{
+        text-align-last: center;
+        font-weight: bold;
+        font-size: 20px;
+        background: #d02139;
+        color: white;
+        box-shadow: inset 2px 2px 4px 1px rgb(138, 18, 35);
+    }
+
+    input{
+        text-align: center;
+    }
+</style>
+<div style="display:flex;">
+    <div style="width: 58%;">
+        <div id="div1" class="separador-div">
+            <table id="FiltroCentrifugo" class="table table-bordered">
+                <thead style="text-align: center;">
+                    <tr>
+                        <th rowspan="2">CAMBIO</th>
+                        <th class="titulo-Header-Dashboard" colspan="5">FILTRO CENTRIFUGO (1000 Hrs.)</th>
+                    </tr>
+                    <tr>
+                        <th>UNIDAD</th>
+                        <th>FECHA</th>
+                        <th>Hrs. OP.</th>
+                        <th>ESPESOR</th>
+                        <th>EJECUTOR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (datosFiltroCentrifugo != null && datosFiltroCentrifugo.ContainsKey(1))
+                    {
+                        <tr id="FiltroCentrifugoEG1">
+                            <td><input id-tipo-referencia="numero" id-class="ProximaHoraCambio" id="ProximaHoraCambio1" type="number" value="@(datosFiltroCentrifugo[1].HorasOperacion + 1000)" disabled></td>
+                            <td style="display: flex;padding: 0 0 0 5px;"> EG<input style="width: 50px;" id-class="NumeroGenerador" type="number" min="1" max="2" disabled value="1"></td>
+                            <td><input class="datepicker" id-tipo-referencia="fecha" oninput="convertirYMostrarFecha('fechaInput')" id-class="fecha" id="fechaInput" value="@datosFiltroCentrifugo[1].Fecha.Split(' ')[0]"></td>
+                            <td><input id-tipo-referencia="numero" id-class="HorasOperacion" value="@datosFiltroCentrifugo[1].HorasOperacion" type="number" id="HorasOperacion1" oninput="actualizarProximaHora('1')"></td>
+                            <td><input id-tipo-referencia="numero" id-class="espesor" value="@datosFiltroCentrifugo[1].Espesor" type="number"></td>
+                            <td style="display:flex;">
+                                <input id-class="OperadorEjecutor" id="idOperarioEG1" value="@datosFiltroCentrifugo[1].OperadorEjecutor">
+                                <select id="ListaOperariosEG1" style="height: 23px">
+                                    <option value="">-OP-</option>
+                                    @foreach (var item in listaOperario)
+                                    {
+                                        <option value="@item.IdOperario">@(item.Apellidos + " " + item.Nombre)</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr id="FiltroCentrifugoEG1">
+                            <td><input id-tipo-referencia="numero" id-class="ProximaHoraCambio" id="ProximaHoraCambio1" type="number" disabled></td>
+                            <td style="display: flex;padding: 0 0 0 5px;"> EG<input id-tipo-referencia="numero" style="width: 50px;" id-class="NumeroGenerador" type="number" min="1" max="2" disabled value="1"></td>
+                            <td><input class="datepicker" id-tipo-referencia="fecha" oninput="convertirYMostrarFecha('fechaInput')" id-class="fecha" id="fechaInput"></td>
+                            <td><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion1" oninput="actualizarProximaHora('1')"></td>
+                            <td><input id-tipo-referencia="numero" id-class="espesor" type="number"></td>
+                            <td style="display:flex;">
+                                <input id-class="OperadorEjecutor" id="idOperarioEG1">
+                                <select id="ListaOperariosEG1" style="height: 23px">
+                                    <option value="">-OP-</option>
+                                    @foreach (var item in listaOperario)
+                                    {
+                                        <option value="@item.IdOperario">@(item.Apellidos + " " + item.Nombre)</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                    @if (datosFiltroCentrifugo != null && datosFiltroCentrifugo.ContainsKey(2))
+                    {
+                        <tr id="FiltroCentrifugoEG2">
+                            <td><input id-tipo-referencia="numero" id-class="ProximaHoraCambio" id="ProximaHoraCambio2" type="number" disabled value="@(datosFiltroCentrifugo[2].HorasOperacion + 1000)"></td>
+                            <td style="display: flex;padding: 0 0 0 5px;">EG<input id-tipo-referencia="numero" type="number" style="width: 50px;" id-class="NumeroGenerador" min="1" max="2" disabled value="2"></td>
+                            <td><input class="datepicker"  id-tipo-referencia="fecha" oninput="convertirYMostrarFecha('fechaInput2')" id-class="fecha" id="fechaInput2" value="@datosFiltroCentrifugo[2].Fecha.Split(' ')[0]"></td>
+                            <td><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion2" oninput="actualizarProximaHora('2')" value="@datosFiltroCentrifugo[2].HorasOperacion"></td>
+                            <td><input id-tipo-referencia="numero" id-class="espesor" type="number" value="@datosFiltroCentrifugo[2].Espesor"></td>
+                            <td style="display:flex;">
+                                <input id-class="OperadorEjecutor" id="idOperarioEG2" value="@datosFiltroCentrifugo[2].OperadorEjecutor">
+                                <select id="ListaOperariosEG2" style="height: 23px">
+                                    <option value="">-OP-</option>
+                                    @foreach (var item in listaOperario)
+                                    {
+                                        <option value="@item.IdOperario">@(item.Apellidos + " " + item.Nombre)</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr id="FiltroCentrifugoEG2">
+                            <td><input id-tipo-referencia="numero" id-class="ProximaHoraCambio" id="ProximaHoraCambio2" type="number" disabled></td>
+                            <td style="display: flex;padding: 0 0 0 5px;">EG<input id-tipo-referencia="numero" type="number" style="width: 50px;" id-class="NumeroGenerador" min="1" max="2" disabled value="2"></td>
+                            <td><input class="datepicker" id-tipo-referencia="fecha" oninput="convertirYMostrarFecha('fechaInput2')" id-class="fecha" id="fechaInput2"></td>
+                            <td><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion2" oninput="actualizarProximaHora('2')"></td>
+                            <td><input id-tipo-referencia="numero" id-class="espesor" type="number"></td>
+                            <td style="display:flex;">
+                                <input id-class="OperadorEjecutor" id="idOperarioEG2">
+                                <select id="ListaOperariosEG2" style="height: 23px">
+                                    <option value="">-OP-</option>
+                                    @foreach (var item in listaOperario)
+                                    {
+                                        <option value="@item.IdOperario">@(item.Apellidos + " " + item.Nombre)</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div>
+                <div id="mensaje-recordatorio-BESSEL" style="display: flex;text-align: center;">
+                    <p style="font-weight: bold;color: red;width: 20%;">BESS</p><p style="color: black;width: 80%;font-weight: bold;">DOMINGOS Y FERIADOS NO ACTIVAR</p>
+                </div>
+            </div>
+        </div>
+        <div id="div2" class="contendor-tablas-iguales">
+            <div class="separador-div">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Fecha</th>
+                            <th colspan="2" class="titulo-Header-Dashboard">HORAS DE BUJÍA</th>
+                        </tr>
+                        <tr>
+                            <th>EG-1</th>
+                            <th>EG-2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th><input class="datepicker"  id-tipo-referencia="fecha" value="@(datosDuracionBujias.ContainsKey(1) ? datosDuracionBujias[1].Fecha.Split(' ')[0] : DateTime.Now.ToString("dd/MM/yyyy"))" oninput="convertirYMostrarFecha()" id-class="fecha" type="text" /></th>
+                            <td><input id-tipo-referencia="numero" value="@(datosDuracionBujias.ContainsKey(1) ? datosDuracionBujias[1].Detalle : 0)" id-class="" type="number" /></td>
+                            <td><input id-tipo-referencia="numero" value="@(datosDuracionBujias.ContainsKey(2) ? datosDuracionBujias[2].Detalle : 0)" id-class="" type="number" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="separador-div">
+                <table id="FiltroAutomatico" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width:100px">Fecha</th>
+                            <th colspan="2" class="titulo-Header-Dashboard">Filtro Automatico</th>
+                        </tr>
+                        @if (datosFiltroAutomatico != null && datosFiltroAutomatico.ContainsKey(1))
+                        {
+                            <tr>
+                                <th style="width:100px">EG-1</th>
+                                <th><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion1" value="@datosFiltroAutomatico[1].HorasOperacion" /></th>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th style="width:100px">EG-1</th>
+                                <th><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion1" /></th>
+                            </tr>
+                        }
+                    </thead>
+                    <tbody>
+
+                        @if (datosFiltroAutomatico != null && datosFiltroAutomatico.ContainsKey(2))
+                        {
+                            <tr>
+                                <th><input  class="datepicker"  id-tipo-referencia="fecha" oninput="convertirYMostrarFecha('fechaAutomatico',event)" id-class="fecha" id="fechaAutomatico" type="text" value="@(DateTime.Parse(datosFiltroAutomatico[1].Fecha.Split(' ')[0]).ToString("dd/MM/yyyy"))" /></th>
+                                <th>EG-2</th>
+                                <td><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion2" value="@datosFiltroAutomatico[2].HorasOperacion" /></td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th><input class="datepicker" id-tipo-referencia="fecha" oninput="convertirYMostrarFecha('fechaAutomatico',event)" id-class="fechaAutomatico" id="fechaAutomatico" type="text" /></th>
+                                <th>EG-2</th>
+                                <td><input id-tipo-referencia="numero" id-class="HorasOperacion" type="number" id="HorasOperacion2" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="div3" class="separador-div">
+            <div style="font-weight: bold; text-align: center; display: flex; justify-content: space-between;">
+                <span id="titulo-consumo-gas" class="titulo-Header-Dashboard"></span>
+                <div id="edit-Detalle-Gas" style="display: none;">
+                    <span style="font-size: 12px;">EDITAR</span>
+                    <input type="checkbox" id="checkEdt">
+                </div>
+            </div>
+            <div id="contenedor-gas">
+                <div id="custom-tooltip"></div>
+
+                <div id="detalle-gas" style="display: none;">
+                    <table id="consumo-gas" class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>CONTRATO GAS</th>
+                                <th>DIAS DEL MES</th>
+                                <th>CONSUMO DIARIO</th>
+                                <th>
+                                    <p>CONSUMO TOTAL</p>
+                                    <p>@DateTime.Now.ToString("dd/MM/yyyy")</p>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                @{
+                                    var resultadoFormateado = datoContrato != null ? datoContrato.ConsumoContrato.ToString("N2", new System.Globalization.CultureInfo("es-ES")) : "0";
+                                    resultadoFormateado = resultadoFormateado.Replace(".", "temp").Replace(",", ".").Replace("temp", ",");
+                                    <td><input id-tipo="decimal" id-table="@(datoContrato != null ? datoContrato.IdContratoGas : "")" id-class="consumoContrato" id="consumoContrato" oninput="obtenerConsumoPorContrato()" value="@resultadoFormateado"></td>
+
+
+                                    <td><input id-tipo="int" id-table="@(datosConsumo != null ? datosConsumo.IdConsumoGas : "")" id-class="diasMes" id="diasMes" value="@daysInMonth" disabled></td>
+
+                                    resultadoFormateado = datodetalleConsumo != null ? datodetalleConsumo.ConsumoDiario.ToString("N2", new System.Globalization.CultureInfo("es-ES")) : "0";
+                                    resultadoFormateado = resultadoFormateado.Replace(".", "temp").Replace(",", ".").Replace("temp", ",");
+                                    <td><input id-tipo="decimal" id-class="consumoDiario" id="consumoDiario" oninput="parsearCantidad('consumoDiario')" value="@(resultadoFormateado)"></td>
+
+                                    resultadoFormateado = datodetalleConsumo != null ? datodetalleConsumo.ConsumoTotalActual.ToString("N2", new System.Globalization.CultureInfo("es-ES")) : "0";
+                                    resultadoFormateado = resultadoFormateado.Replace(".", "temp").Replace(",", ".").Replace("temp", ",");
+                                    <td><input id-tipo="decimal" id-table="@(datosConsumo != null ? datosConsumo.IdConsumoGas : "")" id-class="consumoTotalActual" id="consumoTotal" oninput="obtenerConsumoFaltante()" value="@(resultadoFormateado)"> SM3</td>
+                                }
+                            </tr>
+                            <tr>
+                                <th colspan="2" id="titulo-consumo-del-mes">CONSUMO GAS JUNIO</th>
+                                <th colspan="2">CONSUMO FALTANTE</th>
+                            </tr>
+                            <tr>
+                                @{
+                                    resultadoFormateado = datosConsumo != null ? datosConsumo.ConsumoDelMes.ToString("N2", new System.Globalization.CultureInfo("es-ES")) : "0";
+                                    resultadoFormateado = resultadoFormateado.Replace(".", "temp").Replace(",", ".").Replace("temp", ",");
+                                    <td colspan="2"><input id-tipo="decimal" id-table="@(datosConsumo != null ? datosConsumo.IdConsumoGas: "")" id-class="consumoDelMes" id="consumoDelMes" oninput="obtenerConsumoPorMes()" value="@(resultadoFormateado)"> SM3</td>
+                                    if (datosConsumo != null && datodetalleConsumo != null)
+                                    {
+                                        var resultadoOperacion = datosConsumo.ConsumoDelMes - datodetalleConsumo.ConsumoTotalActual;
+                                        resultadoFormateado = resultadoOperacion.ToString("N2", new System.Globalization.CultureInfo("es-ES"));
+                                        resultadoFormateado = resultadoFormateado.Replace(".", "temp").Replace(",", ".").Replace("temp", ",");
+
+                                        <td colspan="2" id="consumoFaltante">@resultadoFormateado SM3</td>
+                                    }
+                                    else
+                                    {
+                                        <td colspan="2" id="consumoFaltante">0 SM3</td>
+
+                                    }
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="chart-container">
+                    <canvas id="myChart" style="width:400px; height:200px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="div4" class="separador-div">
+            <div>
+                <table id="control-cambio-aceite" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th colspan="7" class="titulo-Header-Dashboard">CONTROL CAMBIO DE ACEITE GENERADOR CADA 5000 Hrs</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th>H. OP</th>
+                            <th>H. Cambio N</th>
+                            <th>F. Cambio N</th>
+                            <th>H. Cambio ND</th>
+                            <th>F. Cambio ND</th>
+                            <th>H. Restante N</th>
+                            <th>H. Restante ND</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>EG1</td>
+                            @{
+                                if (detalleControlAceite.ContainsKey(1))
+                                {
+                                    <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horas-operacion1" id-class="horasOperacion" type="number" value="@(detalleControlAceite[1].HorasOperacion)" /></td>
+                                }
+                                else
+                                {
+                                    <td><input id-tipo-referencia="numero" id="horas-operacion1" id-class="horasOperacion" type="number" /></td>
+                                }
+                            }
+                            @{
+                                if (datosControlAceite.ContainsKey(1))
+                                {
+                                    if (datosControlAceite[1].ContainsKey("N"))
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horasCambioGE1N" id-tabla="@(datosControlAceite[1]["N"].IdControlCambioAceite)" id-class="horasCambio" tipo-Comp="N" type="number" value="@(datosControlAceite[1]["N"].HorasCambio)" /></td>
+                                        <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="@(datosControlAceite[1]["N"].IdControlCambioAceite)" id-class="fechaCambio" tipo-Comp="N" value="@(datosControlAceite[1]["N"].FechaCambio)" id="fechaControlAceiteGE1N" oninput="convertirYMostrarFecha('fechaControlAceiteGE1N')" /></td>
+                                    }
+                                    else
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horasCambioGE1N" id-tabla="" id-class="horasCambio" tipo-Comp="N" type="number" /></td>
+                                        <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="N" id="fechaControlAceiteGE1N" oninput="convertirYMostrarFecha('fechaControlAceiteGE1N')" /></td>
+                                    }
+                                    if (datosControlAceite[1].ContainsKey("ND"))
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horasCambioGE1ND" id-tabla="@(datosControlAceite[1]["ND"].IdControlCambioAceite)" id-class="horasCambio" tipo-Comp="ND" type="number" value="@(datosControlAceite[1]["ND"].HorasCambio)" /></td>
+                                        <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="@(datosControlAceite[1]["ND"].IdControlCambioAceite)" id-class="fechaCambio" tipo-Comp="ND" value="@(datosControlAceite[1]["ND"].FechaCambio)" id="fechaControlAceiteGE1ND" oninput="convertirYMostrarFecha('fechaControlAceiteGE1ND')" /></td>
+                                    }
+                                    else
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horasCambioGE1ND" id-tabla="" id-class="horasCambio" tipo-Comp="ND" type="number" /></td>
+                                        <td><input class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="ND" id="fechaControlAceiteGE1ND" oninput="convertirYMostrarFecha('fechaControlAceiteGE1ND')" /></td>
+                                    }
+                                    <td id="horasRestantesGE1N"> @(5000 - (detalleControlAceite[1].HorasOperacion - datosControlAceite[1]["N"].HorasCambio)) </td>
+                                    <td id="horasRestantesGE1ND">@(5000 - (detalleControlAceite[1].HorasOperacion - datosControlAceite[1]["ND"].HorasCambio))   </td>
+                                }
+                                else
+                                {
+                                    <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horasCambioGE1N" id-tabla="" id-class="horasCambio" tipo-Comp="N" type="number" value="0" /></td>
+                                    <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="N" value="0" oninput="convertirYMostrarFecha('fechaControlAceiteGE1N')" /></td>
+                                    <td><input  class="datepicker" id-tipo-referencia="numero" oninput="ValidarHorasRestantes(1)" id="horasCambioGE1ND" id-tabla="" id-class="horasCambio" tipo-Comp="ND" type="number" value="0" /></td>
+                                    <td><input class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="ND" value="0" id="fechaControlAceiteGE1ND" oninput="convertirYMostrarFecha('fechaControlAceiteGE1ND')" /></td>
+                                    <td id="horasRestantesGE1N"></td>
+                                    <td id="horasRestantesGE1ND"></td>
+                                }
+                            }
+                        </tr>
+                        <tr>
+                            <td>EG2</td>
+                            @{
+                                int HorasOP2 = 0;
+                                if (detalleControlAceite.ContainsKey(2))
+                                {
+                                    <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(2)" id="horas-operacion2" id-class="horasOperacion" type="number" value="@(detalleControlAceite[2].HorasOperacion)" /></td>
+                                    HorasOP2 = detalleControlAceite[2].HorasOperacion;
+                                }
+                                else
+                                {
+                                    <td><input id-tipo-referencia="numero" id="horas-operacion2" id-class="horasOperacion" type="number" /></td>
+                                }
+                            }
+                            @{
+                                if (datosControlAceite.ContainsKey(2))
+                                {
+                                    int horasCambioN = 0;
+                                    int horasCambioND = 0;
+                                    if (datosControlAceite[2].ContainsKey("N"))
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(2)" id="horasCambioGE2N" id-tabla="@(datosControlAceite[2]["N"].IdControlCambioAceite)" id-class="horasCambio" tipo-Comp="N" type="number" value="@(datosControlAceite[2]["N"].HorasCambio)" /></td>
+                                        <td><input class="datepicker"  id-tipo-referencia="fecha" id-tabla="@(datosControlAceite[2]["N"].IdControlCambioAceite)" id-class="fechaCambio" tipo-Comp="N" value="@(datosControlAceite[2]["N"].FechaCambio)" id="fechaControlAceiteGE2N" oninput="convertirYMostrarFecha('fechaControlAceiteGE2N')" /></td>
+                                        horasCambioN = datosControlAceite[2]["N"].HorasCambio;
+                                    }
+                                    else
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(2)" id="horasCambioGE2N" id-tabla="" id-class="horasCambio" tipo-Comp="N" type="number" /></td>
+                                        <td><input class="datepicker"  id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="N" id="fechaControlAceiteGE2N" oninput="convertirYMostrarFecha('fechaControlAceiteGE2N')" /></td>
+                                    }
+                                    if (datosControlAceite[2].ContainsKey("ND"))
+                                    {
+                                        <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(2)" id="horasCambioGE2ND" id-tabla="@(datosControlAceite[2]["ND"].IdControlCambioAceite)" id-class="horasCambio" tipo-Comp="ND" type="number" value="@(datosControlAceite[2]["ND"].HorasCambio)" /></td>
+                                        <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="@(datosControlAceite[2]["ND"].IdControlCambioAceite)" id-class="fechaCambio" tipo-Comp="ND" value="@(datosControlAceite[2]["ND"].FechaCambio)" id="fechaControlAceiteGE2ND" oninput="convertirYMostrarFecha('fechaControlAceiteGE2ND')" /></td>
+                                        horasCambioND = datosControlAceite[2]["ND"].HorasCambio;
+                                    }
+                                    else
+                                    {
+                                        <td><input id-tipo-referencia="numero" id="horasCambioGE2ND" id-tabla="" id-class="horasCambio" tipo-Comp="ND" type="number" /></td>
+                                        <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="ND" id="fechaControlAceiteGE2ND" oninput="convertirYMostrarFecha('fechaControlAceiteGE2ND')" /></td>
+                                    }
+
+                                    <td id="horasRestantesGE2N"> @(5000 - (HorasOP2 - horasCambioN)) </td>
+                                    <td id="horasRestantesGE2ND">@(5000 - (HorasOP2 - horasCambioND))   </td>
+                                }
+                                else
+                                {
+                                    <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(2)" id="horasCambioGE2N" id-tabla="" id-class="horasCambio" tipo-Comp="N" type="number" value="0" /></td>
+                                    <td><input  class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="N" value="0" id="fechaControlAceiteGE2N" oninput="convertirYMostrarFecha('fechaControlAceiteGE2N')" /></td>
+                                    <td><input id-tipo-referencia="numero" oninput="ValidarHorasRestantes(2)" id="horasCambioGE2ND" id-tabla="" id-class="horasCambio" tipo-Comp="ND" type="number" value="0" /></td>
+                                    <td><input class="datepicker" id-tipo-referencia="fecha" id-tabla="" id-class="fechaCambio" tipo-Comp="ND" value="0" id="fechaControlAceiteGE2ND" oninput="convertirYMostrarFecha('fechaControlAceiteGE2ND')" /></td>
+                                    <td id="horasRestantesGE2N"></td>
+                                    <td id="horasRestantesGE2ND"></td>
+                                }
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    <div style="width: 42%;">
+        <div class="separador-div">
+            <table id="turbo-compresor" class="table table-bordered contenedor-turbocompresor">
+                <thead>
+                    <tr>
+                        <th colspan="5" class="titulo-Header-Dashboard">Turbo Compresores</th>
+                    </tr>
+                    <tr>
+                        <th>FECHA</th>
+                        <th colspan="2">EG1</th>
+                        <th colspan="2">EG2</th>
+                    </tr>
+                    <tr>
+                        <th>RADIO</th>
+                        <td>A</td>
+                        <td>B</td>
+                        <td>A</td>
+                        <td>B</td>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr position="1">
+
+                        @if (datosTurboCompresor != null)
+                        {
+                            <td><input  class="datepicker" id-tipo-referencia="fecha" style="width: 90px;" id-tipo="fechaTurboCompresor" id="fechaTurboCompresor" oninput="convertirYMostrarFecha('fechaTurboCompresor')" value="@datosTurboCompresor.Fecha.Split(' ')[0]"></td>
+                        }
+                        else
+                        {
+                            <td><input class="datepicker" id-tipo-referencia="fecha" style="width: 90px;" id-tipo="fechaTurboCompresor" id="fechaTurboCompresor" oninput="convertirYMostrarFecha('fechaTurboCompresor')"></td>
+                        }
+
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(1))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[1]["radio"][1]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[1]["radio"][1]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" value="0" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" value="0" id-lado="B" type="number">mm</td>
+                        }
+
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(2))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[2]["radio"][1]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[2]["radio"][1]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+
+                    </tr>
+                    <tr position="2">
+                        <th></th>
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(1))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[1]["radio"][2]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[1]["radio"][2]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(2))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[2]["radio"][2]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[2]["radio"][2]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+
+
+                    </tr>
+                    <tr position="3">
+                        <th></th>
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(1))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[1]["radio"][3]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[1]["radio"][3]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(2))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[2]["radio"][3]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[2]["radio"][3]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+
+                    </tr>
+                    <tr position="4">
+                        <th></th>
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(1))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[1]["radio"][4]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[1]["radio"][4]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(2))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="A" type="number" value="@detalleTurboCompresor[2]["radio"][4]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="radio" id-lado="B" type="number" value="@detalleTurboCompresor[2]["radio"][4]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" value="0" id-tipo="radio" id-lado="B" type="number">mm</td>
+                        }
+                    </tr>
+                    <tr position="1">
+                        <th>AXIAL</th>
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(1))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="axial" id-lado="A" type="number" value="@detalleTurboCompresor[1]["axial"][1]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="axial" id-lado="B" type="number" value="@detalleTurboCompresor[1]["axial"][1]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="1" id-tipo="axial" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="1" id-tipo="axial" id-lado="B" type="number">mm</td>
+                        }
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(2))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="axial" id-lado="A" type="number" value="@detalleTurboCompresor[2]["axial"][1]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="axial" id-lado="B" type="number" value="@detalleTurboCompresor[2]["axial"][1]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="2" id-tipo="axial" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="2" id-tipo="axial" id-lado="B" type="number">mm</td>
+                        }
+                    </tr>
+                    <tr position="2">
+                        <th>AXIAL</th>
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(1))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="axial" id-lado="A" type="number" value="@detalleTurboCompresor[1]["axial"][2]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="1" id-tipo="axial" id-lado="B" type="number" value="@detalleTurboCompresor[1]["axial"][2]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="1" id-tipo="axial" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="1" id-tipo="axial" id-lado="B" type="number">mm</td>
+                        }
+                        @if (detalleTurboCompresor != null && detalleTurboCompresor.ContainsKey(2))
+                        {
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="axial" id-lado="A" type="number" value="@detalleTurboCompresor[2]["axial"][2]["A"].Valor">mm</td>
+                            <td><input id-tipo-referencia="numero" id-generador="2" id-tipo="axial" id-lado="B" type="number" value="@detalleTurboCompresor[2]["axial"][2]["B"].Valor">mm</td>
+
+                        }
+                        else
+                        {
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="2" id-tipo="axial" id-lado="A" type="number">mm</td>
+                            <td><input id-tipo-referencia="numero" value="0" id-generador="2" id-tipo="axial" id-lado="B" type="number">mm</td>
+                        }
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="separador-div">
+            <table id="Lavado" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>50 H.</th>
+                        <th colspan="2" class="titulo-Header-Dashboard">LAVADO TURBO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>EG1</th>
+                        <th>U. LAVADO</th>
+                        <th>P. LAVADO</th>
+                    </tr>
+                    <tr numero-generador="1">
+                        @{
+                            if (detalleLavadoTurbo != null && detalleLavadoTurbo.ContainsKey(1))
+                            {
+                                <td><input class="datepicker"  id-tipo-referencia="fecha" value="@(detalleLavadoTurbo[1]["U"].Fecha.Split(' ')[0])" id-tipo="FechaLavado" id="lavadoGe1" oninput="convertirYMostrarFecha('lavadoGe1')"></td>
+                                <td><input id-tipo-referencia="numero" type="number" value="@(detalleLavadoTurbo[1]["U"].Valor)" id-tipo="U"></td>
+                                <td><input id-tipo-referencia="numero" type="number" value="@(detalleLavadoTurbo[1]["P"].Valor)" id-tipo="P"></td>
+                            }
+                            else
+                            {
+                                <td><input  class="datepicker" id-tipo-referencia="fecha" id-tipo="FechaLavado" id="lavadoGe1" oninput="convertirYMostrarFecha('lavadoGe1')"></td>
+                                <td><input id-tipo-referencia="numero" type="number" id-tipo="U"></td>
+                                <td><input id-tipo-referencia="numero" type="number" id-tipo="P"></td>
+                            }
+                        }
+                    </tr>
+                    <tr>
+                        <th>EG2</th>
+                        <th>U. LAVADO</th>
+                        <th>P. LAVADO</th>
+                    </tr>
+                    <tr numero-generador="2">
+                        @{
+                            if (detalleLavadoTurbo != null && detalleLavadoTurbo.ContainsKey(2))
+                            {
+                                <td><input class="datepicker"  id-tipo-referencia="fecha" value="@(detalleLavadoTurbo[2]["U"].Fecha.Split(' ')[0])" id-tipo="FechaLavado" id="lavadoGe2" oninput="convertirYMostrarFecha('lavadoGe2')"></td>
+                                <td><input id-tipo-referencia="numero" value="@(detalleLavadoTurbo[2]["U"].Valor)" type="number" id-tipo="U"></td>
+                                <td><input id-tipo-referencia="numero" value="@(detalleLavadoTurbo[2]["P"].Valor)" type="number" id-tipo="P"></td>
+                            }
+                            else
+                            {
+                                <td><input class="datepicker" id-tipo-referencia="fecha" value="0" id-tipo="FechaLavado" id="lavadoGe2" oninput="convertirYMostrarFecha('lavadoGe2')"></td>
+                                <td><input id-tipo-referencia="numero" value="0" type="number" id-tipo="U"></td>
+                                <td><input id-tipo-referencia="numero" value="0" type="number" id-tipo="P"></td>
+                            }
+                        }
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="separador-div">
+            <table id="calibracion-valvula" class="table table-bordered calibracion-valvula">
+                <thead>
+                    <tr>
+                        <th style="padding: 5% 0 0 29px;">&nbsp;</th>
+                        <th colspan="5" class="titulo-Header-Dashboard">CALIBRACION VALVULA MOTOR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr numero-generador="1">
+                        <th class="rotated-text" style="width: 1px !important;" rowspan="4">1000 HORAS</th>
+                        <th>EG-1</th>
+                        <th>U. CAL</th>
+                        <td>
+                            @{
+                                int valorGE1 = 0;
+                                if (datosCalibracionValvula != null && datosCalibracionValvula[1] != null && datosCalibracionValvula.ContainsKey(1))
+                                {
+                                    valorGE1 = datosCalibracionValvula[1].valor;
+
+                                    <input class="datepicker"  id-tipo-referencia="fecha" value="@(DateTime.Parse(datosCalibracionValvula[1].Fecha.Split(' ')[0]).ToString("dd/MM/yyyy"))" id-class="fecha" id="fechaCalibracionGE1" oninput="convertirYMostrarFecha('fechaCalibracionGE1')" />
+                                    <input  id-tipo-referencia="numero" value="@datosCalibracionValvula[1].valor" id-class="valor" type="number" id-tipo="P" id="valorCalibracionGE1" oninput="obtenerProximaFechaCalibracion('1')" />
+                                }
+                                else
+                                {
+                                    <input  class="datepicker" id-tipo-referencia="fecha" value="@DateTime.Now.ToString("dd/MM/yyyy")" id-class="fecha" id="fechaCalibracionGE1" oninput="convertirYMostrarFecha('fechaCalibracionGE1')" />
+                                    <input id-tipo-referencia="numero" id-class="valor" type="number" value="0" id-tipo="P" oninput="obtenerProximaFechaCalibracion('1')" />
+                                }
+                            }
+
+                        </td>
+                        <th>PROX</th>
+                        <td>
+                            @{
+                                <input disabled />
+                                <input disabled id="proximaCalibracion1" value="@(valorGE1 != 0 ? valorGE1 + 1000 :0)" />
+                            }
+                        </td>
+                    </tr>
+                    <tr numero-generador="2">
+                        <th>EG-2</th>
+                        <th>U. CAL</th>
+                        <td>
+                            @{
+                                int valorGE2 = 0;
+                                if (datosCalibracionValvula != null && datosCalibracionValvula[2] != null && datosCalibracionValvula.ContainsKey(2))
+                                {
+                                    valorGE2 = datosCalibracionValvula[2].valor;
+
+                                    <input  class="datepicker" id-tipo-referencia="fecha" value="@(DateTime.Parse(@datosCalibracionValvula[2].Fecha.Split(' ')[0]).ToString("dd/MM/yyyy"))" id-class="fecha" id="fechaCalibracionGE2" oninput="convertirYMostrarFecha('fechaCalibracionGE2')" />
+                                    <input value="@datosCalibracionValvula[2].valor" id-class="valor" type="number" id-tipo="P" id="valorCalibracionGE2" oninput="obtenerProximaFechaCalibracion('2')" />
+                                }
+                                else
+                                {
+                                    <input  class="datepicker" id-tipo-referencia="fecha" value="@DateTime.Now.ToString("dd/MM/yyyy")" id-class="fecha" id="fechaCalibracionGE2" oninput="convertirYMostrarFecha('fechaCalibracionGE2')" />
+                                    <input id-tipo-referencia="numero" id-class="valor" type="number" value="0" id-tipo="P" oninput="obtenerProximaFechaCalibracion('2')" />
+                                }
+                            }
+
+                        </td>
+                        <th>PROX</th>
+                        <td>
+                            @{
+                                <input disabled />
+                                <input disabled id="proximaCalibracion2" value="@(valorGE2 != 0 ? valorGE2 + 1000 :0)" />
+                            }
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="separador-div">
+            <table id="tk-vessel" class="table table-bordered tk-vessel">
+                <thead>
+                    <tr>
+                        <th class="titulo-Header-Dashboard">TK VESSEL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        <tr>
+                            <th>FECHA</th>
+                            <td><input  class="datepicker" id-tipo-referencia="fecha" value="@(datosTKVessel.ContainsKey("Anterior")? datosTKVessel["Anterior"][1].Fecha.Split(' ')[0]  :DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy"))" id="fechaVesselGE1" oninput="convertirYMostrarFecha('fechaVesselGE1')" /></td>
+                            <td><input class="datepicker" id-tipo-referencia="fecha" value="@(datosTKVessel.ContainsKey("Nuevo")? datosTKVessel["Nuevo"][2].Fecha.Split(' ')[0] :DateTime.Now.ToString("dd/MM/yyyy"))" id="fechaVesselGE2" oninput="convertirYMostrarFecha('fechaVesselGE2')" /></td>
+                        </tr>
+                        <tr>
+                            <th>EG1</th>
+                            <td><input id-tipo-referencia="numero" value="@(datosTKVessel.ContainsKey("Anterior")? datosTKVessel["Anterior"][1].NivelTKNuevo  :0)" id="nivelTkANTGE1" /></td>
+                            <td><input id-tipo-referencia="numero" value="@(datosTKVessel.ContainsKey("Nuevo")? datosTKVessel["Nuevo"][1].NivelTKNuevo :0)" id="nivelTkACTGE1" /></td>
+                        </tr>
+                        <tr>
+                            <th>EG2</th>
+                            <td><input id-tipo-referencia="numero" value="@(datosTKVessel.ContainsKey("Anterior")? datosTKVessel["Anterior"][2].NivelTKNuevo  :0)" id="nivelTkANTGE2" /></td>
+                            <td><input id-tipo-referencia="numero" value="@(datosTKVessel.ContainsKey("Nuevo")? datosTKVessel["Nuevo"][2].NivelTKNuevo :0)" id="nivelTkACTGE2" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* Estilos del modal de advertencia */
+/* Estilos del modal de advertencia */
+.modal-advertencia {
+    display: block;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+       backdrop-filter: blur(1px);
+    opacity: 1;
+    transition: opacity 4s, height 4s;
+}
+
+.modal-content-advertencia {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: opacity 4s, height 4s;
+}
+
+.close-advertencia {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-advertencia:hover,
+.close-advertencia:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Agregar una clase para ocultar el modal */
+.modal-advertencia.oculto {
+    opacity: 0;
+    height: 0;
+}
+
+</style>
+
+@if (mostrarAdvertencia)
+{
+    <div id="modal-advertencia" class="modal-advertencia">
+        <div class="modal-content-advertencia">
+            <span class="close-advertencia" onclick="cerrarModalAdvertencia()">&times;</span>
+               <h3>BESSEL</h3> <p>DOMINGOS Y FERIADOS NO ACTIVAR</p>
+            <button onclick="cerrarModalAdvertencia()">Cerrar</button>
+        </div>
+    </div>
+}
+
+<button class="btn btn-primary" onclick="GuardarDatosGeneralesDashBoard()">Guardar Datos</button>
+
+<script src="./vendor/chart.js/Chart.min.js"></script>
+<script>
+
+    function cerrarModalAdvertencia() {
+        var modal = document.getElementById('modal-advertencia');
+        modal.classList.add('oculto');
+
+        setTimeout(function () {
+            modal.style.display = 'none';
+        }, 4000); 
+    }
+
+
+window.onclick = function(event) {
+    var modal = document.getElementById('modal-advertencia');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+};
+
+
+
+    async function GuardarDatosGeneralesDashBoard() {
+
+        if (validarInputs()) {
+            const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+            var detalleTKVessel = DetalleTKVessel();
+            guardarDatosControl('@Url.Action("GuardarDatosTKVessel", "Home")', detalleTKVessel);
+
+
+            var detalleCalibracionValvula = DetalleCalibracionValvula();
+            guardarDatosControl('@Url.Action("GuardarDatosCalibracion", "Home")', detalleCalibracionValvula);
+
+
+            var datosLavadoTurbo = DatosLavadoTurbo();
+            guardarDatosControl('@Url.Action("GuardarDatosLavadoTurbo", "Home")', datosLavadoTurbo);
+
+            var datosTurboCompresor = DatosTurboCompresor();
+            guardarDatosControl('@Url.Action("GuardarDatosTurboCompresor", "Home")', datosTurboCompresor);
+
+
+            var datosDetalleControlCambioAceite = DatosDetalleControlCambioAceite();
+            guardarDatosControl('@Url.Action("GuardarDetallesControlAceite", "Home")', datosDetalleControlCambioAceite);
+
+            var datosControlCambioAceite = DatosControlCambioAceite();
+            guardarDatosControl('@Url.Action("GuardarDatosControlAceite", "Home")', datosControlCambioAceite);
+
+
+            DatosConsumoGas();
+            guardarDatosControl('@Url.Action("GuardarContratoGAS", "Home")', datosContrato);
+            guardarDatosControl('@Url.Action("GuardarDatosGAS", "Home")', datosConsumoGas);
+            guardarDatosControl('@Url.Action("GuardarDetalleGAS", "Home")', datosDetalleGas);
+
+            var datosFiltroAutomatico = DatosFiltroAutomatico();
+            guardarDatosControl('@Url.Action("GuardarDatosDashBoard", "Home")', datosFiltroAutomatico);
+
+            var datosFiltro = DatosFiltro();
+
+            guardarDatosControl('@Url.Action("GuardarDatosDashBoard", "Home")', datosFiltro);
+        }
+
+    }
+
+
+
+    /**************TK VESSEL******************** */
+
+    function DetalleTKVessel() {
+        var datosTKVessel = [];
+        var tabla = document.getElementById("tk-vessel");
+        var filasTr = Array.from(tabla.querySelector('tbody').getElementsByTagName('tr'));
+
+        filasTr.forEach(function (fila) {
+            datosTKVessel = obtenerValoresTKVESSEL(fila);
+        });
+
+        return datosTKVessel;
+    }
+
+
+    function obtenerValoresTKVESSEL(fila) {
+        var datosTKVessel = [];
+
+        var valoresTkVessel1 = {};
+
+        var valoresTkVessel2 = {};
+
+        for (var i = 1; i < 3; i++) {
+
+            var fecha = document.getElementById("fechaVesselGE" + i);
+            var nivelAnt = document.getElementById("nivelTkANTGE" + i);
+            var nivelAct = document.getElementById("nivelTkACTGE" + i);
+
+            if (i === 1) {
+                valoresTkVessel1 = {
+                    idCarter: datosOperario.IdSitio + '-Carter-' + obtenerFecha("format") + 1,
+                    NumeroGenerador: 1,
+                    nivelCarterNuevo: 0,
+                    nivelTKNuevo: parseFloat(nivelAct.value),
+                    contometroNuevo: 0,
+                    IdReporteDiario: datosOperario.IdSitio + '-ELD-REPORT-' + obtenerFecha("format"),
+                    Fecha: obtenerFecha("fechaVista")
+                };
+            } else {
+                valoresTkVessel2 = {
+                    idCarter: datosOperario.IdSitio + '-Carter-' + obtenerFecha("format") + 2,
+                    NumeroGenerador: 2,
+                    nivelCarterNuevo: 0,
+                    nivelTKNuevo: parseFloat(nivelAct.value),
+                    contometroNuevo: 0,
+                    IdReporteDiario: datosOperario.IdSitio + '-ELD-REPORT-' + obtenerFecha("format"),
+                    Fecha: obtenerFecha("fechaVista")
+                };
+            }
+        }
+        datosTKVessel.push(valoresTkVessel1);
+        datosTKVessel.push(valoresTkVessel2);
+        return datosTKVessel;
+    }
+
+    /*************** CALIBRACIION MOTOR ************************************ */
+
+    function DetalleCalibracionValvula() {
+        var datosCalibracionValvula = [];
+        var tabla = document.getElementById("calibracion-valvula");
+        var filasTr = Array.from(tabla.querySelector('tbody').getElementsByTagName('tr'));
+
+        filasTr.forEach(function (fila) {
+            console.log("fila  : ", fila);
+
+            var numeroGenerador = fila.getAttribute("numero-generador");
+            if (numeroGenerador != null) {
+                var datos = obtenerValoresCalibracionValvula(fila, numeroGenerador);
+                datosCalibracionValvula = datosCalibracionValvula.concat(datos);
+            }
+        });
+
+        return datosCalibracionValvula;
+
+    }
+
+    function obtenerValoresCalibracionValvula(fila, numeroGenerador) {
+        var valores = [];
+        var datos = {};
+        var fecha = "";
+
+        for (var i = 2; i < fila.cells.length; i++) { // Iniciar desde la tercera celda
+            var inputFecha = fila.cells[i].querySelector('input[id-class="fecha"]');
+            var inputValor = fila.cells[i].querySelector('input[id-class="valor"]');
+
+
+            if (inputFecha != null && inputValor != null) {
+                fecha = inputFecha.value;
+
+                console.log("inputValor.value  : ", inputValor.value);
+
+                if (inputValor.value === "") {
+                    inputValor.value = 0;
+                }
+
+                datos = {
+                    "idDetalleCalibracionMotor": datosOperario.IdSitio + "-DET-CAL-MOTOR-" + numeroGenerador + obtenerFecha("format"),
+                    "valor": parseInt(inputValor.value),
+                    "numeroGenerador": parseInt(numeroGenerador),
+                    "fecha": fecha
+                };
+                console.log("datos : ", datos);
+                valores.push(datos);
+            }
+        }
+
+        return valores;
+    }
+
+
+
+    /*************** LAVADO **************************** */
+
+    function DatosLavadoTurbo() {
+
+        var datos = {
+            "fecha": obtenerFecha("fechaVista"),
+            "idLavadoTurbo": datosOperario.IdSitio + "-LAVADO-TURBO-" + obtenerFecha("format")
+        };
+
+        var detalles = DetalleLavado();
+
+        var request = {
+            "detalleTurbo": detalles,
+            "lavadoTurbo": datos
+        }
+        console.log("request : ", request);
+
+        return request;
+    }
+
+
+    function DetalleLavado() {
+        var datosLavadoTurbo = [];
+        var tabla = document.getElementById("Lavado");
+        var filasTr = Array.from(tabla.querySelector('tbody').getElementsByTagName('tr'));
+
+        filasTr.forEach(function (fila) {
+            var numeroGenerador = fila.getAttribute("numero-generador");
+            if (numeroGenerador != null) {
+
+                var datos = obtenerValoresLavado(fila, numeroGenerador);
+                datosLavadoTurbo = datosLavadoTurbo.concat(datos);
+            }
+        });
+
+        return datosLavadoTurbo;
+    }
+
+
+
+    function obtenerValoresLavado(fila, numeroGenerador) {
+
+        var valores = [];
+        var datos = {};
+        var fecha = "";
+        for (var i = 0; i < fila.cells.length; i++) {
+            var input = fila.cells[i].querySelector('input');
+
+            if (input != null) {
+                var tipo = input.getAttribute("id-tipo");
+
+                if (tipo === "FechaLavado") {
+                    fecha = input.value;
+                } else {
+
+                    if (input.value === "") {
+                        input.value = 0;
+                    }
+
+                    datos = {
+                        "idDetalleLavadoTurbo": datosOperario.IdSitio + "-DET-LAVADO-TURBO-" + tipo + numeroGenerador + obtenerFecha("format"),
+                        "tipo": tipo,
+                        "valor": parseInt(input.value),
+                        "numeroGenerador": parseInt(numeroGenerador),
+                        "fecha": fecha,
+                        "idLavadoTurbo": datosOperario.IdSitio + "-LAVADO-TURBO-" + obtenerFecha("format")
+                    }
+                    valores.push(datos);
+                }
+            }
+        }
+        return valores;
+    }
+
+    /*************TURBO COMPRESOR******************** */
+    var idTurboCompresor = "";
+
+    function DatosTurboCompresor() {
+        var fecha = document.getElementById("fechaTurboCompresor");
+        idTurboCompresor = "TURBOCOMPRESOR-" + fecha.value.replace(/\//g, "_");
+        var datos = {
+            "idTurboCompresor": idTurboCompresor,
+            "fecha": fecha.value
+        }
+
+        var detalle = DetalleTurboCompresor();
+
+        var request = {
+            "detalleTurbo": detalle,
+            "datosTurbo": datos
+        }
+
+        return request;
+    }
+
+    function DetalleTurboCompresor() {
+        var datosTurboCompresor = [];
+        var tabla = document.getElementById("turbo-compresor");
+        var filasTr = Array.from(tabla.querySelector('tbody').getElementsByTagName('tr'));
+
+        let contador = 1;
+        filasTr.forEach(function (fila) {
+            var posicion = fila.getAttribute("position");
+
+            var datos = obtenerValoresTurboCompresor(fila, posicion);
+            datosTurboCompresor = datosTurboCompresor.concat(datos);
+        });
+
+        return datosTurboCompresor;
+    }
+
+    var fechaTurboCompresor = "";
+
+    function obtenerValoresTurboCompresor(fila, posicion) {
+
+        var valores = [];
+
+        for (var i = 0; i < fila.cells.length; i++) {
+
+            var input = fila.cells[i].querySelector('input');
+
+            if (input != null) {
+                var idClass = input.getAttribute("id-tipo");
+                //var idTabla = input.getAttribute("id-tabla");
+                var idGenerador = input.getAttribute("id-generador");
+                var lado = input.getAttribute("id-lado");
+
+                if (idClass === "fechaTurboCompresor") {
+                    fechaTurboCompresor = input.value;
+                } else {
+                    var datos = {
+                        "posicion": parseInt(posicion),
+                        "lado": lado,
+                        "Tipo": idClass,
+                        "NumeroGenerador": parseInt(idGenerador),
+                        "Fecha": fechaTurboCompresor,
+                        "valor": parseFloat(input.value),
+                        "idTurboCompresor": idTurboCompresor,
+                    }
+
+                    datos["IdDetalleTurboCompresor"] = datosOperario.IdSitio + "-DET-TURBO-COMPRESOR-" + datos["Tipo"] + datos["posicion"] + datos["NumeroGenerador"] + datos["lado"] + "-" + fechaTurboCompresor.replace(/\//g, "_");
+                    valores.push(datos);
+                }
+            }
+        }
+        return valores;
+    }
+
+    /******************************************************** */
+    var idControlCambioAceite = "";
+    var idControlCambioAceite2 = "";
+    function DatosDetalleControlCambioAceite() {
+
+        DatosControlCambioAceite();
+
+        var datos = [];
+
+        for (var i = 1; i < 3; i++) {
+            var input = document.getElementById("horas-operacion" + i);
+
+            if (input) {
+                var dato = {
+                    "idDetalleControlCambio": datosOperario.IdSitio + "-DET-CONTROL-" + i + "-" + obtenerFecha("format"),
+                    "horasOperacion": parseInt(input.value),
+                    "numeroGenerador": i,
+                    "idControlCambioAceite": i === 1 ? idControlCambioAceite : idControlCambioAceite2,
+                    "fecha" :obtenerFecha("fechaVista")
+                };
+                datos.push(dato);
+            }
+        }
+
+        console.log("datos  aceite : ", datos);
+
+        return datos;
+    }
+
+
+
+    function DatosControlCambioAceite() {
+        var datosControlAceite = [];
+        var tabla = document.getElementById("control-cambio-aceite");
+        var filasTr = Array.from(tabla.querySelector('tbody').getElementsByTagName('tr'));
+
+        let contador = 1;
+        filasTr.forEach(function (fila) {
+            var dato = obtenerValoresFilaControlAceite(fila, contador);
+
+            datosControlAceite = datosControlAceite.concat(dato);
+            contador++;
+        });
+
+        return datosControlAceite;
+    }
+
+    var horasCambioAnteriorEG1N = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(1) && datosControlAceite[1].ContainsKey("N") ? datosControlAceite[1]["N"].HorasCambio : 0)));
+    var horasCambioAnteriorEG1ND = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(1) && datosControlAceite[1].ContainsKey("ND") ? datosControlAceite[1]["ND"].HorasCambio : 0)));
+    var FechaCambioAnteriorEG1N = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(1) && datosControlAceite[1].ContainsKey("N") ? datosControlAceite[1]["N"].FechaCambio : 0)));
+    var FechaCambioAnteriorEG1ND = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(1) && datosControlAceite[1].ContainsKey("ND") ? datosControlAceite[1]["ND"].FechaCambio : 0)));
+
+    var horasCambioAnteriorEG2N = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(2) && datosControlAceite[2].ContainsKey("N") ? datosControlAceite[2]["N"].HorasCambio : 0)));
+    var horasCambioAnteriorEG2ND = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(2) && datosControlAceite[2].ContainsKey("ND") ? datosControlAceite[2]["ND"].HorasCambio : 0)));
+    var FechaCambioAnteriorEG2N = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(2) && datosControlAceite[2].ContainsKey("N") ? datosControlAceite[2]["N"].FechaCambio : 0)));
+    var FechaCambioAnteriorEG2ND = parseInt(@Html.Raw(JsonConvert.SerializeObject(datosControlAceite.ContainsKey(2) && datosControlAceite[2].ContainsKey("ND") ? datosControlAceite[2]["ND"].FechaCambio : 0)));
+
+
+
+    var horasOpAnteriorEG1 = parseInt(@Html.Raw(JsonConvert.SerializeObject(detalleControlAceite.ContainsKey(1) ? detalleControlAceite[1].HorasOperacion : 0)));
+    var horasOpAnteriorEG2 = parseInt(@Html.Raw(JsonConvert.SerializeObject(detalleControlAceite.ContainsKey(2) ? detalleControlAceite[2].HorasOperacion : 0)));
+
+    function obtenerValoresFilaControlAceite(fila, contador) {
+        var controlAceiteN = {
+            "idControlCambioAceite": "",
+            "horasCambio": 0,
+            "numeroGenerador": 0,
+            "tipo": "N",
+            "fechaCambio": ""
+        };
+        var controlAceiteND = {
+            "idControlCambioAceite": "",
+            "horasCambio": 0,
+            "numeroGenerador": 0,
+            "tipo": "ND",
+            "fechaCambio": ""
+        };
+        var valores = [];
+
+        for (var i = 0; i < fila.cells.length; i++) {
+
+            var input = fila.cells[i].querySelector('input');
+
+            if (input != null) {
+                var idClass = input.getAttribute("id-class");
+                var tipoComponente = input.getAttribute("tipo-Comp");
+                var idTabla = input.getAttribute("id-tabla");
+
+                if (tipoComponente === "N") {
+                    controlAceiteN["numeroGenerador"] = parseFloat(contador);
+
+                    if (input.type === 'number') {
+                        controlAceiteN[idClass] = parseFloat(input.value);
+                    } else {
+                        controlAceiteN[idClass] = input.value;
+                    }
+
+                    if (contador === 1) {
+                        if ((horasCambioAnteriorEG1N != controlAceiteN["horasCambio"] || FechaCambioAnteriorEG1N != controlAceiteN["fechaCambio"]) &&
+                            (idClass === "horasCambio" || idClass === "fechaCambio")) {
+                            controlAceiteN["idControlCambioAceite"] = datosOperario.IdSitio + "-Control-Aceite-N-" + contador + "-" + obtenerFecha("format");
+                        } else {
+                            controlAceiteN["idControlCambioAceite"] = idTabla;
+                        }
+                        idControlCambioAceite = controlAceiteN["idControlCambioAceite"];
+                        console.log("idControlCambioAceite : ", idControlCambioAceite);
+
+                    } else {
+                        if ((horasCambioAnteriorEG2N != controlAceiteN["horasCambio"] || FechaCambioAnteriorEG2N != controlAceiteN["fechaCambio"]) &&
+                            (idClass === "horasCambio" || idClass === "fechaCambio")) {
+                            controlAceiteN["idControlCambioAceite"] = datosOperario.IdSitio + "-Control-Aceite-N-" + contador + "-" + obtenerFecha("format");
+                        } else {
+                            controlAceiteN["idControlCambioAceite"] = idTabla;
+                        }
+                        idControlCambioAceite2 = controlAceiteN["idControlCambioAceite"];
+                        console.log("idControlCambioAceite2 : ", idControlCambioAceite2);
+
+                    }
+                } else if (tipoComponente === "ND") {
+                    controlAceiteND["numeroGenerador"] = parseFloat(contador);
+
+                    if (input.type === 'number') {
+                        controlAceiteND[idClass] = parseFloat(input.value);
+                    } else {
+                        controlAceiteND[idClass] = input.value;
+                    }
+
+                    if (contador === 1) {
+                        if ((horasCambioAnteriorEG1ND != controlAceiteND["horasCambio"] || FechaCambioAnteriorEG1ND != controlAceiteND["fechaCambio"]) &&
+                            (idClass === "horasCambio" || idClass === "fechaCambio")) {
+                            controlAceiteND["idControlCambioAceite"] = datosOperario.IdSitio + "-Control-Aceite-ND-" + contador + "-" + obtenerFecha("format");
+                        } else {
+                            controlAceiteND["idControlCambioAceite"] = idTabla;
+                        }
+                    } else {
+                        if ((horasCambioAnteriorEG2ND != controlAceiteND["horasCambio"] || FechaCambioAnteriorEG2ND != controlAceiteND["fechaCambio"]) &&
+                            (idClass === "horasCambio" || idClass === "fechaCambio")) {
+                            controlAceiteND["idControlCambioAceite"] = datosOperario.IdSitio + "-Control-Aceite-ND-" + contador + "-" + obtenerFecha("format");
+                        } else {
+                            controlAceiteND["idControlCambioAceite"] = idTabla;
+                        }
+                    }
+
+                }
+            }
+        }
+        valores.push(controlAceiteN);
+        valores.push(controlAceiteND);
+
+        return valores;
+    }
+
+
+    /************CONTROL CONSUMO GAS*************/
+
+
+    var consumoGASMes = parseFloat(@Html.Raw(JsonConvert.SerializeObject(datosConsumo != null ? datosConsumo.ConsumoDelMes : 0)));
+    var contratoAnteriorGAS = parseFloat(@Html.Raw(JsonConvert.SerializeObject(datoContrato != null ? datoContrato.ConsumoContrato: 0)));
+
+
+    function DatosConsumoGas() {
+
+        var tabla = document.getElementById("consumo-gas");
+        var filasTr = Array.from(tabla.querySelector('tbody').getElementsByTagName('tr'));
+
+        filasTr.forEach(function (fila) {
+            obtenerValoresFilaGAS(fila);
+        });
+    }
+
+    function guardarDatosControl(url, datos) {
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datos)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                console.log("url:", url);
+                console.log("data:", data);
+
+                mostrarMensaje(data);
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+                mostrarError();
+            });
+    }
+
+    function mostrarMensaje(data) {
+        if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+            Swal.fire({
+                title: "Success!!",
+                text: "Se guardaron los datos.",
+                icon: "success",
+                button: "Aww yiss!"
+            });
+        } else {
+            Swal.fire({
+                title: "Error",
+                text: data.respuesta.mensaje,
+                icon: "error",
+                button: "OK",
+            });
+        }
+    }
+
+    function mostrarError() {
+        Swal.fire({
+            title: "Error",
+            text: "Error en la solicitud.",
+            icon: "error",
+            button: "OK",
+        });
+    }
+
+
+    var datosContrato = {
+        "idContratoGas": "",
+        "consumoContrato": "",
+        "activo": 0
+    };
+
+    var datosConsumoGas = {
+        "idConsumoGas": "",
+        "diasMes": 0,
+        "consumoDelMes": 0,
+        "idContratoGas": ""
+    };
+
+    var datosDetalleGas = {
+        "IdDetalleConsumoGas": "",
+        "consumoTotalActual": 0,
+        "consumoDiario": 0
+    };
+
+
+
+    function obtenerValoresFilaGAS(fila) {
+        var valores = {};
+
+        for (var i = 0; i < fila.cells.length; i++) {
+            var input = fila.cells[i].querySelector('input');
+            if (input != null) {
+                var idClass = input.getAttribute("id-class");
+
+                var idTabla = input.getAttribute("id-table");
+                var idTipo = input.getAttribute("id-tipo");
+                var idTablaNuevo = datosOperario.IdSitio + "-Contracto-Gas-" + obtenerFecha("format");
+                var datoParseado = input.value.replace(/,/g, '');
+
+                if (datosContrato && datosContrato.hasOwnProperty(idClass)) {
+                    datosContrato[idClass] = parseFloat(datoParseado);
+                    datosContrato["idContratoGas"] = idTabla != "" ? idTabla : datosOperario.IdSitio + "-Contracto-Gas-" + obtenerFecha("format");
+
+                    if (idTablaNuevo != idTabla && parseFloat(contratoAnteriorGAS) != 0 && parseFloat(contratoAnteriorGAS) !== parseFloat(datoParseado)) {
+                        datosContrato["idContratoGas"] = datosOperario.IdSitio + "-Contracto-Gas-" + obtenerFecha("format");
+                        datosContrato["activo"] = 1;
+                    }
+                }
+
+                if (datosConsumoGas && datosConsumoGas.hasOwnProperty(idClass)) {
+
+                    if (idTipo === "decimal") {
+                        datosConsumoGas[idClass] = parseFloat(datoParseado);
+                    } else if (idTipo === "int") {
+                        datosConsumoGas[idClass] = parseInt(datoParseado);
+                    } else {
+                        datosConsumoGas[idClass] = datoParseado;
+                    }
+
+                    datosConsumoGas["idConsumoGas"] = idTabla != "" ? idTabla : datosOperario.IdSitio + "-Consumo-Gas-" + obtenerFecha("format");
+                    datosConsumoGas["idContratoGas"] = datosContrato["idContratoGas"];
+
+                    if (parseFloat(consumoGASMes) !== parseFloat(datoParseado)) {
+                        datosConsumoGas["idConsumoGas"] = datosOperario.IdSitio + "-Consumo-Gas-" + obtenerFecha("format");
+                    }
+
+                }
+                console.log("idConsumoGas : ", datosConsumoGas["idConsumoGas"]);
+
+                if (datosDetalleGas && datosDetalleGas.hasOwnProperty(idClass)) {
+                    if (idTipo === "decimal") {
+                        datosDetalleGas[idClass] = parseFloat(datoParseado);
+                    } else if (idTipo === "int") {
+                        datosDetalleGas[idClass] = parseInt(datoParseado);
+                    } else {
+                        datosDetalleGas[idClass] = datoParseado;
+                    }
+
+                    datosDetalleGas["IdDetalleConsumoGas"] = datosOperario.IdSitio + "-Detalle-Gas-" + obtenerFecha("format");
+                }
+                datosDetalleGas["idConsumoGas"] = datosConsumoGas["idConsumoGas"];
+            }
+        }
+    }
+
+
+    function obtenerConsumoPorContrato() {
+        var diasMes = document.getElementById("diasMes");
+        var consumoContrato = document.getElementById("consumoContrato");
+        var consumoDelMes = document.getElementById("consumoDelMes");
+
+        var decimal = "";
+        if (consumoContrato.value.includes('.')) {
+            decimal = "." + consumoContrato.value.split('.')[1].replace(/[^0-9,]/g, '');
+            consumoContrato.value = consumoContrato.value.split('.')[0];
+        }
+
+        consumoContrato.value = consumoContrato.value.replace(/[^0-9,]/g, '');
+
+        if (consumoContrato.value != null && consumoContrato.value != "") {
+            var valorSinComas = parseFloat(consumoContrato.value.replace(/,/g, ''));
+
+            consumoContrato.value = valorSinComas.toLocaleString() + decimal;
+            consumoDelMes.value = (parseFloat(consumoContrato.value.replace(/,/g, '')) * parseFloat(diasMes.value)).toLocaleString();
+        } else {
+            consumoDelMes.value = 0;
+        }
+    }
+
+    function obtenerConsumoPorMes() {
+        var diasMes = document.getElementById("diasMes");
+        var consumoContrato = document.getElementById("consumoContrato");
+        var consumoDelMes = document.getElementById("consumoDelMes");
+
+        var decimal = "";
+        if (consumoDelMes.value.includes('.')) {
+            decimal = "." + consumoDelMes.value.split('.')[1].replace(/[^0-9,]/g, '');
+            consumoDelMes.value = consumoDelMes.value.split('.')[0];
+        }
+        consumoDelMes.value = consumoDelMes.value.replace(/[^0-9,]/g, '');
+
+
+        if (consumoDelMes.value != null && consumoDelMes.value != "") {
+            var valorSinComas = parseFloat(consumoDelMes.value.replace(/,/g, ''));
+
+            consumoDelMes.value = valorSinComas.toLocaleString() + decimal;
+            consumoContrato.value = (parseFloat(valorSinComas + decimal) / parseFloat(diasMes.value)).toLocaleString();
+
+            obtenerConsumoFaltante(valorSinComas);
+
+        } else {
+            consumoDelMes.value = 0;
+        }
+    }
+
+    function obtenerConsumoFaltante(valor) {
+        var consumoTotal = document.getElementById("consumoTotal");
+        var consumoFaltante = document.getElementById("consumoFaltante");
+
+        var decimal = "";
+        if (consumoTotal.value.includes('.')) {
+            decimal = "." + consumoTotal.value.split('.')[1].replace(/[^0-9,]/g, '');
+            consumoTotal.value = consumoTotal.value.split('.')[0];
+        }
+        consumoTotal.value = consumoTotal.value.replace(/[^0-9,]/g, '');
+
+        var consumoTotalSinComas = 0;
+        if (consumoTotal.value != "") {
+            consumoTotalSinComas = parseFloat(consumoTotal.value.replace(/,/g, ''));
+        }
+
+        if (valor != undefined && valor.value != 0) {
+
+            consumoTotal.value = consumoTotalSinComas.toLocaleString() + decimal;
+
+            consumoFaltante.innerText = (valor - consumoTotalSinComas).toLocaleString() + ' SM3';
+        } else {
+            var consumoDelMes = document.getElementById("consumoDelMes");
+            var consumoDelMesSinComas = parseFloat(consumoDelMes.value.replace(/,/g, ''));
+
+            consumoTotal.value = consumoTotalSinComas.toLocaleString() + decimal;
+            consumoFaltante.innerText = (consumoDelMesSinComas - consumoTotalSinComas).toLocaleString() + ' SM3';
+        }
+    }
+
+    function parsearCantidad(consumoDiario) {
+        var input = document.getElementById(consumoDiario);
+
+        var decimal = "";
+        if (input.value.includes('.')) {
+            decimal = "." + input.value.split('.')[1].replace(/[^0-9,]/g, '');
+            input.value = input.value.split('.')[0];
+            console.log("input.value ", input.value);
+        }
+        input.value = input.value.replace(/[^0-9,]/g, '');
+
+        if (input != null && input.value != "") {
+            var valorSinComas = parseFloat(input.value.replace(/,/g, ''));
+
+            input.value = valorSinComas.toLocaleString() + decimal;
+        } else {
+            input.value = "0";
+        }
+    }
+
+    /**************DATOS FILTRO AUTOMATICO Y CENTRIFUGO********** */
+
+    function DatosFiltroAutomatico() {
+        var tabla = document.getElementById("FiltroAutomatico");
+        var inputFecha = document.getElementById("fechaAutomatico");
+
+        var valores1 = {
+            "IdReporteFiltro": datosOperario.IdSitio + "-AUTOMATICO-O&M-FOR-01-" + obtenerFecha("format"),
+            "IdDetalleFiltro": datosOperario.IdSitio + "-FiltroAutomatico-1-" + obtenerFecha("format"),
+            "OperadorEjecutor": "NO APLICA",
+            "fecha": inputFecha.value,
+            "NumeroGenerador": 1
+        };
+        var valores2 = {
+            "IdReporteFiltro": datosOperario.IdSitio + "-AUTOMATICO-O&M-FOR-01-" + obtenerFecha("format"),
+            "IdDetalleFiltro": datosOperario.IdSitio + "-FiltroAutomatico-2-" + obtenerFecha("format"),
+            "OperadorEjecutor": "NO APLICA",
+            "fecha": inputFecha.value,
+            "NumeroGenerador": 2
+        };
+
+        var inputs = tabla.querySelectorAll('input');
+
+        inputs.forEach(function (input) {
+            var numero = input.id.match(/\d+/);
+            console.log("numero :", numero);
+
+            if (numero) {
+                if (numero[0] === '1') {
+                    valores1[input.getAttribute('id-class')] = input.value;
+                } else if (numero[0] === '2') {
+                    valores2[input.getAttribute('id-class')] = input.value;
+                }
+            } else {
+                valores1[input.getAttribute('id-class')] = input.value;
+                valores2[input.getAttribute('id-class')] = input.value;
+            }
+        });
+        var datos = [];
+        datos.push(valores1);
+        datos.push(valores2);
+
+        return datos;
+
+    }
+
+
+
+
+    function actualizarProximaHora(number) {
+        var horasOperacion = document.getElementById("HorasOperacion" + number);
+        var idOperarioTrabajo = document.getElementById("ProximaHoraCambio" + number);
+
+        idOperarioTrabajo.value = parseInt(horasOperacion.value) + 1000;
+    }
+
+
+    var idOperarioTrabajo = document.getElementById("ListaOperariosEG1");
+    idOperarioTrabajo.addEventListener('change', obtenerOperariosSeleccionados);
+    var idOperarioTrabajo2 = document.getElementById("ListaOperariosEG2");
+    idOperarioTrabajo2.addEventListener('change', obtenerOperariosSeleccionados2);
+
+    function obtenerOperariosSeleccionados() {
+        var selectedOption = this.options[this.selectedIndex];
+        var id = selectedOption.value;
+
+        if (id != "") {
+            var nombreApellido = selectedOption.text.split(' ');
+            if (nombreApellido.length < 2) {
+                nombreApellido[1] = " ";
+            }
+            var inputOperario = document.getElementById("idOperarioEG1");
+
+            inputOperario.value = inputOperario.value == "" ? nombreApellido[0][0] + nombreApellido[1][0] : inputOperario.value + '/' + nombreApellido[0][0] + nombreApellido[1][0];
+            this.selectedIndex = 0;
+        }
+    }
+    function obtenerOperariosSeleccionados2() {
+        var selectedOption = this.options[this.selectedIndex];
+        var id = selectedOption.value;
+
+        if (id != "") {
+            var nombreApellido = selectedOption.text.split(' ');
+            if (nombreApellido.length < 2) {
+                nombreApellido[1] = " ";
+            }
+            var inputOperario = document.getElementById("idOperarioEG2");
+
+            inputOperario.value = inputOperario.value == "" ? nombreApellido[0][0] + nombreApellido[1][0] : inputOperario.value + '/' + nombreApellido[0][0] + nombreApellido[1][0];
+            this.selectedIndex = 0;
+        }
+    }
+
+
+    function DatosFiltro() {
+        var tabla = document.getElementById("FiltroCentrifugo");
+        var filasTr = tabla.querySelector('tbody').getElementsByTagName('tr');
+        var datos = [];
+        for (var i = 0; i < filasTr.length; i++) {
+            var valores = obtenerValoresFila(filasTr[i]);
+            valores["IdReporteFiltro"] = datosOperario.IdSitio + "-CENTRIFUGO-O&M-FOR-01-" + obtenerFecha("format");
+            valores["IdDetalleFiltro"] = datosOperario.IdSitio + "-FiltroCentrifugo-" + i + 1 + "-" + obtenerFecha("format");
+            datos.push(valores);
+        }
+        return datos;
+    }
+
+
+
+    function obtenerValoresFila(fila) {
+        var valores = {};
+
+        for (var i = 0; i < fila.cells.length; i++) {
+            var input = fila.cells[i].querySelector('input');
+            var idClass = input.getAttribute("id-class");
+
+            if (input.value === "") {
+                input.focus();
+            } else {
+                if (input.type === 'number') {
+                    valores[idClass] = parseFloat(input.value);
+                } else {
+                    valores[idClass] = input.value;
+                }
+            }
+        }
+        return valores;
+    }
+
+
+    function ValidarHorasRestantes(value) {
+
+        if (value === 1) {
+
+            var horasN = document.getElementById("horasCambioGE1N");
+            var horasND = document.getElementById("horasCambioGE1ND");
+            var horasOperacion = document.getElementById("horas-operacion1");
+
+            var horasRestantesN = document.getElementById("horasRestantesGE1N");
+            var horasRestantesND = document.getElementById("horasRestantesGE1ND");
+
+            horasRestantesN.innerText = 5000 - (parseInt(horasOperacion.value) - parseInt(horasN.value));
+            horasRestantesND.innerText = 5000 - (parseInt(horasOperacion.value) - parseInt(horasND.value));
+
+
+        } else {
+            var horasN = document.getElementById("horasCambioGE2N");
+            var horasND = document.getElementById("horasCambioGE2ND");
+            var horasOperacion = document.getElementById("horas-operacion2");
+
+
+            var horasRestantesN = document.getElementById("horasRestantesGE2N");
+            var horasRestantesND = document.getElementById("horasRestantesGE2ND");
+
+            horasRestantesN.innerText = 5000 - (parseInt(horasOperacion.value) - parseInt(horasN.value));
+            horasRestantesND.innerText = 5000 - (parseInt(horasOperacion.value) - parseInt(horasND.value));
+        }
+    }
+
+    function obtenerProximaFechaCalibracion(numeroGE) {
+        var horasOperacionCalibracion = document.getElementById("valorCalibracionGE" + numeroGE);
+        var proximaCalibracion = document.getElementById("proximaCalibracion" + numeroGE);
+
+        if (horasOperacionCalibracion.value === "") {
+            proximaCalibracion.value = 0;
+        } else {
+            proximaCalibracion.value = parseInt(horasOperacionCalibracion.value) + 1000;
+        }
+    }
+
+</script>
+
+<script>
+    /*
+     activar para la continuidad de los divs
+    var intervalId;
+     var currentDiv = 1;
+     var totalDivs = 2; // Actualizar el número total de divs
+
+     window.onload = function () {
+         startAutoToggle();
+     };
+
+     function toggleVisibility() {
+         clearInterval(intervalId);
+         currentDiv = (currentDiv % totalDivs) + 1;
+         showDiv();
+         intervalId = setInterval(function () {
+             currentDiv = (currentDiv % totalDivs) + 1;
+             showDiv();
+         }, 5000);
+     }
+
+     function startAutoToggle() {
+         intervalId = setInterval(function () {
+             currentDiv = (currentDiv % totalDivs) + 1;
+             showDiv();
+         }, 1000);
+     }
+
+     function showDiv() {
+         for (var i = 1; i <= totalDivs; i++) {
+
+             var div = document.getElementById('div' + i);
+             console.log("div ", div);
+             if (i === currentDiv) {
+                 div.classList.remove('hidden');
+             } else {
+                 div.classList.add('hidden');
+             }
+         }
+     }*/
+</script>
+
+<script>
+    /*********Chart ***************/
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var tituloConsumoGas = document.getElementById("titulo-consumo-gas");
+        tituloConsumoGas.innerText = "CONSUMO DE GAS " + datosOperario.IdSitio + " Sm3";
+
+        //
+        var tituloConsumoGasMes = document.getElementById("titulo-consumo-del-mes");
+        tituloConsumoGasMes.innerText = "CONSUMO GAS " + obtenerMesTitulo();
+
+        //
+        var mensajerecordatorioBESSEL = document.getElementById("mensaje-recordatorio-BESSEL");
+        if (datosOperario.IdSitio !== 'LUREN') {
+            mensajerecordatorioBESSEL.style.display = 'none';
+        }
+
+
+        // Datos proporcionados
+        var totalConsumir = parseFloat(@Html.Raw(JsonConvert.SerializeObject(datosConsumo != null ? datosConsumo.ConsumoDelMes : 0)));// 2141952;
+        var consumoDiario = parseFloat(@Html.Raw(JsonConvert.SerializeObject(datodetalleConsumo != null ? datodetalleConsumo.ConsumoDiario : 0))); //60105;
+        var consumoHastaFecha = parseFloat(@Html.Raw(JsonConvert.SerializeObject(datodetalleConsumo != null ? datodetalleConsumo.ConsumoTotalActual : 0)));//1910196;
+        var consumoFaltante = totalConsumir - consumoHastaFecha;//231756;
+
+        // Calcular porcentaje completado y faltante
+        var porcentajeCompletado = (consumoHastaFecha / totalConsumir) * 100;
+        var porcentajeFaltante = (consumoFaltante / totalConsumir) * 100;
+
+        // Datos para el gráfico de medialuna
+        var data = {
+            labels: [porcentajeCompletado.toFixed(2) + '% Completado', porcentajeFaltante.toFixed(2) + '% Faltante', 'Consumo Diario : ' + consumoDiario],
+            datasets: [{
+                data: [porcentajeCompletado, porcentajeFaltante],
+                backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+                borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                borderWidth: 1
+            }]
+        };
+
+        var options = {
+            cutoutPercentage: 30,
+            circumference: Math.PI,
+            rotation: -Math.PI,
+            animation: {
+                animateRotate: true,
+                animateScale: true
+            },
+            legend: {
+                display: true,
+                position: 'right',
+                labels: {
+                    fontSize: 20
+                }
+            },
+            tooltips: {
+                enabled: false,
+                custom: function (tooltipModel) {
+                    // Personalizar la apariencia del tooltip aquí
+                    var customTooltip = document.getElementById('custom-tooltip');
+                    var chartContainer = document.getElementById('chart-container');
+
+                    if (tooltipModel.body) {
+                        var label = tooltipModel.body[0].lines[0]; // Obtener el label del tooltip
+
+                        // Mostrar el div personalizado solo si hay un label
+                        customTooltip.style.display = 'block';
+                        customTooltip.style.left = tooltipModel.caretX + chartContainer.offsetLeft + 'px';
+                        customTooltip.style.top = tooltipModel.caretY + chartContainer.offsetTop + 'px';
+                        customTooltip.innerHTML = label;
+                    } else {
+                        customTooltip.style.display = 'none';
+                    }
+                }
+            },
+            onHover: function (event, chartElement) {
+                var customTooltip = document.getElementById('custom-tooltip');
+                var chartContainer = document.getElementById('chart-container');
+
+                if (chartElement.length > 0) {
+                    var position = chartElement[0]._model;
+                    customTooltip.style.display = 'block';
+                    customTooltip.style.left = position.x + chartContainer.offsetLeft + 'px';
+                    customTooltip.style.top = position.y + chartContainer.offsetTop + 'px';
+
+                    if (chartElement[0]._index === 0) {
+                        customTooltip.innerHTML = 'Completado: ' + consumoHastaFecha + ' SM3';
+                    } else {
+                        customTooltip.innerHTML = 'Faltante: ' + consumoFaltante + ' SM3';
+                    }
+                } else {
+                    customTooltip.style.display = 'none';
+                }
+            },
+            responsive: true, // Permite que el gráfico sea responsive
+            maintainAspectRatio: false, // Desactiva el mantenimiento del aspecto para personalizar el tamaño
+            aspectRatio: 2 // Define la relación de aspectoTurboCompresor personalizada (puedes ajustar este valor)
+        };
+
+        // Crear el gráfico de medialuna
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: options
+        });
+    });
+
+    document.getElementById('contenedor-gas').onclick = function () {
+        mostrarDetalleGas();
+    };
+
+    function mostrarDetalleGas() {
+        var contenedorChart = document.getElementById('chart-container');
+        var contenedorDetalleGas = document.getElementById('detalle-gas');
+        var checkDetalle = document.getElementById('edit-Detalle-Gas');
+
+        // Verificar la visibilidad actual de los contenedores
+        var chartVisible = window.getComputedStyle(contenedorChart).display !== 'none';
+        var detalleGasVisible = window.getComputedStyle(contenedorDetalleGas).display !== 'none';
+
+        if (detalleGasVisible) {
+            // Si el detalle de gas está visible, ocultarlo y mostrar el gráfico
+            contenedorDetalleGas.style.display = 'none';
+            checkDetalle.style.display = "none";
+            contenedorChart.style.display = 'block';
+        } else if (chartVisible) {
+            // Si el gráfico está visible, ocultarlo y mostrar el detalle de gas
+            contenedorChart.style.display = 'none';
+            checkDetalle.style.display = "flex";
+            contenedorDetalleGas.style.display = 'block';
+        }
+    }
+
+
+    $('input[id^="checkEdt"]').change(function () {
+        var contendorDetalleGas = document.getElementById('contenedor-gas');
+
+        // Verificar si el checkbox está marcado o no
+        if (this.checked) {
+            // Agregar la función o lógica que deseas cuando el checkbox está marcado
+            contendorDetalleGas.addEventListener('click', mostrarDetalleGas);
+        } else {
+            // Quitar la función cuando el checkbox no está marcado
+            contendorDetalleGas.removeEventListener('click', mostrarDetalleGas);
+        }
+    });
+
+</script>
+
+

@@ -1,0 +1,18 @@
+﻿
+@using Stimulsoft.Report.Web;
+@using Stimulsoft.Report.Mvc;
+
+@{
+	ViewData["Title"] = "Report.mrt - Viewer";
+}
+
+@*Html.StiNetCoreViewer(new StiNetCoreViewerOptions()
+{
+	Actions =
+	{
+		GetReport = "GetReport",
+		ViewerEvent = "ViewerEvent"
+	}
+})*@
+
+@Html.ActionLink("Export to Pdf", "ExportReport")

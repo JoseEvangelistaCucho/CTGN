@@ -1,0 +1,318 @@
+﻿@using Generacion.Models.Usuario;
+
+
+@model Respuesta<Dictionary<string, List<HistorialUsuario>>>
+@{
+    ViewBag.Title = "Historial";
+
+    string estiloActive = Model.Detalle.Count() == 1 ? "active" : "";
+    string contenedorActive = Model.Detalle.Count() == 1 ? "inherit" : "none";
+}
+
+<style>
+    .content-report-motors input {
+        border: none;
+        padding: 5px 0 0 0;
+        width: 90%;
+    }
+
+    .imput-hours {
+        width: 50px !important;
+        position: absolute;
+    }
+
+    input::placeholder {
+        color: #999; /* Color deseado, por ejemplo, gris claro (#999) */
+    }
+
+    input[type="file"] {
+        display: block;
+    }
+
+    .form-control {
+        display: revert;
+        color: black;
+        border: none;
+        padding: 5px 0 0 60px;
+        width: 95%;
+        overflow-y: hidden;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+</style>
+<div style="text-align: right;">
+    <button class="btn btn-primary" id="GuardarHistorial">Guardar Datos</button>
+</div>
+<div id="historialOperario" style="background-color: #f8f9fc;" class="content-report">
+    <div class="detail-report-title">
+        <style>
+            .tab {
+                padding: 10px;
+                cursor: pointer;
+                border: 1px solid #ccc;
+                margin-right: 5px;
+                width: 130px;
+                border-radius: 0 0 0 25px;
+            }
+
+                .tab.active {
+                    background-color: #ddd; /* Cambiar el color de fondo para resaltar */
+                    border: outset;
+                }
+        </style>
+
+        <div>
+            <h1>Historial</h1>
+
+            <div class="tab-container">
+                <div style="display: flex;padding: 0 0 15px 0;">
+                    <!-- Pestañas -->
+                    @foreach (var key in Model.Detalle.Keys)
+                    {
+                        if (!key.Contains("-"))
+                        {
+                            <div style="width: 130px;" class="tab @(estiloActive)" onclick="showTab('@key', this)">@key</div>
+                        }
+                    }
+                </div>
+                <!-- Contenido de las pestañas -->
+                @foreach (var kvp in Model.Detalle)
+                {
+                    var key = kvp.Key;
+                    var historialUsuarios = kvp.Value;
+
+                    <div class="content-report-motors ">
+                        <div id="@key-content" class="content-historial" style="display: @(contenedorActive);">
+                            @foreach (var item in historialUsuarios)
+                            {
+                                <div id="@item.IdHistorialOperario" style="border: none;border-top: 2px solid">
+                                    <input class="imput-hours form-control" placeholder="00:00" value="@item.Hora">
+                                    <textarea class="form-control" id="Det" placeholder="Ingrese una Descripcion" style="height: 53px;">@item.Descripcion</textarea>
+                                    <button class="btn btn-outline-danger boton-eliminar" onclick="eliminarDivById('@item.IdHistorialOperario')" id="btnEliminarDiv">X</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <button class="btn btn-secondary description-rp" id="agregarDiv">Agregar detalle</button>
+        </div>
+
+        <script>
+
+
+            function showTab(tabId, tabElement) {
+                // Ocultar todos los contenidos
+                document.querySelectorAll('.content-historial').forEach(content => {
+                    content.style.display = 'none';
+                });
+
+                // Remover la clase 'active' de todas las pestañas
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                // Mostrar el contenido de la pestaña seleccionada
+                document.getElementById(tabId + '-content').style.display = 'block';
+
+                // Agregar la clase 'active' a la pestaña seleccionada
+                tabElement.classList.add('active');
+            }
+        </script>
+    </div>
+</div>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("datosOperario : ", datosOperario);
+        document.getElementById("agregarDiv").addEventListener('click', agregarDiv.bind(null, datosOperario.IdOperario + "-content"));
+        function eliminarDiv(div) {
+            const contenedor = div.parentNode;
+
+            contenedor.removeChild(div);
+        }
+        function eliminarDivById(id) {
+            const divAEliminar = document.getElementById(id);
+
+            if (divAEliminar) {
+                divAEliminar.parentNode.removeChild(divAEliminar);
+            }
+        }
+        function eliminarDatos(id) {
+            console.log("listaHistorial : ", listaHistorial);
+            fetch('@Url.Action("GuardarHistorial", "Historial")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(id)
+            })
+                .then(function (response) {
+                    console.log(response.respuesta);
+                    localStorage.setItem('Historial', listaHistorial);
+                })
+                .then(function (data) {
+                    if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.respuesta.mensaje,
+                            icon: "error",
+                            button: "OK",
+                        });
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+        }
+
+    });
+
+    let contador = 1;
+    let contadorUno = 1;
+    function agregarDiv(value) {
+        const cadenaSinContenedor = value.replace(/contenedor/g, '');
+        const IdCasilla = cadenaSinContenedor.split('-');
+
+        const contenedor = document.getElementById(value);
+
+        const nuevoDiv = document.createElement('div');
+        const nuevoInput = document.createElement('textarea');//input');
+        nuevoInput.className = "form-control";
+
+
+        nuevoInput.setAttribute('id', cadenaSinContenedor + "-" + contador);
+        const nuevoInputHours = document.createElement('input');
+        const nuevoDivList = document.createElement('div');
+        const nuevoBotonEliminar = document.createElement('button');
+
+        nuevoInputHours.className = "imput-hours form-control";
+
+        nuevoInputHours.placeholder = "00:00";
+        nuevoInput.placeholder = "Ingrese una Descripcion";
+
+        nuevoDiv.style.border = 'none';
+
+        nuevoDiv.id = "Hist-" + obtenerFecha("format") + "-" + contador;;
+
+        nuevoDiv.style.border = 'none';
+
+        nuevoDiv.appendChild(nuevoInputHours);
+
+        nuevoDiv.appendChild(nuevoInput);
+
+        // Agregar el botón de eliminación
+        nuevoBotonEliminar.textContent = "X";
+        nuevoBotonEliminar.className = "btn btn-outline-danger boton-eliminar"
+        nuevoBotonEliminar.id = "btnEliminarDiv";
+        nuevoBotonEliminar.onclick = function () {
+            eliminarDiv(nuevoDiv);
+        };
+
+        nuevoDiv.appendChild(nuevoBotonEliminar);
+
+        contenedor.appendChild(nuevoDiv);
+
+        $(document).ready(function () {
+            var textarea = $('#' + cadenaSinContenedor);
+
+            textarea.on('input', function () {
+                this.style.height = 'auto'; // Restablece la altura a automática
+                this.style.height = (this.scrollHeight) + 'px'; // Ajusta la altura según el contenido
+            });
+        });
+        contador++;
+    }
+
+    botonGuardarDatos = document.getElementById('GuardarHistorial');
+
+
+    botonGuardarDatos.addEventListener('click',async function () {
+
+        const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+
+        const elementosGenerators = document.querySelectorAll('.content-historial');
+        const listaValores = obtenerDetalleInput(elementosGenerators);
+
+
+
+        const listaHistorial = [];
+
+        listaValores.forEach(item => {
+            if (item.value != '') {
+
+                var HistorialUsuario = {
+                    idHistorialOperario: item.idItem,//idItem + obtenerFecha("format") + "-" + countItems,
+                    fecha: obtenerFecha("fecha"),
+                    hora: item.inputHours,
+                    idUsuario: datosOperario.IdOperario,
+                    descripcion: item.inputDescripcion
+                };
+                listaHistorial.push(HistorialUsuario);
+            }
+        });
+
+        console.log("listaHistorial : ", listaHistorial);
+        fetch('@Url.Action("GuardarHistorial", "Historial")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(listaHistorial)
+        })
+            .then(function (response) {
+                console.log(response.respuesta);
+                localStorage.setItem('Historial', listaHistorial);
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+
+    });
+
+    function obtenerDetalleInput(elementosInputs) {
+
+        const listaValores = [];
+        let countItems = 1;
+        //var id = "";
+        elementosInputs.forEach(function (elemento) {
+            const divs = elemento.querySelectorAll('div');
+
+
+            divs.forEach(function (div) {
+                console.log("div : ", div);
+                var id = div.getAttribute('id');
+                console.log("div id : ", id);
+                const input = div.querySelector('input');
+                const textarea = div.querySelector('textarea');
+
+                if (input && textarea) {
+                    if (textarea.value != "") {
+                        id = "Hist-" + datosOperario.IdOperario + "-" + obtenerFecha("format") + "-" + countItems;
+
+                        listaValores.push({
+                            inputHours: input.value,
+                            inputDescripcion: textarea.value,
+                            idItem: id
+                        });
+                    }
+                }
+                countItems++;
+            });
+        });
+        return listaValores;
+    }
+</script>

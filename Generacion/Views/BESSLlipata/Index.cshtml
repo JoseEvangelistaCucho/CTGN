@@ -1,0 +1,1026 @@
+﻿@using Generacion.Models.Bess;
+@using Generacion.Models.DataCoes;
+@using Newtonsoft.Json;
+
+@{
+    DateTime fechaSeleccionado = DateTime.Parse(ViewBag.Fecha);
+    Dictionary<string, List<Demanda>> datosCoes = ViewData["datosCoes"] as Dictionary<string, List<Demanda>>;
+    Demanda demandaCoindicente = ViewData["demandaCoindicente"] as Demanda;
+
+    Dictionary<string, Demanda> diasCoincidentesDia = ViewData["diasCoincidentesDia"] as Dictionary<string, Demanda>;
+    Dictionary<string, Demanda> diasCoincidentesHora = ViewData["diasCoincidentesHora"] as Dictionary<string, Demanda>;
+    List<Demanda> detalleFechaSeleccionado = ViewData["detallePorFechaSeleccionado"] as List<Demanda>;
+    List<DBDataBess> datosBESS = ViewData["listaDataBESS"] as List<DBDataBess>;
+
+
+    string[] fechaCoincidente = new string[diasCoincidentesHora.Count];
+    decimal[] valorCoincidente = new decimal[diasCoincidentesHora.Count];
+    decimal[] valorHPCoincidente = new decimal[diasCoincidentesHora.Count];
+
+    List<decimal> promedioUsoBaterias = new List<decimal>();
+    List<decimal> usoBaterias = new List<decimal>();
+    List<DBDataBess> datosBessPorHora = new List<DBDataBess>();
+}
+
+<style>
+    .table {
+        margin: 0;
+    }
+
+    .contendor-cabecera-titulo {
+        display: flex;
+        border-bottom: solid 3px gray;
+        height: 15vh;
+    }
+
+    .contendor-titulo {
+        background: rgb(146,208,80);
+    }
+
+    .tabla-detalle-titulo {
+        background: rgb(146,208,80);
+        color: white;
+    }
+
+    .contendor-titulo h2 {
+        text-align: center;
+        color: white;
+        padding: 4vh 6vh 0 6vh;
+        font-size: 3vh;
+    }
+
+    .tabla-detalle-subtitulo {
+        background: rgb(221,235,247);
+    }
+
+    .tabla-detalle-subtitulo-normal {
+        background: rgb(221,235,247);
+        font-weight: normal;
+    }
+
+    .imagen-titulo-cabecera {
+        width: 30vh;
+    }
+
+    .limitador-contenido {
+        background: rgb(146,208,80);
+        height: 4vh;
+        border: solid 1px;
+    }
+
+    .tabla-detalle-status {
+        width: 50vh;
+    }
+
+        .tabla-detalle-status thead tr th {
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .tabla-detalle-status tbody tr td {
+            text-align: left;
+            font-size: 12px;
+            width: 10vh;
+        }
+
+            .tabla-detalle-status tbody tr td input {
+                width: 7vh;
+                text-align: right;
+            }
+
+        .tabla-detalle-status tbody tr th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: normal;
+            width: 30vh;
+        }
+
+    .table td, .table th {
+        padding: 0;
+    }
+
+    input {
+        border: none;
+        background: transparent;
+    }
+
+    .descripcion-general {
+        display: flex;
+    }
+
+    .contenedor-imagen-flecha {
+        text-align: center;
+    }
+
+        .contenedor-imagen-flecha img {
+            width: 8vh;
+        }
+
+    .contenedor-tablas-demanda table {
+        width: 70vh;
+        font-size: 12px;
+        margin: 0;
+        border: solid 1px black;
+    }
+
+    .contenedor-tablas-demanda tbody td, .contenedor-tablas-demanda tbody th {
+        border: none !important;
+    }
+
+    .contenedor-tablas-demanda table input {
+        width: 100%;
+    }
+
+    .contenedor-tablas-demanda table thead {
+        text-align: center;
+    }
+
+    .contenedor-nota {
+        display: flex;
+    }
+
+        .contenedor-nota input {
+            width: 50%;
+            height: 4vh;
+        }
+
+    .detalle-manager-safety div {
+        display: grid;
+    }
+
+        .detalle-manager-safety div input {
+            border: solid 1px !important;
+        }
+
+    .detalle-manager-safety input {
+        width: 100%;
+    }
+
+    .detalle-evento th {
+        font-size: 11px;
+        padding: 2px;
+    }
+
+    .detalle-evento thead {
+        text-align: center;
+    }
+
+    .text-primary {
+        color: grey !important;
+        font-size: 10px;
+    }
+
+    .justify-content-between {
+        background-color: transparent;
+        border-bottom: none;
+    }
+
+    .fondo-plateado {
+        background: rgb(212, 208, 208);
+    }
+
+    .fondo-verde {
+        background: rgb(202, 219, 188);
+    }
+
+    .table-bordered td, .table-bordered th {
+        border: solid 1px black !important;
+    }
+
+    textarea {
+        height: 24px;
+        width: 30vh;
+        overflow-y: hidden;
+        resize: none;
+        font-size: 12px;
+    }
+
+    .fondo-amarillo {
+        background: yellow;
+    }
+
+        .fondo-amarillo input {
+            font-weight: bold;
+        }
+
+</style>
+
+
+<div class="contendor-reporte-bess" style="background:white;">
+    <div class="contendor-cabecera-titulo">
+        <div>
+            <img class="imagen-titulo-cabecera" src="/img/PeruPowerCo.png">
+        </div>
+        <div class="contendor-titulo">
+            <h2>INFORME DIARIO DE OPERACIÓN SISTEMA BESS LLIPATA</h2>
+        </div>
+        <div>
+            <img class="imagen-titulo-cabecera" src="/img/tituloBessLlipata.png">
+        </div>
+    </div>
+    <div>
+        <div style="display: flex;">
+            <p1>Fecha :</p1><input />
+        </div>
+        <div class="limitador-contenido"></div>
+        <div class="descripcion-general">
+            <div>
+                <table id="DetalleBessLlipata" class="table table-bordered tabla-detalle-status">
+                    <thead>
+                        <tr>
+                            <th class="tabla-detalle-titulo">STATUS</th>
+                            <th class="tabla-detalle-titulo">UNITS</th>
+                        </tr>
+                        <tr>
+                            <th class="tabla-detalle-subtitulo" colspan="2" id="titulo-mes-actual">MES DE @fechaSeleccionado.ToString("MMMM").ToUpper() </th>
+                        </tr>
+                        <tr>
+                            <th class="tabla-detalle-subtitulo-normal">MES</th>
+                            <th class="tabla-detalle-subtitulo-normal" id="titulo-descripcion-mes-actual">@fechaSeleccionado.ToString("MMMM")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Dias</th>
+                            <td><input id="diasTotales" value="@DateTime.DaysInMonth(fechaSeleccionado.Year, fechaSeleccionado.Month)" /></td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-plateado">Tiempo de descarga </th>
+                            <td><input type="number" class-name="TiempoDescarga" value="2"/> horas</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-plateado">Energia descargada </th>
+                            <td><input type="number" class-name="EnergiaDescarga" value="2" /> MWh</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-plateado">Ratio de descarga por hora</th>
+                            <td><input type="number" class-name="RatioDescargaHora" value="1" /> MWh</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-plateado">Hora de descarga del sistema </th>
+                            <td class="fondo-amarillo"><input type="text" class-name="HoraDescargaDelSistema" /></td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-plateado">Potencia promedio de descarga</th>
+                            <td class="fondo-amarillo"><input /> kW</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-plateado">Contador de descargas por mes</th>
+                            <td class="fondo-amarillo"><input type="number" class-name="ContadorDescargasMes" /></td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-verde">Tiempo de recarga</th>
+                            <td><input class-name="TiempoRecarga" type="number" value="4" /> horas</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-verde">Energia cargada</th>
+                            <td><input class-name="EnergiaCargada" type="number" value="2" /> MWh</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-verde">Ratio de carga por hora</th>
+                            <td><input class-name="RatioCargaHora" type="number" value="0.5" /> MWh</td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-verde">Hora de carga del sistema </th>
+                            <td class="fondo-amarillo"><input class-name="HoraCargaSistema" /></td>
+                        </tr>
+                        <tr>
+                            <th class="fondo-verde">Contador de recargas por mes</th>
+                            <td class="fondo-amarillo"><input type="number" class-name="ContadorRecargasMes" /></td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: center; font-weight: bold;" colspan="2">
+                                RECORTE
+                                DE PICOS EN HORA FUERA DE PUNTA
+                            </th>
+                        </tr>
+                        <tr>
+                            <th>SP recorte de potencia marcona</th>
+                            <td><input class-name="RecortePotenciaMarconaFP" /></td>
+                        </tr>
+                        <tr>
+                            <th>Tiempo de descarga (Hrs)</th>
+                            <td><input class-name="TiempoDescargaFP" /></td>
+                        </tr>
+                        <tr>
+                            <th>Hora de carga</th>
+                            <td><input class-name="HoraCargaFP" /></td>
+                        </tr>
+                        <tr>
+                            <td><input disabled /></td>
+                            <td><input disabled /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div style="padding: 0 0 0 8.5vh;">
+                    <div class="card shadow mb-4" @*style="width: 100vh;height: 48vh;"*@>
+                        <!-- Card Header - Dropdown -->
+                        <div style="place-self: center;"
+                             class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary"
+                                id="tituloGraficoDemandaCoesVSBess">
+                                Demanda COES vs BESS
+                            </h6>
+                        </div>
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <div class="chartjs-size-monitor-shrink">
+                                    <div></div>
+                                </div>
+                                <canvas id="DemandaCoesVSBess" style="display: block;  height: 310px !important;   width: 100%;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="contenedor-nota">
+            <p style="width:99%;">Nota :<input style="width:96%;" id="nota" /></p>
+        </div>
+        <div style="display: flex;">
+            <div>
+                <div class="contenedor-tablas-demanda">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th colspan="2">Max demanda (Coincidente)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Demanda</th>
+                                <td class="fondo-amarillo"><input id="demandaCoincidente"  disabled value="@demandaCoindicente.Ejecutado.ToString("N2")"/></td>
+                            </tr>
+                            <tr>
+                                <th>Día/Hora</th>
+                                <td class="fondo-amarillo"><input id="diaHoraCoincidente" disabled value="@demandaCoindicente.Fecha" /></td>
+                            </tr>
+                            <tr>
+                                <th>Día</th>
+                                <td><input id="diaCoincidente" disabled value="@($"{demandaCoindicente.Fecha.ToString("dddd")}, {demandaCoindicente.Fecha.Day} de {demandaCoindicente.Fecha.ToString("MMMM")} de {demandaCoindicente.Fecha.Year}")" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="contenedor-imagen-flecha">
+                        <img src="/img/flecha.png">
+                    </div>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th colspan="2">Generación (KW)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>BESS LLIPATA</th>
+                                <td class="fondo-amarillo"><input id="BessLlipata" type="number" value="-1001" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <div class="contendor-graficos">
+                        <div class="col-xl-8 col-lg-7" style="padding: 0 0 0 8.5vh;">
+                            <div class="card shadow mb-4" style="width: 80vh;height: 40vh;">
+                                <!-- Card Header - Dropdown -->
+                                <div style="place-self: center;"
+                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary"
+                                        id="tituloGraficoDemandavsCoindicente">
+                                        Gráfico Max. demanda vs Coincidente-@(fechaSeleccionado.ToString("MMMM")) @(fechaSeleccionado.ToString("yyyy")) (MW)
+                                    </h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <div class="chartjs-size-monitor-shrink">
+                                        </div>
+                                        <canvas id="DemandavsCoincidente2" style="display: block;  height: 220px !important;   width: 100%;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div>
+            <div class="card shadow mb-4" style="width: 140vh; height: 55vh;">
+                <!-- Card Header - Dropdown -->
+                <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary" id="tituloGraficoCargaDescarga">
+                        POTENCIA MARCONA vs BESS
+                    </h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <div class="chartjs-size-monitor-shrink">
+                            <div class=""></div>
+                        </div>
+                        <canvas id="PortenciaMarconaVSBess" style="display: block;  height: 380px !important;   width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div>
+            <div id="manager" class="detalle-manager-safety">
+                <div style="background: #C2FBFC;color: blue;font-weight: bold;">MANAGER</div>
+                <div id="manager">
+                    <input />
+                    <input />
+                </div>
+            </div>
+            <div id="safety" class="detalle-manager-safety">
+                <div style="background: #C2FBFC;color: blue;font-weight: bold;">
+                    SAFETY
+                </div>
+                <div id="safety">
+                    <input />
+                </div>
+            </div>
+            <div id="humanResources" class="detalle-manager-safety">
+                <div style=" background: #C6FEC6;  color: black;  font-weight: bold;">
+                    HUMAN RESOURCES
+                </div>
+                <div id="humanResources">
+                    <input />
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-bordered detalle-evento" id="tablaEventos">
+            <thead style="background: orange;color: black; font-size:10px;">
+                <tr>
+                    <th rowspan="2">Fecha y Hora de inicio de carga o descarga</th>
+                    <th rowspan="2">Fecha y Hora final de carga o descarga</th>
+                    <th rowspan="2" style=" width: 30vh;">Sistema</th>
+                    <th colspan="4" style=" width: 50vh;">Tipo de Parada (Horas)</th>
+                    <th rowspan="2" style=" width: 30vh;">Descripcion del Evento</th>
+                </tr>
+                <tr>
+                    <th style=" width: 15vh;">External Trips</th>
+                    <th style=" width: 15vh;">Forced Maint</th>
+                    <th style=" width: 15vh;">Planned Maint</th>
+                    <th style=" width: 15vh;">Worked</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <button class="btn btn-primary" id="agregarFilaEvento">Agregar</button>
+        <div>
+            <h5 style="color:red;">OBSERVACION</h5>
+            <input style="width:100%; border:solid 1px black;" id="observacion" />
+        </div>
+        <button class="btn btn-primary" id="guardarDatosReporte">Guardar Datos</button>
+    </div>
+</div>
+
+<script src="/vendor/chart.js/Chart.js"></script>
+<script>
+
+
+    function eliminarFila(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+
+    $(document).ready(function () {
+
+        var fechaSeleccionado = "@(ViewBag.Fecha)";
+        var idBessLlipata = datosOperario.IdSitio + "_Bess_Llipata-" + fechaSeleccionado.replace(/\//g, '_');
+
+        document.getElementById("guardarDatosReporte").addEventListener("click", function () {
+            GuardarDatosReporte();
+        });
+
+        function GuardarDatosReporte() {
+
+            var datos = {
+                DBBessLlipata: obtenerDatosTabla(),
+                RegistroEventos: obtenerDatosEvento(),
+                DetalleProduccion: obtenerResourceAndSafery(),
+                DatosPortenciaMarconaVSBess: datosPortenciaMarconaVSBess,
+                DemandaCoesVSBess: demandaCoesVSBess,
+                DatosDemandavsCoincidente: datosDemandavsCoincidente
+            }
+            console.log("datos : ", datos);
+            fetch('@Url.Action("GuardarDetalleProduccion", "BESSLlipata")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+
+                    if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                            willClose: () => {
+                                var link = document.createElement("a");
+                                link.href = '@Url.Action("DescargarArchivo", "ReportesGenerales")' + '?name=Bess-Llipata-' + obtenerFecha("format") + '.pdf&reporte=Bess-Llipata';
+                                link.download = "Bess-Llipata-" + obtenerFecha("format") + ".pdf";
+                                link.click();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.respuesta.mensaje,
+                            icon: "error",
+                            button: "OK",
+                        });
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+        }
+
+
+        function obtenerDatosEvento() {
+            var datos = [];
+
+            var inputs = document.getElementsByClassName("datoEvento");
+            let tamañoTablaEventos = 0;
+            var dato = {};
+
+            for (var i = 0; i < inputs.length; i++) {
+
+                dato[inputs[i].id] = inputs[i].value;
+                tamañoTablaEventos++;
+
+                if (tamañoTablaEventos == 8) {
+                    dato["idReporte"] = idBessLlipata;
+                    dato["idRegEventos"] = datosOperario.IdSitio + "-Reg-Event-" + obtenerFecha("fecha");
+                    dato["numeroGenerador"] = 0;
+                    dato["nombreReporte"] = "BessLlipata";
+
+                    datos.push(dato);
+                    dato = {};
+                    tamañoTablaEventos = 0;
+                }
+            }
+            return datos;
+        }
+
+
+
+        function obtenerDatosTabla() {
+            var dato = {};
+
+            var tabla = document.getElementById("DetalleBessLlipata");
+            var columnas = tabla.querySelectorAll('tr');
+
+            columnas.forEach(function (columna) {
+
+                var filas = columna.querySelectorAll('td');
+
+                filas.forEach(function (fila) {
+                    var input = fila.querySelector('input');
+                    if (input) {
+                        var className = input.getAttribute('class-name');
+                        var tipo = input.getAttribute('type');
+                        if (className) {
+                            if (tipo ==='number') {
+                                dato[className] = parseFloat(input.value || 0);
+                            }else{
+                                dato[className] = input.value;
+                            }
+                        }
+                    }
+                });
+            });
+
+            var nota = document.getElementById("nota");
+            var observacion = document.getElementById("observacion");
+            var BessLlipataInput = document.getElementById("BessLlipata");
+            dato["nota"] = nota.value;
+            dato["observacion"] = observacion.value;
+            dato["bessLlipataValue"] = parseFloat(BessLlipataInput.value || 0);
+            dato["fecha"] = fechaSeleccionado;
+            dato["idBessLlipata"] = idBessLlipata;
+
+            return dato;
+        }
+
+        obtenerDatosCoincidente();
+        function obtenerDatosCoincidente(){
+
+            var diaCoincidente = document.getElementById("diaCoincidente");
+            var diaHoraCoincidente = document.getElementById("diaHoraCoincidente");
+            var demandaCoincidente = document.getElementById("demandaCoincidente");
+            var BessLlipata = document.getElementById("BessLlipata");
+            var diasTotales = document.getElementById("diasTotales");
+            
+            var datos ={
+                demanda: demandaCoincidente.value,
+                diaHora: diaHoraCoincidente.value,
+                hora: diaCoincidente.value,
+                Generacion: BessLlipata.value,
+                Dias: diasTotales,
+
+
+            };
+            /*
+                public string? Manager { get; set; }
+                public string? Manager1 { get; set; }
+                public string? Safety { get;set; }
+                public string? HumanResource { get;set; }
+                public string? HumanResource1 { get;set; }
+            */
+
+
+
+
+            console.log("datosTM :::::", datos);
+
+
+
+        }
+
+
+        var campoDetalle = ["manager", "safety", "humanResources"]
+        function obtenerResourceAndSafery() {
+
+            var datos = [];
+            var dato = {};
+            campoDetalle.forEach(function (campo) {
+                var contenedor = document.getElementById(campo);
+                var inputs = contenedor.getElementsByTagName("input");
+                var detalle = "";
+
+                for (var i = 0; i < inputs.length; i++) {
+                    var valor = inputs[i].value;
+
+                    detalle = detalle + valor;
+
+                    if (i === inputs.length - 1) {
+
+                        dato = {
+                            IdReporteProduccion: idBessLlipata,
+                            tipo: campo,
+                            Detalle: detalle
+                        }
+                        datos.push(dato);
+                    } else {
+                        detalle = detalle + " |# ";
+                    }
+                }
+            });
+
+            return datos;
+        }
+
+
+
+
+        var datosPortenciaMarconaVSBessJson = localStorage.getItem("datosPortenciaMarconaVSBessJson",);
+        var demandaCoesVSBessJson = localStorage.getItem("datosDemandavsCoincidente2Json",);
+        var datosDemandavsCoincidenteJson = localStorage.getItem("datosDemandavsCoincidenteJson",);
+        var datosdemandaMaxCoincidenteJson = localStorage.getItem("datosdemandaMaxCoincidenteJson",);
+        
+        var datosPortenciaMarconaVSBess = JSON.parse(datosPortenciaMarconaVSBessJson);
+        var demandaCoesVSBess = JSON.parse(demandaCoesVSBessJson);
+        var datosDemandavsCoincidente = JSON.parse(datosDemandavsCoincidenteJson);
+        var datosdemandaMaxCoincidente = JSON.parse(datosdemandaMaxCoincidenteJson);
+
+        console.log("datosPortenciaMarconaVSBess", datosPortenciaMarconaVSBess);
+        console.log("demandaCoesVSBess", demandaCoesVSBess);
+        console.log("datosDemandavsCoincidente", datosDemandavsCoincidente);
+        console.log("datosdemandaMaxCoincidente", datosdemandaMaxCoincidente);
+
+
+        var ctxMarcona = document.getElementById("PortenciaMarconaVSBess");
+        var myLineChart = new Chart(ctxMarcona, {
+            type: 'line',
+            data: {
+                labels: datosPortenciaMarconaVSBess.hora,
+                datasets: [
+                    {
+                        label: 'POTENCIA MARCONA',
+                        data: datosPortenciaMarconaVSBess.LLIXI625_PV,
+                        borderColor: 'blue',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y-axis-1'
+                    },
+                    {
+                        label: 'BATERIAS',
+                        data: datosPortenciaMarconaVSBess.LLIXI633_PV,
+                        borderColor: 'orange',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y-axis-2'
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    yAxes: [
+                        {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-axis-1',
+                            ticks: {
+                                min: 0,
+                                max: 35
+                            }
+                        },
+                        {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-axis-2',
+                            ticks: {
+                                min: -2,
+                                max: 3
+                            }
+                        }
+                    ]
+                },
+                legend: {
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        usePointStyle: true
+                    }
+                }
+            }
+        });
+
+
+        var ctx2 = document.getElementById("DemandaCoesVSBess");
+        var myLineChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: demandaCoesVSBess.hora,
+                datasets: [
+                    {
+                        label: 'Ejecutado',
+                        data: demandaCoesVSBess.ejecutado,
+                        borderColor: 'blue',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y-axis-1',
+                        ticks: {
+                            min: 5000,
+                            max: 8000
+                        }
+                    },
+                    {
+                        label: 'Descarga',
+                        data: demandaCoesVSBess.usoBaterias,
+                        borderColor: 'orange',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y-axis-2'
+
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    yAxes: [
+                        {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-axis-1',
+                            ticks: {
+                                min: 5000,
+                                max: 8000
+                            }
+                        },
+                        {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-axis-2'
+                        }
+                    ]
+                },
+                legend: {
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        usePointStyle: true
+                    }
+                }
+            }
+        });
+
+
+        var ctx = document.getElementById("DemandavsCoincidente2");
+        var myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: datosDemandavsCoincidente.fecha,
+                datasets: [
+                    {
+                        label: 'Dataset',
+                        data: datosDemandavsCoincidente.valorHPCoincidente,
+                        borderColor: 'blue',
+                        backgroundColor: 'transparent'
+                    },
+                    {
+                        label: 'Dataset',
+                        data: datosDemandavsCoincidente.valorCoincidente,
+                        borderColor: 'orange',
+                        backgroundColor: 'transparent'
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                }
+            }
+        });
+
+
+
+
+
+       /* var tituloMesActual = document.getElementById("titulo-mes-actual");
+        tituloMesActual.innerText = "MES DE DICIEMBRE";
+        var tituloDescripcionMesActual = document.getElementById("titulo-descripcion-mes-actual");
+        tituloDescripcionMesActual.innerText = "DICIEMBRE";
+        */
+        var tituloGrafico = document.getElementById("tituloGraficoDemandavsCoindicente");
+       // tituloGrafico.innerText = "Gráfico Max. demanda vs Coincidente-Diciembre 2023 (MW)";
+        //tituloGrafico.innerText = "Gráfico Max. demanda vs Coincidente-" + capitalizarPrimeraLetra(nombreMes) + " " + fechaSeleccionadoView.split('/')[2] + " (MW)";
+
+        document.getElementById("agregarFilaEvento").addEventListener("click", function () {
+            agregarFila();
+        });
+
+        function agregarFila() {
+            var table = document.getElementById("tablaEventos").getElementsByTagName('tbody')[0];
+            var newRow = table.insertRow(table.rows.length);
+
+            var columnas = ["fechaParada", "fechaArranque", "sistema", "externalTrips", "forcedMaint", "plannedMaint", "standBy", "descripcionEvento"];
+            var tamañoImputs = ["externalTrips", "forcedMaint", "plannedMaint", "standBy"];
+            var textArea = ["descripcionEvento"];
+
+            for (var i = 0; i < columnas.length; i++) {
+                var cell = newRow.insertCell(i);
+                var input;
+                if (textArea.includes(columnas[i])) {
+                    input = document.createElement("textarea");
+                    input.addEventListener("input", function () {
+                        autoresizeTextarea(input);
+                    });
+                    autoresizeTextarea(input); // Ajusta el tamaño inicial
+                } else {
+                    input = document.createElement("input");
+                    input.type = "text";
+
+                    if (tamañoImputs.includes(columnas[i])) {
+                        input.style.width = "15vh";
+                        input.addEventListener('change', obtenerValoresAgrupados);
+                    } else {
+                        input.style.width = "140px";
+                    }
+
+                    // Agregar evento input a campos de fecha
+                    if (columnas[i] === "fechaArranque") {
+                        input.addEventListener("change", function () {
+                            obtenerHorasEvetos(this); // Pasar el elemento actual a la función
+                        });
+                    }
+                }
+
+                input.id = columnas[i];
+                input.className = "datoEvento";
+                cell.appendChild(input);
+            }
+
+            var actionCell = newRow.insertCell(columnas.length);
+            actionCell.innerHTML = '<button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>';
+        }
+
+        function autoresizeTextarea(textarea) {
+            textarea.style.height = "auto";
+            textarea.style.height = (textarea.scrollHeight - 2) + "px";
+        }
+
+        function obtenerValoresAgrupados() {
+
+            valoresAgrupados = {
+                EG1: [],
+                EG2: []
+            };
+
+            var filas = document.getElementById("tablaEventos").getElementsByTagName('tbody')[0].getElementsByTagName("tr");
+
+            for (var i = 0; i < filas.length; i++) {
+                var unidadFuncional = filas[i].querySelector("#unidadFuncional");
+                var externalTrips = filas[i].querySelector("#externalTrips");
+                var forcedMaint = filas[i].querySelector("#forcedMaint");
+                var plannedMaint = filas[i].querySelector("#plannedMaint");
+                var standBy = filas[i].querySelector("#standBy");
+
+                var valores = {
+                    //unidadFuncional: parseFloat(obtenerHorasConvertidas(unidadFuncional.value)) || 0,
+                    externalTrips: parseFloat(obtenerHorasConvertidas(externalTrips.value)) || 0,
+                    forcedMaint: parseFloat(obtenerHorasConvertidas(forcedMaint.value)) || 0,
+                    plannedMaint: parseFloat(obtenerHorasConvertidas(plannedMaint.value)) || 0,
+                    standBy: parseFloat(obtenerHorasConvertidas(standBy.value)) || 0
+                };
+
+                // Determinar si es EG1 o EG2 en función de unidadFuncional
+                var unidadFuncionalNumerico = unidadFuncional.value.match(/\d+/);
+
+                var tipoEG = parseInt(unidadFuncionalNumerico) === 1 ? "EG1" : "EG2";
+
+                // Agregar valores al array correspondiente
+                valoresAgrupados[tipoEG].push(valores);
+
+                var valoresRunning = sumarValoresPorPropiedad(valoresAgrupados);
+                agregarValoresRunning(valoresRunning);
+            }
+
+            activarEventosInput();
+        }
+        /*actualizar monto de paradas y sincronizacion */
+        function obtenerHorasEvetos(elementoModificado) {
+            // Obtener la fila actual
+            var fila = elementoModificado.closest('tr');
+
+            // Buscar elementos relacionados en la misma fila
+            var fechaInicioStr = fila.querySelector("#fechaParada");
+            var fechaFinStr = fila.querySelector("#fechaArranque");
+
+            if (fechaInicioStr.value !== "" && fechaFinStr.value !== "") {
+                var resultado = calcularDiferenciaYFormatear(fechaInicioStr.value, fechaFinStr.value);
+
+                var externalTrips = fila.querySelector("#externalTrips");
+
+                externalTrips.value = resultado.diferencia;
+                fechaInicioStr.value = resultado.fechaInicioFormateada;
+                fechaFinStr.value = resultado.fechaFinFormateada;
+            }
+        }
+
+        function calcularDiferenciaYFormatear(fechaInicioStr, fechaFinStr) {
+
+            var fechaInicio = convertirAFecha(fechaInicioStr);
+            var fechaFin = convertirAFecha(fechaFinStr);
+
+            var diferenciaMillis = fechaFin - fechaInicio;
+
+            var segundos = Math.floor(diferenciaMillis / 1000);
+            var minutos = Math.floor(segundos / 60);
+            var horas = Math.floor(minutos / 60);
+
+            minutos %= 60;
+            segundos %= 60;
+
+            var diferenciaFormateada = horas + ":" + (minutos < 10 ? "0" : "") + minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
+
+            var formatoFecha = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+            var fechaInicioFormateada = fechaInicio.toLocaleDateString('es-ES', formatoFecha);
+            var fechaFinFormateada = fechaFin.toLocaleDateString('es-ES', formatoFecha);
+
+
+
+            return {
+                diferencia: diferenciaFormateada,
+                fechaInicioFormateada: fechaInicioFormateada,
+                fechaFinFormateada: fechaFinFormateada
+            };
+        }
+
+        function convertirAFecha(cadenaFecha) {
+            var partes = cadenaFecha.split(/[\s/:\-]+/); // Dividir por espacio, barra y dos puntos
+            var dia = parseInt(partes[0], 10);
+            var mes = parseInt(partes[1], 10) - 1; // Restar 1 al mes (ya que en JavaScript los meses van de 0 a 11)
+            var año = parseInt(partes[2], 10);
+            var hora = parseInt(partes[3], 10);
+            var minutos = parseInt(partes[4], 10);
+            var segundos = parseInt(partes[5], 10);
+
+            return new Date(año, mes, dia, hora, minutos, segundos);
+        }
+    });
+
+</script>
+
+
+
+

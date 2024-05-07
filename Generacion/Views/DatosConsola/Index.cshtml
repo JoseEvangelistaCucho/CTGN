@@ -1,0 +1,1751 @@
+﻿@using Generacion.Models.DatosConsola;
+@using Generacion.Models.Session;
+@using Microsoft.AspNetCore.Html;
+@using System.Text;
+@using Microsoft.AspNetCore.Razor.TagHelpers;
+@using Newtonsoft.Json;
+
+@{   
+
+    Dictionary<string, List<SessionOperario>> datoHorario = ViewData["horarioOperarios"] as Dictionary<string, List<SessionOperario>>;
+    List<SessionOperario> mañana = datoHorario.ContainsKey("mañana") ? datoHorario["mañana"] : new List<SessionOperario>();
+    List<SessionOperario> tarde = datoHorario.ContainsKey("tarde") ? datoHorario["tarde"] : new List<SessionOperario>();
+    List<SessionOperario> noche = datoHorario.ContainsKey("noche") ? datoHorario["noche"] : new List<SessionOperario>();
+
+
+    bool activar = true;
+    List<string> horasGenerador = new List<string>
+    {
+        "","4","8","12","16","20","0"
+    };
+
+    List<string> horasEG = new List<string>
+    {
+        "","2","4","6","8","10","12","14","16","18","20","22","0"
+    };
+
+    List<string> baa = new List<string>
+    {
+        "","6","12","18","0"
+    };
+
+
+    FormatoConsola datoFormato = ViewData["datoFormato"] as FormatoConsola;
+    //List<DatosFormatoConsola> energiaGenerada = ViewData["EnergiaGenerada1"] as List<DatosFormatoConsola>;
+    Dictionary<string, List<DatosFormatoConsola>> energiaGenerada = ViewData["EnergiaGenerada"] as Dictionary<string, List<DatosFormatoConsola>>;
+    List<DatosFormatoConsola> energiaGeneradaBAA = ViewData["EnergiaGeneradaBAA"] as List<DatosFormatoConsola>;
+    List<TiposDeRegistroConsola> detalleRegistro = ViewData["TipoRegistros"] as List<TiposDeRegistroConsola>;
+    Dictionary<string, CabecerasTabla> detalleCabeceras = ViewData["Datoscabecera"] as Dictionary<string, CabecerasTabla>;
+    Dictionary<string, List<RegistrosDatosGenerator>> datosGenerador = ViewData["DatosGenerador"] as Dictionary<string, List<RegistrosDatosGenerator>>;
+    Dictionary<string, List<RegistrosDatosEngine>> datosEngine = ViewData["DatosEng"] as Dictionary<string, List<RegistrosDatosEngine>>;
+
+    Dictionary<int, LecturasMedianoche> lecturasMedianoche = ViewData["datosLecturas"] as Dictionary<int, LecturasMedianoche>;
+
+    List<OutGoingFeeder> datosDelived = ViewData["datosDelived"] as List<OutGoingFeeder>;
+    List<OutGoingFeeder> datosReceived = ViewData["datosReceived"] as List<OutGoingFeeder>;
+
+
+
+    var EG01 = detalleRegistro.Where(x => x.IdRegistroConsola == "EG01").Select(x => x).FirstOrDefault();
+    var EG02 = detalleRegistro.Where(x => x.IdRegistroConsola == "EG02").Select(x => x).FirstOrDefault();
+
+    var Generator1 = detalleRegistro.Where(x => x.IdRegistroConsola == "Generator1").Select(x => x).FirstOrDefault();
+    var Generator2 = detalleRegistro.Where(x => x.IdRegistroConsola == "Generator2").Select(x => x).FirstOrDefault();
+
+    var Engine1 = detalleRegistro.Where(x => x.IdRegistroConsola == "Engine1").Select(x => x).FirstOrDefault();
+    var Engine2 = detalleRegistro.Where(x => x.IdRegistroConsola == "Engine2").Select(x => x).FirstOrDefault();
+
+    var BAA1 = detalleRegistro.Where(x => x.IdRegistroConsola == "BAA901-Station").Select(x => x).FirstOrDefault();
+    var BAA2 = detalleRegistro.Where(x => x.IdRegistroConsola == "BFA901-VAMP96").Select(x => x).FirstOrDefault();
+    var BAO = detalleRegistro.Where(x => x.IdRegistroConsola == "BAO901").Select(x => x).FirstOrDefault();
+
+    var LecMedianoche = detalleRegistro.Where(x => x.IdRegistroConsola == "LecMedianoche").Select(x => x).FirstOrDefault();
+    // var date = new DateTime(2023, 10, 16, 23, 0, 0);
+    var date = DateTime.Now;
+    bool tiempoMedianoche = false;
+    var horaSplit = date.ToString("HH").Split(':');
+
+    if (int.Parse(horaSplit[0]) < 2)
+    {
+        tiempoMedianoche = true;
+    }
+
+
+    Func<List<SessionOperario>, int, IHtmlContent> MostrarTurno = (operarios, maxOperarios) =>
+                   {
+                       StringBuilder sb = new StringBuilder();
+                       int cantidadDeDatos = 0;
+
+                       foreach (SessionOperario operario in operarios)
+                       {
+                           cantidadDeDatos++;
+                           if(maxOperarios< cantidadDeDatos)
+                           continue;
+
+                           if (cantidadDeDatos == maxOperarios)
+                           {
+                               sb.Append($"   /   {operario.NombreOperario} ");
+                           }
+                           else
+                           {
+                               sb.Append($"{operario.NombreOperario}");
+                           }
+                       }
+
+                       if (cantidadDeDatos == 0)
+                       {
+                           return new HtmlString("<p>             /             </p>");
+                       }
+                       else
+                       {
+                           return new HtmlString($"<p>{sb.ToString()}</p>");
+                       }
+                   };
+
+    Func<int, List<DatosFormatoConsola>, IHtmlContent> GenerateDataCells = (count, datos) =>
+        {
+            var content = new DefaultTagHelperContent();
+
+            for (int i = 1; i <= count; i++)
+            {
+                List<string> horas = count.Equals(12) ? horasEG : count.Equals(4) ? baa : horasGenerador;
+                string tipoDeValor = count.Equals(12) ? "text" : "number";
+
+
+                var rowData = datos.Count > 0 ? datos[i - 1] : null;
+
+                string pisicionClass = (int.Parse(date.Hour.ToString()) >= int.Parse(horas[i]) && (horas.Count() > i + 1 && int.Parse(date.Hour.ToString()) < int.Parse(horas[i + 1]))) ? "posicicion-actual" : "";
+
+
+                var trContent = rowData != null
+         ? $@"
+                        <tr class='{pisicionClass}' id='{rowData.IdDetalleConsola}' claveRegistro='{rowData.Fila}'>
+                            <td>{horas[i]}:00</td>
+                            <td id='P'><input class='input-limpiar' type='number' value='{rowData.PotenciaActiva}' id-tipo-referencia='numero'></td>
+                            <td id='Q'><input id-tipo-referencia='numero' class='input-limpiar' type='{tipoDeValor}' value='{rowData.PotenciaReactiva}' id-tipo-referencia='numero'></td>
+                            <td id='E+'><input class='input-limpiar' type='number' value='{rowData.EnergiaActiva}' id-tipo-referencia='numero'></td>
+                            <td id='Eq+'><input class='input-limpiar' type='number' value='{rowData.EnergiaReactiva}' id-tipo-referencia='numero'></td>
+                            <td id='lL1'><input class='input-limpiar' type='number' value='{rowData.CorrienteLinea1}' id-tipo-referencia='numero'></td>
+                            <td id='lL2'><input class='input-limpiar' type='number' value='{rowData.CorrienteLinea2}' id-tipo-referencia='numero'></td>
+                            <td id='lL3'><input class='input-limpiar' type='number' value='{rowData.CorrienteLinea3}' id-tipo-referencia='numero'></td>
+                            <td id='U12'><input class='input-limpiar' type='number' value='{rowData.Voltaje}' id-tipo-referencia='numero'></td>
+                            <td id='U23'><input class='input-limpiar' type='number' value='{rowData.Voltaje23}' id-tipo-referencia='numero'></td>
+                            <td id='U31'><input class='input-limpiar' type='number' value='{rowData.Voltaje31}' id-tipo-referencia='numero'></td>
+                        </tr>"
+         : $@"
+                        <tr class='{pisicionClass}' claveRegistro='{i + i}'>
+                            <td id='idHora'>{horas[i]}:00</td>
+                            <td id='P'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='Q'><input class='input-limpiar' type='{tipoDeValor}' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='E+'><input  class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='Eq+'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='lL1'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='lL2'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='lL3'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='U12'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='U23'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='U31'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                        </tr>";
+
+                content.AppendHtml(trContent);
+            }
+
+            return content;
+        };
+
+    /********************************************/
+    Func<int, List<RegistrosDatosGenerator>, IHtmlContent> GenerateDataCellsGEN = (count, datos) =>
+       {
+           var content = new DefaultTagHelperContent();
+
+           for (int i = 1; i <= count; i++)
+           {
+
+               List<string> horas = count.Equals(12) ? horasEG : count.Equals(4) ? baa : horasGenerador;
+
+               var rowData = datos.Count > 0 ? datos[i - 1] : null;
+
+               string pisicionClass = (int.Parse(date.Hour.ToString()) >= int.Parse(horas[i]) && (horas.Count() > i + 1 && int.Parse(date.Hour.ToString()) < int.Parse(horas[i + 1]))) ? "posicicion-actual" : "";
+
+
+               var trContent = rowData != null
+                    ? $@"
+                        <tr class='{pisicionClass}' claveRegistro='{i + i}'>
+                            <td id='idHoraGen2'>{horas[i]}:00</td>
+                            <td id='L1'><input class='input-limpiar' type='number' value='{rowData.L1}'  id-tipo-referencia='numero'></td>
+                            <td id='L2'><input class='input-limpiar' type='number' value='{rowData.L2}' id-tipo-referencia='numero'></td>
+                            <td id='L3'><input class='input-limpiar' type='number' value='{rowData.L3}' id-tipo-referencia='numero'></td>
+                            <td id='D'><input class='input-limpiar' type='number' value='{rowData.D}' id-tipo-referencia='numero'></td>
+                            <td id='ND'><input class='input-limpiar' type='number' value='{rowData.ND}' id-tipo-referencia='numero'></td>
+                            <td id='TV'><input class='input-limpiar' type='number' value='{rowData.TersionalVibration}' id-tipo-referencia='numero'></td>
+                       </tr>"
+                    : $@"
+                        <tr class='{pisicionClass}' claveRegistro='{i + i}'>
+                            <td id='idHoraGen2'>{horas[i]}:00</td>
+                            <td id='L1'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='L2'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='L3'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='D'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='ND'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                            <td id='TV'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                       </tr>";
+
+               content.AppendHtml(trContent);
+           }
+
+           return content;
+       };
+
+    Func<int, List<RegistrosDatosGenerator>, IHtmlContent> GenerateDataCellsGENOIL = (count, datos) =>
+        {
+            var content = new DefaultTagHelperContent();
+
+            for (int i = 1; i <= count; i++)
+            {
+                List<string> horas = count.Equals(12) ? horasEG : count.Equals(4) ? baa : horasGenerador;
+
+                var rowData = datos.Count > 0 ? datos.ElementAtOrDefault(i - 1) : null;
+
+                DetGeneratorTC datosTCA = null;
+                DetGeneratorTC datosTCB = null;
+                if (rowData != null)
+                {
+                    datosTCA = rowData.detalleGeneradores?["TCA"];
+                    datosTCB = rowData.detalleGeneradores?["TCB"];
+                }
+
+                string pisicionClass = (int.Parse(date.Hour.ToString()) >= int.Parse(horas[i]) && (horas.Count() > i + 1 && int.Parse(date.Hour.ToString()) < int.Parse(horas[i + 1]))) ? "posicicion-actual" : "";
+
+                var trContent = rowData != null
+            ? $@"
+                <tr id='row-{i}'  class='{pisicionClass}' claveRegistro='{i + i}'>
+                    <td id='TO-A'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '{datosTCA.TempOut}'  id-tipo-referencia='numero'></td>
+                    <td id='Sp-A'><input class='input-limpiar' type='number' claveRegistro='{i}' value='{datosTCA.Speed}'  id-tipo-referencia='numero'></td>
+                    <td id='TO-B'><input class='input-limpiar' type='number' claveRegistro='{i}' value='{datosTCB.TempOut}'  id-tipo-referencia='numero'></td>
+                    <td id='Sp-B'><input class='input-limpiar' type='number' claveRegistro='{i}' value='{datosTCB.Speed}'  id-tipo-referencia='numero'></td>
+                </tr>"
+            : $@"
+                <tr id='row-{i}' class='{pisicionClass}' claveRegistro='{i + i}'>
+                    <td id='TO-A'><input  class='input-limpiar' type='number' claveRegistro='{i}' value= '0'  id-tipo-referencia='numero'></td>
+                    <td id='Sp-A'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0'  id-tipo-referencia='numero'></td>
+                    <td id='TO-B'><input  class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                    <td id='Sp-B'><input class='input-limpiar' type='number' claveRegistro='{i}' value= '0' id-tipo-referencia='numero'></td>
+                </tr>";
+
+                content.AppendHtml(trContent);
+            }
+
+            return content;
+        };
+
+    /********************************************/
+
+    Func<int, List<RegistrosDatosEngine>, IHtmlContent> GenerateDataEngine = (count, datos) =>
+          {
+              var content = new DefaultTagHelperContent();
+
+              for (int i = 1; i <= count; i++)
+              {
+
+                  List<string> horas = count.Equals(12) ? horasEG : count.Equals(4) ? baa : horasGenerador;
+
+
+                  var rowData = datos.Count > 0 ? datos[i - 1] : null;
+
+                  string pisicionClass = (int.Parse(date.Hour.ToString()) >= int.Parse(horas[i]) && (horas.Count() > i + 1 && int.Parse(date.Hour.ToString()) < int.Parse(horas[i + 1]))) ? "posicicion-actual" : "";
+
+
+                  DetalleEngine detalleEngineFuel = null;
+                  DetalleEngine detalleEngineOil = null;
+
+                  if (rowData != null)
+                  {
+                      detalleEngineFuel = rowData.detalleEngine["FUEL"];
+                      detalleEngineOil = rowData.detalleEngine["OIL"];
+                  }
+
+                  var trContent = rowData != null
+                   ? $@"
+                                <tr class='{pisicionClass}' id='{rowData.IdDetEngineConsola}' claveRegistro='{i + i}'>
+                                   <td style='width: 10%;'>{horas[i]}:00</td>
+                                   <td id='Run-H'><input  class='input-limpiar' type='number' value='{rowData.RunHours}'  id-tipo-referencia='numero'></td>
+                                   <td id='P-F'><input  class='input-limpiar' type='number' value='{detalleEngineFuel.Presion}'  id-tipo-referencia='numero'></td>
+                                   <td id='T-F'><input   class='input-limpiar' type='number' value='{detalleEngineFuel.Temp}'  id-tipo-referencia='numero'></td>
+                                   <td id='P-O'><input class='input-limpiar' type='number' value='{detalleEngineOil.Presion}'  id-tipo-referencia='numero'></td>
+                                   <td id='T-O'><input class='input-limpiar' type='number' value='{detalleEngineOil.Temp}'  id-tipo-referencia='numero'></td>
+                                   <td id='CA-T'><input class='input-limpiar' type='number' value='{rowData.CATemp}'  id-tipo-referencia='numero'</td>
+                                   <td id='Diff-P'><input class='input-limpiar' type='number' value='{rowData.DiffPressJetPulse}'  id-tipo-referencia='numero'></td>
+                                   <td id='Ca-P'><input class='input-limpiar' type='number' value='{rowData.CAPress}'  id-tipo-referencia='numero'></td>
+                                   <td id='Ex-G'><input class='input-limpiar' type='number' value='{rowData.ExhGasAvgTemp}'  id-tipo-referencia='numero'></td>
+                                   <td id='Cy-P'><input class='input-limpiar' type='number' value='{rowData.CylPressAvg}'  id-tipo-referencia='numero'></td>
+                                </tr>"
+                   : $@"
+                                 <tr class='{pisicionClass}' claveRegistro='{i + i}'>
+                                            <td style='width: 10%;' id='idHora'>{horas[i]}:00</td>
+                                            <td id='Run-H'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero'/></td>
+                                            <td id='P-F'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='T-F'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='P-O'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='T-O'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='CA-T'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='Diff-P'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='Ca-P'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='Ex-G'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                            <td id='Cy-P'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero' /></td>
+                                        </tr>";
+
+                  content.AppendHtml(trContent);
+              }
+
+              return content;
+          };
+
+
+
+
+    Func<int, List<OutGoingFeeder>, List<OutGoingFeeder>, IHtmlContent> GenerateDataCellsBAO = (count, datosRe, datosDe) =>
+          {
+              var content = new DefaultTagHelperContent();
+
+              for (int i = 1; i <= count; i++)
+              {
+
+                  List<string> horas = count.Equals(12) ? horasEG : count.Equals(4) ? baa : horasGenerador;
+
+                  var rowData = datosRe != null && datosRe.Count > 0 ? datosRe[i - 1] : null;
+
+                  /*string posicionClass = (int.Parse(date.Hour.ToString()) >= int.Parse(horas[i]) 
+                                                    && int.Parse(date.Hour.ToString()) <= int.Parse(horas[i+1])) 
+                                           ? "posicicion-actual" 
+                                           : "";*/
+                  string posicionClass = (int.Parse(date.Hour.ToString()) >= int.Parse(horas[i])
+                                                    && (horas.Count() > i + 1 && int.Parse(date.Hour.ToString()) 
+                                                    < int.Parse(horas[i + 1]))) ? "posicicion-actual" : "";
+
+                  var trContent = rowData != null
+               ? $@"
+                        <tr class='{posicionClass}' claveRegistro='{i + i}'>
+                           <td id='idHoraBao'>{horas[i]}:00</td>
+                            <td id='de-kwh'><input class='input-limpiar' type='number' value='{rowData.KWh}'  id-tipo-referencia='numero'></td>
+                            <td id='de-kvarh'><input class='input-limpiar' type='number' value='{rowData.KVARh}' id-tipo-referencia='numero'></td>
+                            <td id='re-kwh'><input class='input-limpiar' type='number' value='{datosDe[i - 1].KWh}' id-tipo-referencia='numero'></td>
+                            <td id='re-kvarh'><input class='input-limpiar' type='number' value='{datosDe[i - 1].KVARh}' id-tipo-referencia='numero'></td>
+                       </tr>"
+               : $@"
+                        <tr class='{posicionClass}' claveRegistro='{i + i}'>
+                           <td id='idHoraBao'>{horas[i]}:00</td>
+                            <td id='de-kwh'><input class='input-limpiar' type='number' value='0'  id-tipo-referencia='numero'></td>
+                            <td id='de-kvarh'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero'></td>
+                            <td id='re-kwh'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero'></td>
+                            <td id='re-kvarh'><input class='input-limpiar' type='number' value='0' id-tipo-referencia='numero'></td>
+                       </tr>";
+
+                  content.AppendHtml(trContent);
+              }
+
+              return content;
+          };
+
+}
+
+<style>
+    .posicicion-actual td {
+        background: #C5C5C5;
+    }
+
+    .lectura input {
+        width: 130px;
+        height: 26px;
+    }
+
+    .lectura span {
+        width: 165px;
+        padding: 0px 35px 0 35px;
+        margin-bottom: 1rem;
+        color: #858796;
+    }
+
+    .lectura {
+        display: flex;
+        border: 1px solid #e3e6f0;
+    }
+
+        .lectura div {
+            width: 40%;
+            border: 1px solid #e3e6f0;
+        }
+
+    .EG td {
+        width: 65px !important;
+        text-align: center;
+    }
+
+    .LM td {
+        width: 115px !important;
+        text-align: center;
+    }
+
+    .EG input {
+        width: 85% !important;
+        text-align-last: center;
+        font-size: 14px;
+    }
+
+    .EG th {
+        text-align-last: center;
+        font-weight: bold;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .title-table {
+        text-align-last: center;
+        font-weight: bold;
+        font-size: 20px;
+        background: #d02139;
+        color: white;
+        box-shadow: inset 2px 2px 4px 1px rgb(138, 18, 35);
+    }
+
+    .content-report {
+        border: solid;
+        padding: 40px;
+    }
+
+    .row {
+        margin-right: inherit;
+        margin-left: inherit;
+    }
+
+    .subTitulo-consola {
+        text-align: inherit;
+        font-size: 20px;
+        font-weight: bold;
+        padding: 0 0 0 10px;
+        background: #d02139;
+    }
+
+    .btnMostrarGE {
+        border-block-end-color: red;
+    }
+
+    .btnMostrarGE2 {
+        display: none;
+    }
+
+    .table thead th {
+        vertical-align: middle;
+    }
+
+    .table td, .table th {
+        padding: .30rem;
+    }
+    .btn-primary{
+        background: rgba(0, 57, 76, 1);
+    }
+
+</style>
+
+<div id="contendor-datosconsola">
+<div class="header-detail-report">
+    <div class="title-report col-md-12">
+        <h2 id="TituloConsolaGeneral">Central Termica</h2>
+        <h3 style="font-size: inherit;">LECTURAS DE CONSOLA</h3>
+    </div>
+    <div class="row">
+        <div class="col-md-6" style="display: flow;background: white;">
+            <img class="image-logo" src="./img/logo_elec.png" />
+        </div>
+        <div class="col-md-6">
+            <div>
+                <p>Versión 00 ELD-CTL-OM002</p>
+            </div>
+            <div>
+                <p1>Fecha</p1>
+                @{
+                    <p>@date.ToString("dd/MM/yyyy")</p>
+                }
+            </div>
+            <div class="subTitulo-consola">
+                <p1 style="text-align: inherit;">Operadores</p1>
+            </div>
+            <div>
+                <p1>Turno 1</p1>
+                @MostrarTurno(mañana,2)
+            </div>
+            <div>
+                <p1>Turno 2</p1>
+                @MostrarTurno(tarde,2)
+            </div>
+            <div>
+                <p1>Turno 3</p1>
+                @MostrarTurno(noche,2)
+            </div>
+        </div>
+    </div>
+</div>
+<div id="contenedor-botones-guardar" style="position: fixed;bottom: 1rem;">
+    <button class="btn btn-primary" id="GuardarDatos"><i class="fas fa-download fa-sm text-white-50"></i>Guardar Datos</button>
+    <button style="display:none;" class="btn btn-primary " id="GuardarDatos2"><i class="fas fa-download fa-sm text-white-50"></i>Guardar Datos</button>
+    <button style="display:none;" class="btn btn-primary " id="guardarLecturasMedianoche"><i class="fas fa-download fa-sm text-white-50"></i>Guardar Datos</button>
+</div>
+<div>
+    <button style="bottom: 1px; background-color:#F37021;" class="btn btn-light btnMostrarGE floating-button" id="EG1">
+        <i id="mostrarVistaGe1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+            </svg>
+        </i>
+        <i style="display:none;" id="ocultarVistaGe1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+            </svg>
+        </i>
+        EG01</button>
+    <button style="bottom: 6.4vh;" class="btn btn-light btnMostrarGE floating-button" id="EG2">
+        <i style="display:none;" id="mostrarVistaGe2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+            </svg>
+        </i>
+        <i id="ocultarVistaGe2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+            </svg>
+        </i>
+        EG02</button>
+    <button style="bottom: 12.5vh;" class="btn btn-light btnMostrarGE floating-button" id="lecturasExternas-medianoche">
+        <i style="display:none;" id="mostrarVistaLM">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+            </svg>
+        </i>
+        <i id="ocultarVistaLM">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z" />
+                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+            </svg>
+        </i>
+        Lecturas Externas</button>
+</div>
+<div style="padding: 10px 0 0 0">
+    <div id="datos-EG1">
+        <div style="padding :10px;">
+            <div class="title-table principal1">
+                <p id="idRegistro" claveRegistro='@EG01.IdRegistroConsola'>@EG01.TipoRegistro</p>
+            </div>
+            <table class="table table-bordered EG boton1" id="tabla-EG1">
+                <thead>
+                    <tr>
+                        <th>HORA</th>
+                        <th data-info='@detalleCabeceras["P"].Descripcion' id=@detalleCabeceras["P"].IdTipoEngine>@detalleCabeceras["P"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Q"].Descripcion' id=@detalleCabeceras["Q"].IdTipoEngine>@detalleCabeceras["Q"].Detalle</th>
+                        <th data-info='@detalleCabeceras["EA"].Descripcion' id=@detalleCabeceras["EA"].IdTipoEngine>@detalleCabeceras["EA"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Eq"].Descripcion' id=@detalleCabeceras["Eq"].IdTipoEngine>@detalleCabeceras["Eq"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL1"].Descripcion' id=@detalleCabeceras["IL1"].IdTipoEngine>@detalleCabeceras["IL1"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL2"].Descripcion' id=@detalleCabeceras["IL2"].IdTipoEngine>@detalleCabeceras["IL2"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL3"].Descripcion' id=@detalleCabeceras["IL3"].IdTipoEngine>@detalleCabeceras["IL3"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>@detalleCabeceras["U12"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U23</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U31</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @GenerateDataCells(12, energiaGenerada["EG01"])
+                </tbody>
+            </table>
+        </div>
+        <div id="tabla-Generator1">
+            <div class="title-table principal2">
+                <p id="idRegistroGen" claveRegistro='@Generator1.IdRegistroConsola'>@Generator1.TipoRegistro</p>
+            </div>
+            <div style="display: flex;">
+                <table class="table table-bordered EG boton2">
+                    <thead>
+                        <tr style="height: 69px;">
+                            <th>HORA</th>
+                            <th data-info='@detalleCabeceras["L1"].Descripcion' id=@detalleCabeceras["L1"].IdTipoEngine>@detalleCabeceras["L1"].Detalle</th>
+                            <th data-info='@detalleCabeceras["L2"].Descripcion' id=@detalleCabeceras["L2"].IdTipoEngine>@detalleCabeceras["L2"].Detalle</th>
+                            <th data-info='@detalleCabeceras["L3"].Descripcion' id=@detalleCabeceras["L3"].IdTipoEngine>@detalleCabeceras["L3"].Detalle</th>
+                            <th data-info='@detalleCabeceras["D"].Descripcion' id=@detalleCabeceras["D"].IdTipoEngine>@detalleCabeceras["D"].Detalle</th>
+                            <th data-info='@detalleCabeceras["ND"].Descripcion' id=@detalleCabeceras["ND"].IdTipoEngine>@detalleCabeceras["ND"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Torsion-V"].Descripcion' id=@detalleCabeceras["Torsion-V"].IdTipoEngine>@detalleCabeceras["Torsion-V"].Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @GenerateDataCellsGEN(6, datosGenerador["Generator1"])
+                    </tbody>
+                </table>
+
+                <table class="table table-bordered EG boton2">
+                    <thead>
+                        <tr>
+                            <th data-info='@detalleCabeceras["TCA"].Descripcion' colspan="2" id=@detalleCabeceras["TCA"].IdTipoEngine>@detalleCabeceras["TCA"].Detalle</th>
+                            <th data-info='@detalleCabeceras["TCB"].Descripcion' colspan="2" id=@detalleCabeceras["TCB"].IdTipoEngine>@detalleCabeceras["TCB"].Detalle</th>
+                        </tr>
+                        <tr>
+                            <th data-info='@detalleCabeceras["TpOut-A"].Descripcion' id=@detalleCabeceras["TpOut-A"].IdTipoEngine>@detalleCabeceras["TpOut-A"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Speed-A"].Descripcion' id=@detalleCabeceras["Speed-A"].IdTipoEngine>@detalleCabeceras["Speed-A"].Detalle</th>
+                            <th data-info='@detalleCabeceras["TpOut-B"].Descripcion' id=@detalleCabeceras["TpOut-B"].IdTipoEngine>@detalleCabeceras["TpOut-B"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Speed-B"].Descripcion' id=@detalleCabeceras["Speed-B"].IdTipoEngine>@detalleCabeceras["Speed-B"].Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tc">
+                        @GenerateDataCellsGENOIL(6, datosGenerador["Generator1"])
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="Engine1">
+            <div class="title-table principal3">
+                <p id="idRegistroEng" claveRegistro='@Engine1.IdRegistroConsola'>@Engine1.TipoRegistro</p>
+            </div>
+            <div style="display: flex;">
+                <table class="table table-bordered EG boton3" style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">HORA</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Run-Hours"].Descripcion' id=@detalleCabeceras["Run-Hours"].IdTipoEngine>@detalleCabeceras["Run-Hours"].Detalle</th>
+                            <th colspan="2" data-info='@detalleCabeceras["Fuel"].Descripcion' id=@detalleCabeceras["Fuel"].IdTipoEngine>@detalleCabeceras["Fuel"].Detalle</th>
+                            <th colspan="2" data-info='@detalleCabeceras["Oil"].Descripcion' id=@detalleCabeceras["Oil"].IdTipoEngine>@detalleCabeceras["Oil"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Cooling"].Descripcion' id=@detalleCabeceras["Cooling"].IdTipoEngine>@detalleCabeceras["Cooling"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Diff-P-J-P"].Descripcion' id=@detalleCabeceras["Diff-P-J-P"].IdTipoEngine>@detalleCabeceras["Diff-P-J-P"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Ca-Press"].Descripcion' id=@detalleCabeceras["Ca-Press"].IdTipoEngine>@detalleCabeceras["Ca-Press"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Ex-G-A-T"].Descripcion' id=@detalleCabeceras["Ex-G-A-T"].IdTipoEngine>@detalleCabeceras["Ex-G-A-T"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Cy-P-A"].Descripcion' id=@detalleCabeceras["Cy-P-A"].IdTipoEngine>@detalleCabeceras["Cy-P-A"].Detalle</th>
+                        </tr>
+                        <tr>
+                            <th data-info='@detalleCabeceras["Presion-F"].Descripcion' id=@detalleCabeceras["Presion-F"].IdTipoEngine>@detalleCabeceras["Presion-F"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Temp-F"].Descripcion' id=@detalleCabeceras["Temp-F"].IdTipoEngine>@detalleCabeceras["Temp-F"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Presion-O"].Descripcion' id=@detalleCabeceras["Presion-O"].IdTipoEngine>@detalleCabeceras["Presion-O"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Temp-O"].Descripcion' id=@detalleCabeceras["Temp-O"].IdTipoEngine>@detalleCabeceras["Temp-O"].Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @GenerateDataEngine(6,datosEngine["Engine1"])
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    <div style="display:none;" id="datos-EG2">
+
+        <div style="padding :10px;">
+            <div class="title-table principal5">
+                <p id="idRegistro2" claveRegistro='@EG02.IdRegistroConsola'>@EG02.TipoRegistro</p>
+            </div>
+            <table class="table table-bordered EG boton5" id="tabla-EG2">
+                <thead>
+                    <tr>
+                        <th>HORA</th>
+                        <th data-info='@detalleCabeceras["P"].Descripcion' id=@detalleCabeceras["P"].IdTipoEngine>@detalleCabeceras["P"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Q"].Descripcion' id=@detalleCabeceras["Q"].IdTipoEngine>@detalleCabeceras["Q"].Detalle</th>
+                        <th data-info='@detalleCabeceras["EA"].Descripcion' id=@detalleCabeceras["EA"].IdTipoEngine>@detalleCabeceras["EA"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Eq"].Descripcion' id=@detalleCabeceras["Eq"].IdTipoEngine>@detalleCabeceras["Eq"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL1"].Descripcion' id=@detalleCabeceras["IL1"].IdTipoEngine>@detalleCabeceras["IL1"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL2"].Descripcion' id=@detalleCabeceras["IL2"].IdTipoEngine>@detalleCabeceras["IL2"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL3"].Descripcion' id=@detalleCabeceras["IL3"].IdTipoEngine>@detalleCabeceras["IL3"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>@detalleCabeceras["U12"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U23</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U31</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @GenerateDataCells(12, energiaGenerada["EG02"])
+                </tbody>
+            </table>
+        </div>
+
+        <div id="tabla-Generator2">
+            <div class="title-table principal5">
+                <p id="idRegistroGen2" claveRegistro='@Generator2.IdRegistroConsola'>@Generator2.TipoRegistro</p>
+            </div>
+            <div style="display: flex;">
+                <table class="table table-bordered EG boton 5">
+                    <thead>
+                        <tr style="height: 69px;">
+                            <th>HORA</th>
+                            <th data-info='@detalleCabeceras["L1"].Descripcion' id=@detalleCabeceras["L1"].IdTipoEngine>@detalleCabeceras["L1"].Detalle</th>
+                            <th data-info='@detalleCabeceras["L2"].Descripcion' id=@detalleCabeceras["L2"].IdTipoEngine>@detalleCabeceras["L2"].Detalle</th>
+                            <th data-info='@detalleCabeceras["L3"].Descripcion' id=@detalleCabeceras["L3"].IdTipoEngine>@detalleCabeceras["L3"].Detalle</th>
+                            <th data-info='@detalleCabeceras["D"].Descripcion' id=@detalleCabeceras["D"].IdTipoEngine>@detalleCabeceras["D"].Detalle</th>
+                            <th data-info='@detalleCabeceras["ND"].Descripcion' id=@detalleCabeceras["ND"].IdTipoEngine>@detalleCabeceras["ND"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Torsion-V"].Descripcion' id=@detalleCabeceras["Torsion-V"].IdTipoEngine>@detalleCabeceras["Torsion-V"].Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @GenerateDataCellsGEN(6, datosGenerador["Generator2"])
+                    </tbody>
+                </table>
+
+                <table class="table table-bordered EG principal boton5">
+                    <thead>
+                        <tr>
+                            <th data-info='@detalleCabeceras["TCA"].Descripcion' colspan="2" id=@detalleCabeceras["TCA"].IdTipoEngine>@detalleCabeceras["TCA"].Detalle</th>
+                            <th data-info='@detalleCabeceras["TCB"].Descripcion' colspan="2" id=@detalleCabeceras["TCB"].IdTipoEngine>@detalleCabeceras["TCB"].Detalle</th>
+                        </tr>
+                        <tr>
+                            <th data-info='@detalleCabeceras["TpOut-A"].Descripcion' id=@detalleCabeceras["TpOut-A"].IdTipoEngine>@detalleCabeceras["TpOut-A"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Speed-A"].Descripcion' id=@detalleCabeceras["Speed-A"].IdTipoEngine>@detalleCabeceras["Speed-A"].Detalle</th>
+                            <th data-info='@detalleCabeceras["TpOut-B"].Descripcion' id=@detalleCabeceras["TpOut-B"].IdTipoEngine>@detalleCabeceras["TpOut-B"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Speed-B"].Descripcion' id=@detalleCabeceras["Speed-B"].IdTipoEngine>@detalleCabeceras["Speed-B"].Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tc">
+                        @GenerateDataCellsGENOIL(6, datosGenerador["Generator2"])
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="Engine2">
+            <div class="title-table">
+                <p id="idRegistroEng2" claveRegistro='@Engine2.IdRegistroConsola'>@Engine2.TipoRegistro</p>
+            </div>
+            <div style="display: flex;">
+                <table class="table table-bordered EG" style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">HORA</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Run-Hours"].Descripcion' id=@detalleCabeceras["Run-Hours"].IdTipoEngine>@detalleCabeceras["Run-Hours"].Detalle</th>
+                            <th colspan="2" data-info='@detalleCabeceras["Fuel"].Descripcion' id=@detalleCabeceras["Fuel"].IdTipoEngine>@detalleCabeceras["Fuel"].Detalle</th>
+                            <th colspan="2" data-info='@detalleCabeceras["Oil"].Descripcion' id=@detalleCabeceras["Oil"].IdTipoEngine>@detalleCabeceras["Oil"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Cooling"].Descripcion' id=@detalleCabeceras["Cooling"].IdTipoEngine>@detalleCabeceras["Cooling"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Diff-P-J-P"].Descripcion' id=@detalleCabeceras["Diff-P-J-P"].IdTipoEngine>@detalleCabeceras["Diff-P-J-P"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Ca-Press"].Descripcion' id=@detalleCabeceras["Ca-Press"].IdTipoEngine>@detalleCabeceras["Ca-Press"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Ex-G-A-T"].Descripcion' id=@detalleCabeceras["Ex-G-A-T"].IdTipoEngine>@detalleCabeceras["Ex-G-A-T"].Detalle</th>
+                            <th rowspan="2" data-info='@detalleCabeceras["Cy-P-A"].Descripcion' id=@detalleCabeceras["Cy-P-A"].IdTipoEngine>@detalleCabeceras["Cy-P-A"].Detalle</th>
+                        </tr>
+                        <tr>
+                            <th data-info='@detalleCabeceras["Presion-F"].Descripcion' id=@detalleCabeceras["Presion-F"].IdTipoEngine>@detalleCabeceras["Presion-F"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Temp-F"].Descripcion' id=@detalleCabeceras["Temp-F"].IdTipoEngine>@detalleCabeceras["Temp-F"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Presion-O"].Descripcion' id=@detalleCabeceras["Presion-O"].IdTipoEngine>@detalleCabeceras["Presion-O"].Detalle</th>
+                            <th data-info='@detalleCabeceras["Temp-O"].Descripcion' id=@detalleCabeceras["Temp-O"].IdTipoEngine>@detalleCabeceras["Temp-O"].Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @GenerateDataEngine(6,datosEngine["Engine2"])
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:none;" id="medicionExterna">
+
+
+        <div style="padding :10px;">
+            <div class="title-table principal4">
+                <p id="idRegistroBaa" claveRegistro='@BAA1.IdRegistroConsola'>@BAA1.TipoRegistro</p>
+            </div>
+            <table class="table table-bordered EG boton4" id="tabla-Baa">
+                <thead>
+                    <tr>
+                        <th>HORA</th>
+                        <th data-info='@detalleCabeceras["P"].Descripcion' id=@detalleCabeceras["P"].IdTipoEngine>@detalleCabeceras["P"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Q"].Descripcion' id=@detalleCabeceras["Q"].IdTipoEngine>@detalleCabeceras["Q"].Detalle</th>
+                        <th data-info='@detalleCabeceras["EA"].Descripcion' id=@detalleCabeceras["EA"].IdTipoEngine>@detalleCabeceras["EA"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Eq"].Descripcion' id=@detalleCabeceras["Eq"].IdTipoEngine>@detalleCabeceras["Eq"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL1"].Descripcion' id=@detalleCabeceras["IL1"].IdTipoEngine>@detalleCabeceras["IL1"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL2"].Descripcion' id=@detalleCabeceras["IL2"].IdTipoEngine>@detalleCabeceras["IL2"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL3"].Descripcion' id=@detalleCabeceras["IL3"].IdTipoEngine>@detalleCabeceras["IL3"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>@detalleCabeceras["U12"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U23</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U31</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @GenerateDataCells(4, energiaGenerada["BAA901"])
+                </tbody>
+            </table>
+        </div>
+
+
+        <div style="padding :10px;">
+            <div class="title-table">
+                <p id="idRegistroBaa2" claveRegistro='@BAA2.IdRegistroConsola'>@BAA2.TipoRegistro</p>
+            </div>
+            <table class="table table-bordered EG" id="tabla-Baa2">
+                <thead>
+                    <tr>
+                        <th>HORA</th>
+                        <th data-info='@detalleCabeceras["P"].Descripcion' id=@detalleCabeceras["P"].IdTipoEngine>@detalleCabeceras["P"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Q"].Descripcion' id=@detalleCabeceras["Q"].IdTipoEngine>@detalleCabeceras["Q"].Detalle</th>
+                        <th data-info='@detalleCabeceras["EA"].Descripcion' id=@detalleCabeceras["EA"].IdTipoEngine>@detalleCabeceras["EA"].Detalle</th>
+                        <th data-info='@detalleCabeceras["Eq"].Descripcion' id=@detalleCabeceras["Eq"].IdTipoEngine>@detalleCabeceras["Eq"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL1"].Descripcion' id=@detalleCabeceras["IL1"].IdTipoEngine>@detalleCabeceras["IL1"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL2"].Descripcion' id=@detalleCabeceras["IL2"].IdTipoEngine>@detalleCabeceras["IL2"].Detalle</th>
+                        <th data-info='@detalleCabeceras["IL3"].Descripcion' id=@detalleCabeceras["IL3"].IdTipoEngine>@detalleCabeceras["IL3"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>@detalleCabeceras["U12"].Detalle</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U23</th>
+                        <th data-info='@detalleCabeceras["U12"].Descripcion' id=@detalleCabeceras["U12"].IdTipoEngine>U31</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @GenerateDataCells(4, energiaGenerada["BFA901"])
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <div class="title-table">
+                <p id="idRegistroBAO" claveRegistro='@BAO.IdRegistroConsola'>@BAO.TipoRegistro</p>
+            </div>
+            <table class="table table-bordered EG" id="BAO901">
+                <thead>
+                    <tr>
+                        <th rowspan="2">HORA</th>
+                        <th colspan="2" data-info='@detalleCabeceras["Delivered"].Descripcion' id=@detalleCabeceras["Delivered"].IdTipoEngine>@detalleCabeceras["Delivered"].Detalle</th>
+                        <th colspan="2" data-info='@detalleCabeceras["Recived"].Descripcion' id=@detalleCabeceras["Recived"].IdTipoEngine>@detalleCabeceras["Recived"].Detalle</th>
+                    </tr>
+                    <tr>
+                        <th data-info='@detalleCabeceras["kwh"].Descripcion' id=@detalleCabeceras["kwh"].IdTipoEngine>@detalleCabeceras["kwh"].Detalle</th>
+                        <th data-info='@detalleCabeceras["kvarh"].Descripcion' id=@detalleCabeceras["kvarh"].IdTipoEngine>@detalleCabeceras["kvarh"].Detalle</th>
+                        <th data-info='@detalleCabeceras["kwh"].Descripcion' id=@detalleCabeceras["kwh"].IdTipoEngine>@detalleCabeceras["kwh"].Detalle</th>
+                        <th data-info='@detalleCabeceras["kvarh"].Descripcion' id=@detalleCabeceras["kvarh"].IdTipoEngine>@detalleCabeceras["kvarh"].Detalle</th>
+                    </tr>
+                </thead>
+                @GenerateDataCellsBAO(4, datosDelived, datosReceived)
+            </table>
+        </div>
+
+        <div id="lecturasMedianoche">
+            <div style="padding :10px;">
+                <div class="title-table">
+                    <p id="idRegistro12" claveRegistro='@LecMedianoche.IdRegistroConsola'>@LecMedianoche.TipoRegistro</p>
+                </div>
+                <div>
+
+                    @{
+                        if (lecturasMedianoche != null && lecturasMedianoche.Count() != 0)
+                        {
+
+                            foreach (var item in lecturasMedianoche)
+                            {
+                                <div class="lectura">
+                                    <div data-info='@detalleCabeceras["GasCon"].Descripcion' id=@detalleCabeceras["GasCon"].IdTipoEngine@item.Value.NumeroEG>
+                                        <span> @detalleCabeceras["GasCon"].Detalle@item.Value.NumeroEG &nbsp;</span> <input type="number" value=@item.Value.GasconsumedEG />
+                                    </div>
+                                    <div data-info='@detalleCabeceras["EnerProd"].Descripcion' id=@detalleCabeceras["EnerProd"].IdTipoEngine@item.Value.NumeroEG>
+                                        <span> @detalleCabeceras["EnerProd"].Detalle@item.Value.NumeroEG &nbsp;</span>
+                                        <input type="number" value=@item.Value.GasEnergiaEG id-tipo-referencia="numero" value="0" />
+                                    </div>
+                                    <div data-info='@detalleCabeceras["ReadingToday"].Descripcion' id=@detalleCabeceras["ReadingToday"].IdTipoEngine@item.Value.NumeroEG>
+                                        <span> @detalleCabeceras["ReadingToday"].Detalle &nbsp;</span>
+                                        <input type="number" value=@item.Value.ReadingToday id-tipo-referencia="numero" value="0" />
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 1; i <= 2; i++)
+                            {
+                                <div class="lectura">
+                                    <div data-info='@detalleCabeceras["GasCon"].Descripcion' id=@detalleCabeceras["GasCon"].IdTipoEngine@i>
+                                        <span> @detalleCabeceras["GasCon"].Detalle@i &nbsp;</span>
+                                        <input type="number" id-tipo-referencia="numero" value="0" />
+                                    </div>
+                                    <div data-info='@detalleCabeceras["EnerProd"].Descripcion' id=@detalleCabeceras["EnerProd"].IdTipoEngine@i>
+                                        <span> @detalleCabeceras["EnerProd"].Detalle@i &nbsp;</span>
+                                        <input type="number" id-tipo-referencia="numero" value="0" />
+                                    </div>
+                                    <div data-info='@detalleCabeceras["ReadingToday"].Descripcion' id=@detalleCabeceras["ReadingToday"].IdTipoEngine@i>
+                                        <span> @detalleCabeceras["ReadingToday"].Detalle &nbsp;</span>
+                                        <input type="number" id-tipo-referencia="numero" value="0" />
+                                    </div>
+                                </div>
+                            }
+                        }
+                        <div id="observacionesConsola" style="display: flex; padding: 10px 0 0 0;">
+                            <span style="padding: 0 10px 0 0;">Observaciones</span>
+                            <textarea style="height: 113px; width: 90%;">@datoFormato.Observaciones</textarea>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    function ObtenerDatosFormato() {
+        var inputObser = document.getElementById('observacionesConsola').querySelector('textarea');
+
+
+        var datos = {
+            idFormatoConsola: idFormatoConsola,
+            Observaciones: inputObser.value,
+            Observaciones1: "",
+            Observaciones2: "",
+            fecha: obtenerFecha("fecha")
+        };
+
+
+        fetch('@Url.Action("GuardarFormato", "DatosConsola")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datos)
+        })
+            .then(function (response) {
+                return response.json();
+
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    }
+
+
+
+
+
+    document.getElementById('lecturasExternas-medianoche').addEventListener('click', function () {
+        var egElement = document.getElementById('EG1');
+        var eg2Element = document.getElementById('EG2');
+        var datosEg1 = document.getElementById('datos-EG1');
+        var datosEg2 = document.getElementById('datos-EG2');
+        var datosMedicionExterna = document.getElementById('medicionExterna');
+        var btnGuardar = document.getElementById('GuardarDatos');
+        var btnGuardar2 = document.getElementById('GuardarDatos2');
+        var btnLecturasMedianoche = document.getElementById('guardarLecturasMedianoche');
+        var iconMostrarGe1 = document.getElementById('mostrarVistaGe1');
+        var iconOcultarGe1 = document.getElementById('ocultarVistaGe1');
+        var iconMostrarGe2 = document.getElementById('mostrarVistaGe2');
+        var iconOcultarGe2 = document.getElementById('ocultarVistaGe2');
+        var iconMostrarLM = document.getElementById('mostrarVistaLM');
+        var iconOcultarLM = document.getElementById('ocultarVistaLM');
+
+
+        iconOcultarGe1.style.display = 'initial';
+        iconMostrarGe1.style.display = 'none';
+        iconOcultarGe2.style.display = 'initial';
+        iconMostrarGe2.style.display = 'none';
+        iconOcultarLM.style.display = 'none';
+        iconMostrarLM.style.display = 'initial';
+
+
+
+
+        btnLecturasMedianoche.style.display = 'initial';
+        btnGuardar.style.display = 'none';
+        btnGuardar2.style.display = 'none';
+
+        this.style.backgroundColor = '#F37021';//    
+        datosMedicionExterna.style.display = 'initial';
+        datosEg2.style.display = 'none';
+        datosEg1.style.display = 'none';
+        egElement.style.backgroundColor = '#f8f9fc';
+        eg2Element.style.backgroundColor = '#f8f9fc';
+    });
+
+
+
+    document.getElementById('EG2').addEventListener('click', function () {
+        var eg2Element = document.getElementById('EG1');
+        var datosEg1 = document.getElementById('datos-EG1');
+        var datosEg2 = document.getElementById('datos-EG2');
+        var btnGuardar = document.getElementById('GuardarDatos');
+        var btnGuardar2 = document.getElementById('GuardarDatos2');
+        var btnlLecturaExterna = document.getElementById('lecturasExternas-medianoche');
+        var datosMedicionExterna = document.getElementById('medicionExterna');
+        var btnLecturasMedianoche = document.getElementById('guardarLecturasMedianoche');
+
+        var iconMostrarGe1 = document.getElementById('mostrarVistaGe1');
+        var iconOcultarGe1 = document.getElementById('ocultarVistaGe1');
+        var iconMostrarGe2 = document.getElementById('mostrarVistaGe2');
+        var iconOcultarGe2 = document.getElementById('ocultarVistaGe2');
+        var iconMostrarLM = document.getElementById('mostrarVistaLM');
+        var iconOcultarLM = document.getElementById('ocultarVistaLM');
+
+
+        iconOcultarGe1.style.display = 'initial';
+        iconMostrarGe1.style.display = 'none';
+        iconOcultarGe2.style.display = 'none';
+        iconMostrarGe2.style.display = 'initial';
+        iconOcultarLM.style.display = 'initial';
+        iconMostrarLM.style.display = 'none';
+
+        btnLecturasMedianoche.style.display = 'none';
+        btnlLecturaExterna.style.backgroundColor = '#f8f9fc';
+        datosMedicionExterna.style.display = 'none';
+
+        this.style.backgroundColor = '#F37021';
+        eg2Element.style.backgroundColor = '#f8f9fc';
+        datosEg2.style.display = 'initial';
+        datosEg1.style.display = 'none';
+        btnGuardar.style.display = 'none';
+        btnGuardar2.style.display = 'initial';
+    });
+
+    document.getElementById('EG1').addEventListener('click', function () {
+        var eg2Element = document.getElementById('EG2');
+        var datosEg1 = document.getElementById('datos-EG1');
+        var datosEg2 = document.getElementById('datos-EG2');
+        var btnGuardar = document.getElementById('GuardarDatos');
+        var btnGuardar2 = document.getElementById('GuardarDatos2');
+        var btnlLecturaExterna = document.getElementById('lecturasExternas-medianoche');
+        var datosMedicionExterna = document.getElementById('medicionExterna');
+        var btnLecturasMedianoche = document.getElementById('guardarLecturasMedianoche');
+        var iconMostrarGe1 = document.getElementById('mostrarVistaGe1');
+        var iconOcultarGe1 = document.getElementById('ocultarVistaGe1');
+        var iconMostrarGe2 = document.getElementById('mostrarVistaGe2');
+        var iconOcultarGe2 = document.getElementById('ocultarVistaGe2');
+        var iconMostrarLM = document.getElementById('mostrarVistaLM');
+        var iconOcultarLM = document.getElementById('ocultarVistaLM');
+
+
+        iconOcultarGe1.style.display = 'none';
+        iconMostrarGe1.style.display = 'initial';
+        iconOcultarGe2.style.display = 'initial';
+        iconMostrarGe2.style.display = 'none';
+        iconOcultarLM.style.display = 'initial';
+        iconMostrarLM.style.display = 'none';
+
+
+
+        btnLecturasMedianoche.style.display = 'none';
+        btnlLecturaExterna.style.backgroundColor = '#f8f9fc';
+        datosMedicionExterna.style.display = 'none';
+        eg2Element.style.backgroundColor = '#f8f9fc';
+        this.style.backgroundColor = '#F37021';
+        datosEg2.style.display = 'none';
+        datosEg1.style.display = 'initial';
+        btnGuardar.style.display = 'initial';
+        btnGuardar2.style.display = 'none';
+    });
+
+
+    function ObtenerDatosLectMedianoche() {
+
+        var etiquetaIdRegistro = document.getElementById('idRegistro12');
+        var claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+
+        for (let i = 1; i <= 2; i++) {
+            var inputGas = document.getElementById('GasCon' + i).querySelector('input');
+            var inputEnergia = document.getElementById('EnerProd' + i).querySelector('input');
+            var inputRead = document.getElementById('ReadingToday' + i).querySelector('input');
+            var idLecturas = claveRegistro + '-' + obtenerFecha("format") + '-' + i;
+
+            var datos = {
+                IdLecturas: datosOperario.IdSitio + '-' + idLecturas,
+                NumeroEG: parseInt(i),
+                GasconsumedEG: parseFloat(inputGas.value),
+                GasEnergiaEG: parseFloat(inputEnergia.value),
+                ReadingToday: parseFloat(inputRead.value),
+                IdFormatoConsola: idFormatoConsola,
+                fecha : ''
+            };
+
+            fetch('@Url.Action("GuardarDatosLectMedianoche", "DatosConsola")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                        });
+
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.respuesta.mensaje,
+                            icon: "error",
+                            button: "OK",
+                        });
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+        }
+    }
+
+
+
+
+
+
+    var idFormatoConsola;
+    var botonGuardarDatos = document.getElementById('GuardarDatos');
+
+    botonGuardarDatos.addEventListener('click', async function () {
+
+        const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+        loader.style.display = 'block';
+        var inputs = document.querySelectorAll('input');
+
+
+        inputs.forEach(function (input) {
+            var typeInput = input.getAttribute('type');
+
+            if (input.value.trim() === '' && typeInput !=='file') {
+                console.log("input.value : ", input);
+                input.value = '0';
+            }
+        });
+
+
+
+        idFormatoConsola = datosOperario.IdSitio + "-ELD-CTL-OM002_" + obtenerFecha("fecha")
+
+        ObtenerDatosInput('tabla-EG1');
+        GuardarDatosEnginer('Engine1');
+        GuardarDatosGenerador('tabla-Generator1');
+        /*ObtenerDatosLectMedianoche();
+        GuardarDatosBAO();
+        ObtenerDatosFormato();*/
+        loader.style.display = 'none';
+        //location.reload(true);
+    });
+
+    var botonGuardarDatos2 = document.getElementById('GuardarDatos2');
+
+
+    botonGuardarDatos2.addEventListener('click', async function () {
+        loader.style.display = 'block';
+        var inputs = document.querySelectorAll('input');
+
+        inputs.forEach(function (input) {
+            var tipoInput = input.getAttribute('type');
+            if (input.value.trim() === '' && tipoInput != 'file') {
+                input.value = 0;
+            }
+        });
+
+
+        idFormatoConsola = datosOperario.IdSitio + "-ELD-CTL-OM002_" + obtenerFecha("fecha")
+
+        ObtenerDatosInput('tabla-EG2');
+        GuardarDatosEnginer('Engine2');
+        GuardarDatosGenerador('tabla-Generator2');
+        //ObtenerDatosLectMedianoche();
+        //GuardarDatosBAO();
+        //ObtenerDatosFormato();
+        loader.style.display = 'none';
+        // location.reload(true);
+    });
+
+    //
+    var btnLecturasMedianoche = document.getElementById('guardarLecturasMedianoche');
+    btnLecturasMedianoche.addEventListener('click', async function () {
+        loader.style.display = 'block';
+        var inputs = document.querySelectorAll('input');
+
+        inputs.forEach(function (input) {
+            var tipoInput = input.getAttribute('type');
+            if (input.value.trim() === '' && tipoInput != 'file') {
+                input.value = 0;
+            }
+        });
+
+
+        idFormatoConsola = datosOperario.IdSitio + "-ELD-CTL-OM002_" + obtenerFecha("fecha")
+
+        ObtenerDatosInput('tabla-Baa');
+        ObtenerDatosInput('tabla-Baa2');
+        ObtenerDatosLectMedianoche();
+        GuardarDatosBAO();
+        ObtenerDatosFormato();
+        loader.style.display = 'none';
+    });
+
+
+    function ObtenerDatosInput(tablaId) {
+
+        var etiquetaIdRegistro;
+        var claveRegistro;
+        var etiquetaIdHora;
+        if (tablaId == "tabla-Baa") {
+            etiquetaIdRegistro = document.getElementById('idRegistroBaa');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+        }
+        if (tablaId == "tabla-EG1") {
+            etiquetaIdRegistro = document.getElementById('idRegistro');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+        }
+        if (tablaId == "tabla-EG2") {
+            etiquetaIdRegistro = document.getElementById('idRegistro2');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+        }
+        if (tablaId == "tabla-Baa2") {
+            etiquetaIdRegistro = document.getElementById('idRegistroBaa2');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+        }
+
+        var idDetalleConsola = datosOperario.IdSitio + '-' + claveRegistro + '-' + obtenerFecha("format") + '-'
+        var idOperario = datosOperario.IdOperario;
+
+        var filas = document.getElementById(tablaId).querySelectorAll('tbody tr');
+
+        var listaDatos = [];
+        filas.forEach(function (fila) {
+            var claveHora = fila.getAttribute('claveRegistro');
+            var idInput = fila.getAttribute('id');
+
+            var inputs = fila.querySelectorAll('td input');
+
+            var dato = {
+                potenciaActiva: parseFloat(inputs[0].value),
+                potenciaReactiva: parseFloat(inputs[1].value),
+                energiaActiva: parseFloat(inputs[2].value),
+                energiaReactiva: parseFloat(inputs[3].value),
+                corrienteLinea1: parseFloat(inputs[4].value),
+                corrienteLinea2: parseFloat(inputs[5].value),
+                corrienteLinea3: parseFloat(inputs[6].value),
+                voltaje: parseFloat(inputs[7].value),
+                voltaje23: parseFloat(inputs[8].value),
+                voltaje31: parseFloat(inputs[9].value),
+                idDetalleConsola: idInput == "" || idInput == null ? idDetalleConsola + claveHora : idInput,
+                fecha: obtenerFecha("fecha"),
+                hora: claveHora + ":00",
+                idRegistroConsola: claveRegistro,
+                idOperario: idOperario,
+                idformatoConsola: idFormatoConsola
+            };
+
+            listaDatos.push(dato);
+        });
+
+        fetch('@Url.Action("GuardarDatosConsola", "DatosConsola")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(listaDatos)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    }
+
+
+    function GuardarDatosBAO() {
+        const datos = [];
+        const filas = document.querySelectorAll('#BAO901 tbody tr');
+
+        filas.forEach(fila => {
+            const hora = fila.querySelector('#idHoraBao').textContent;
+            const deKwh = parseFloat(fila.querySelector('#de-kwh input').value);
+            const deKvarh = parseFloat(fila.querySelector('#de-kvarh input').value);
+            const reKwh = parseFloat(fila.querySelector('#re-kwh input').value);
+            const reKvarh = parseFloat(fila.querySelector('#re-kvarh input').value);
+
+            console.log('hora : ', parseInt(hora.split(':')[0]));
+            console.log('hora : ', parseInt(hora.split(':')[0]) == 0 ? 24 : parseInt(hora.split(':')[0]));
+
+            const dato = {
+                idOutGoing: `${datosOperario.IdSitio}-BAO901-DE-${obtenerFecha("format")}-${hora.split(':')[0]}`,
+                idTipoEngine: 'DELIVERED',
+                kWh: deKwh,
+                kVARh: deKvarh,
+                fila: parseInt(hora.split(':')[0]) == 0 ? 24 : parseInt(hora.split(':')[0]),
+                hora: hora,
+                IdFormatoConsola: datosOperario.IdSitio+'-ELD-CTL-OM002_' + obtenerFecha("format"),
+                fecha: obtenerFecha("fecha")
+            };
+
+            const datoRe = {
+                idOutGoing: `${datosOperario.IdSitio}-BAO901-RE-${obtenerFecha("format")}-${hora.split(':')[0]}`,
+                idTipoEngine: 'RECIVED',
+                kWh: reKwh,
+                kVARh: reKvarh,
+                fila: parseInt(hora.split(':')[0]) == 0 ? 24 : parseInt(hora.split(':')[0]),
+                hora: hora,
+                IdFormatoConsola:  datosOperario.IdSitio+'-ELD-CTL-OM002_' + obtenerFecha("format"),
+                fecha: obtenerFecha("fecha")
+            };
+
+            datos.push(dato);
+            datos.push(datoRe);
+        });
+        console.log("datos : ", datos);
+        fetch('@Url.Action("GuardarDetalleBAO",  "DatosConsola")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datos)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    };
+
+    function GuardarDatosBAO1() {
+
+        var etiquetaIdHora = document.getElementById('idHoraBao');
+        var claveHora = etiquetaIdHora.getAttribute('claveRegistro');
+
+
+        var etiquetaIdRegistro = document.getElementById('idRegistroBAO');
+        console.log("etiquetaIdRegistro : ", etiquetaIdRegistro);
+        var claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+        console.log("claveRegistro : ", claveRegistro);
+
+        //console.log(" : ",);
+
+        var listaDetalle = [];
+
+        var filas = document.getElementById('BAO901').querySelectorAll('tbody tr');
+        filas.forEach(function (fila) {
+            console.log("fila : ", fila);
+
+            for (let i = 1; i <= 2; i++) {
+                var id = i == 1 ? "Delivered" : "Recived";
+                var idEng = document.getElementById(id);
+                console.log(" idEng : ", idEng);
+
+                var idValue = idEng.textContent || idEng.innerText;
+                console.log(" idValue : ", idValue);
+
+                var inputlKvarh = document.getElementById(idValue.substring(0, 2).toLowerCase() + '-kvarh').querySelector('input');
+                console.log(" inputlKvarh : ", inputlKvarh);
+
+                var inputlKwh = document.getElementById(idValue.substring(0, 2).toLowerCase() + '-kwh').querySelector('input');
+                console.log(" inputlKwh : ", inputlKwh);
+
+                var datos = {
+                    idOutGoing: datosOperario.IdSitio + "-" + claveRegistro + "-" + idValue.substring(0, 2) + "-" + obtenerFecha("format") + "-" + claveHora,
+                    idTipoEngine: idValue,
+                    kWh: parseFloat(inputlKwh.value),
+                    kVARh: parseFloat(inputlKvarh.value),
+                    hora: etiquetaIdHora.textContent,
+                    IdFormatoConsola: idFormatoConsola,
+                    fecha: obtenerFecha("fecha")
+                };
+                listaDetalle.push(datos);
+            }
+        });
+
+
+
+        console.log(" listaDetalle : ", listaDetalle);
+
+        fetch('@Url.Action("GuardarDetalleBAO",  "DatosConsola")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(listaDetalle)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+
+    }
+
+    function GuardarDatosGenerador(tablaId) {
+
+        var filas = document.getElementById(tablaId).querySelectorAll('tbody tr');
+
+        var etiquetaIdHora;
+        var etiquetaIdRegistro;
+        var claveRegistro;
+
+        if (tablaId == "tabla-Generator1") {
+            etiquetaIdRegistro = document.getElementById('idRegistroGen');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+            etiquetaIdHora = document.getElementById('idHoraGen');
+        }
+        if (tablaId == "tabla-Generator2") {
+            etiquetaIdRegistro = document.getElementById('idRegistroGen2');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+            etiquetaIdHora = document.getElementById('idHoraGen2');
+        }
+        var IdDetGeneratorConsola = datosOperario.IdSitio + '-' + claveRegistro + '-' + obtenerFecha("format") + '-';
+
+
+        var listDatos = [];
+
+        let numerosFilas = 0;
+        filas.forEach(function (fila) {
+
+            numerosFilas++;
+            if (numerosFilas >= 7) {
+                return;
+            }
+
+            var claveHora = fila.getAttribute('claveRegistro');
+
+            var detGeneratorTC = "";
+            var listDetGeneratorTC = [];
+
+            var inputl1 = fila.querySelector('#L1 input');
+            var inputl2 = fila.querySelector('#L2 input');
+            var inputl3 = fila.querySelector('#L3 input');
+            var inputD = fila.querySelector('#D input');
+            var inputND = fila.querySelector('#ND input');
+            var inputTV = fila.querySelector('#TV input');
+
+
+
+            for (var i = 0; i < 2; i++) {
+                var tablaTc = document.getElementById('tc');
+                var inputPresion = tablaTc.querySelector('#row-' + numerosFilas);
+
+
+                var id = i == 1 ? "A" : "B";
+
+                var inputTpOut = inputPresion.querySelector('#TO-' + id + ' input');
+                var inputSpeed = inputPresion.querySelector('#Sp-' + id + ' input');
+
+                detGeneratorTC = {
+                    idDetGenerator: datosOperario.IdSitio + '-' + claveRegistro + id + "-" + obtenerFecha("format") + "-" + claveHora,
+                    fecha: obtenerFecha("fecha"),
+                    idTipoEngine: 'TC' + id,
+                    tempOut: ParseFloatEmpty(inputTpOut.value),
+                    speed: ParseFloatEmpty(inputSpeed.value),
+                    idDetGeneratorConsola: IdDetGeneratorConsola + claveHora
+                };
+
+                listDetGeneratorTC.push(detGeneratorTC);
+            }
+
+            var RegistroDatosGenerator = {
+                idDetGeneratorConsola: IdDetGeneratorConsola + claveHora,
+                hora: claveHora + ":00",
+                fecha: obtenerFecha("fecha"),
+                l1: ParseFloatEmpty(inputl1.value),
+                l2: ParseFloatEmpty(inputl2.value),
+                l3: ParseFloatEmpty(inputl3.value),
+                d: ParseFloatEmpty(inputD.value),
+                nD: ParseFloatEmpty(inputND.value),
+                tersionalVibration: parseFloat(inputTV.value),
+                idFormatoConsola: idFormatoConsola,
+                detalleGeneradores: listDetGeneratorTC
+            };
+            listDatos.push(RegistroDatosGenerator);
+
+        });
+
+
+
+        fetch('@Url.Action("GuardarDatosGenerador", "DatosConsola")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(listDatos)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    }
+
+
+
+
+    function GuardarDatosEnginer(tablaId) {
+        console.log("tablaId : ", tablaId);
+
+        var filas = document.getElementById(tablaId).querySelectorAll('tbody tr');
+
+        var etiquetaIdHora;
+        var etiquetaIdRegistro;
+        var claveRegistro;
+
+        if (tablaId == "Engine1") {
+            etiquetaIdRegistro = document.getElementById('idRegistroEng');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+            console.log("claveRegistro : ", claveRegistro);
+
+        }
+        if (tablaId == "Engine2") {
+            etiquetaIdRegistro = document.getElementById('idRegistroEng2');
+            claveRegistro = etiquetaIdRegistro.getAttribute('claveRegistro');
+            console.log("claveRegistro : ", claveRegistro);
+        }
+        var idDetEngineConsola = datosOperario.IdSitio + "-" + claveRegistro + '-' + obtenerFecha("format") + '-';
+
+        var listDatos = [];
+        let numerosFilas = 0;
+        filas.forEach(function (fila) {
+
+            numerosFilas++;
+            if (numerosFilas >= 13) {
+                return;
+            }
+            var idInput = fila.getAttribute('id');
+
+            var claveHora = fila.getAttribute('claveRegistro');
+
+            var inputRun = fila.querySelector('#Run-H input');
+            var inputCA_Temp = fila.querySelector('#CA-T input');
+            var inputDiff_P = fila.querySelector('#Diff-P input');
+            var inputCa_Press = fila.querySelector('#Ca-P input');
+            var inputEx_G = fila.querySelector('#Ex-G input');
+            var inputCy_P = fila.querySelector('#Cy-P input');
+
+
+            var detEngine;
+            var listDetEngine = [];
+
+            for (var i = 0; i < 2; i++) {
+
+                var id = i == 1 ? "F" : "O";
+
+                var inputPresion = fila.querySelector('#P-' + id + ' input');
+                var inputTemp = fila.querySelector('#T-' + id + ' input');
+
+                detEngine = {
+                    idDetEngine: datosOperario.IdSitio + "-" + claveRegistro + "-Eng-" + id + "-" + obtenerFecha("format") + "-" + claveHora,
+                    idTipoEngine: id == "F" ? "FUEL" : "OIL",
+                    fecha: obtenerFecha("fecha"),
+                    presion: ParseFloatEmpty(inputPresion.value),
+                    temp: ParseFloatEmpty(inputTemp.value),
+                    idDetEngineConsola: idDetEngineConsola + claveHora
+                };
+
+                listDetEngine.push(detEngine);
+            }
+
+            var RegistroDatosGenerator = {
+                idDetEngineConsola: idInput == "" || idInput == null ? idDetEngineConsola + claveHora : idInput,
+                hora: claveHora + ":00",
+                runHours: inputRun.value,
+                caTemp: inputCA_Temp.value,
+                DiffPressJetPulse: inputDiff_P.value,
+                CAPress: inputCa_Press.value,
+                ExhGasAvgTemp: inputEx_G.value,
+                CylPressAvg: inputCy_P.value,
+                fecha: obtenerFecha("fecha"),
+                IdFormatoConsola: idFormatoConsola,
+                detalleEngines: listDetEngine
+            };
+            listDatos.push(RegistroDatosGenerator);
+
+        });
+
+        fetch('@Url.Action("GuardarDatosEngine", "DatosConsola")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(listDatos)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    }
+
+    function ParseFloatEmpty(value) {
+        return value == "" ? 0 : parseFloat(value);
+    }
+
+    const thElements = document.querySelectorAll('th');
+
+    thElements.forEach(th => {
+        th.addEventListener('mouseover', function () {
+            const info = this.getAttribute('data-info');
+            if (info != "" && info != null) {
+                const tooltip = document.createElement('div');
+                tooltip.textContent = info;
+
+                tooltip.style.position = 'absolute';
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                tooltip.style.color = 'white';
+                tooltip.style.padding = '5px';
+                tooltip.style.borderRadius = '5px';
+
+                tooltip.style.left = (this.getBoundingClientRect().left + window.scrollX) + 'px';
+                tooltip.style.top = (this.getBoundingClientRect().top + window.scrollY - 30) + 'px';
+
+                document.body.appendChild(tooltip);
+
+                this.addEventListener('mouseout', function () {
+                    tooltip.remove();
+                });
+            }
+        });
+    });
+
+
+    for (let i = 1; i <= 1; i++) {
+        const principalElement = document.querySelector(`.principal${i}`);
+        const tablaEG = document.querySelector(`.boton${i}`);
+
+        principalElement.addEventListener("click", () => {
+            if (tablaEG.style.display === "none" || tablaEG.style.display === "") {
+                tablaEG.style.display = "table";
+            } else {
+                tablaEG.style.display = "none";
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        
+        var fechaSeleccionado = @Html.Raw(JsonConvert.SerializeObject(ViewBag.FechaSeleccionado));
+        console.log("fechaSeleccionado : ", fechaSeleccionado);
+
+        if(fechaSeleccionado != null){
+            var contenedor = document.getElementById('contendor-datosconsola');
+            var inputs = contenedor.getElementsByTagName('input');
+           
+            for (var i = 0; i < inputs.length; i++) {
+                inputs[i].disabled = true;
+            }
+
+            var contenedor = document.getElementById('contenedor-botones-guardar');
+            contenedor.style.display = "none";
+        }
+
+
+
+
+
+        $("#accordionSidebar").addClass("toggled");
+
+        var tituloFormatoComsola = document.getElementById("TituloConsolaGeneral");
+        tituloFormatoComsola.innerText = "Central Termica " + datosOperario.IdSitio;
+    });
+
+
+
+
+
+</script>

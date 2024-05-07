@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de fechas</title>
+</head>
+<body>
+
+    <button id="btnConsultar">Consultar Fechas</button>
+
+    <script>
+        document.getElementById("btnConsultar").addEventListener("click", function () {
+            // Datos del formulario
+            var formData = new FormData();
+            formData.append('fechaInicial', '14/03/2024');
+            formData.append('fechaFinal', '15/03/2024');
+
+            // URL a la que enviar la solicitud POST
+            var url = 'https://www.coes.org.pe/Portal/portalinformacion/exportardemanda';
+
+            // Configuración de la solicitud
+            var options = {
+                method: 'POST',
+                body: formData // Los datos del formulario se pasan como cuerpo de la solicitud
+            };
+
+            // Realizar la solicitud
+            fetch(url, options)
+                .then(function (response) {
+                    if (response.ok) {
+                        return response.json(); // Si la respuesta es exitosa, obtener los datos en formato JSON
+                    }
+                    throw new Error('Error en la solicitud');
+                })
+                .then(function (data) {
+                    console.log('Respuesta del servidor:', data);
+                    // Aquí puedes manejar la respuesta del servidor según sea necesario
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                    // Manejar cualquier error que ocurra durante la solicitud
+                });
+        });
+    </script>
+
+</body>
+</html>

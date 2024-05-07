@@ -1,0 +1,81 @@
+﻿@using Generacion.Models.Bess;
+@{
+
+    List<DBDataBess> datosBESS = ViewData["listaDataBESS"] as List<DBDataBess>;
+    bool requiereArchivos = (bool)ViewData["requiereArchivos"];
+
+}
+
+<style>
+
+    table thead tr th {
+        color: white;
+        background: deepskyblue;
+        text-align: center;
+    }
+
+    .table td {
+        padding: 0;
+        text-align: center;
+    }
+
+    .cabecera-tabla-5 {
+        border: solid 1px;
+        width: 5vh;
+    }
+
+    .cabecera-tabla-25 {
+        border: solid 1px;
+    }
+
+    .cabecera-tabla-35 {
+        border: solid 1px;
+    }
+</style>
+
+<div>
+    <div>
+        <h4>DATA BESS</h4>
+    </div>
+    <div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th class="cabecera-tabla-5">NRO</th>
+                    <th class="cabecera-tabla-25">Date</th>
+                    <th class="cabecera-tabla-25">Time</>
+                    <th class="cabecera-tabla-35">LLIXI625.PV</th>
+                    <th class="cabecera-tabla-35">LLIXI622.PV</th>
+                    <th class="cabecera-tabla-35">LLIXI633.PV</th>
+                    <th class="cabecera-tabla-35">LLIXI634.PV</th>
+                    <th class="cabecera-tabla-35">LLIXI634.PV</th>
+                    <th class="cabecera-tabla-35"></th>
+                    <th class="cabecera-tabla-35"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    if (datosBESS != null)
+                    {
+                        int index = 0;
+                        foreach (var item in datosBESS)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.Fecha</td>
+                                <td>@item.Hora</td>
+                                <td>@item.LLIXI625_PV</td>
+                                <td>@item.LLIXI622_PV</td>
+                                <td>@item.LLIXI633_PV</td>
+                                <td>@item.LLIXI634_PV</td>
+                            </tr>
+
+                            index++;
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+

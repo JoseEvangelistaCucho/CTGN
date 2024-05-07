@@ -1,0 +1,635 @@
+﻿@using Generacion.Models.InformePerturbacion;
+@using Newtonsoft.Json;
+@{
+    bool reload = (bool)ViewData["reload"];
+
+    InformeGeneralPerturbacion datosPrincipal = null;
+    DetalleInformePerturbacion detallePerturbacion = null;
+    Dictionary<int, List<SecuenciaCronologica>> datosSecuencia = null;
+    List<SuministrosInterrumpidos> datosSumInterrumpidos = null;
+    if (reload)
+    {
+        datosPrincipal = ViewData["datosPrincipal"] as InformeGeneralPerturbacion;
+        detallePerturbacion = ViewData["datosDetallePerturbacion"] as DetalleInformePerturbacion;
+        datosSecuencia = ViewData["datosSecuencia"] as Dictionary<int, List<SecuenciaCronologica>>;
+        datosSumInterrumpidos = ViewData["datosSumInterrumpido"] as List<SuministrosInterrumpidos>;
+
+
+    }
+
+    int numeroSecuenciaCronologica = 1;
+}
+
+<style>
+
+    .titulo-reporte-perturbacion {
+        display: flex;
+    }
+
+    .tbl-informe-cabecera tbody {
+        /*  white-space: pre-wrap;*/
+    }
+
+
+    textarea {
+        overflow-y: hidden;
+        resize: none;
+    }
+
+    input[type="file"] {
+        display: block;
+    }
+
+    .content-report-motors img {
+        padding: 0 0 10vh 0;
+        width: 90%;
+    }
+
+</style>
+
+
+<div style="width: 85%;">
+    <div class="titulo-reporte-perturbacion">
+        <div style="width: 30%;">
+            <img />
+        </div>
+        <div style="width: 55%;">
+            <h3>INFORME PERTURBACIÓN</h3>
+            <h3>ELD-@(datosPrincipal != null ? datosPrincipal.Fecha.Split(' ')[0] : DateTime.Now.ToString("dd/MM/yyyy"))</h3>
+        </div>
+        <div>
+            <h3>CENTRAL</h3>
+            <h3>TERMICA</h3>
+            <h3 id="tituloSitio"></h3>
+        </div>
+    </div>
+    <div>
+        <div>
+            <table id="informePerturbacion" class="tbl-informe-cabecera">
+                <thead>
+                    <tr>
+                        <th colspan="2">1.  INFORME GENERAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th style="padding: 0 30vh 0 0;">EVENTO </th>
+                        <td>:    <textarea attribute-class="evento" style="width: 90vh;">@(datosPrincipal != null ? datosPrincipal.Evento : string.Empty)</textarea></td>
+                    </tr>
+                    <tr>
+                        <th>FECHA </th>
+                        <td>:    <input id="fechaBusqueda" attribute-class="fecha" value="@(datosPrincipal!= null ? datosPrincipal.Fecha.Split(' ')[0] : DateTime.Now.ToString("dd/MM/yyyy"))" /></td>
+                    </tr>
+                    <tr>
+                        <th>HORA </th>
+                        <td>
+                            :
+                            <input id="horaBusqueda" attribute-class="hora" value="@(datosPrincipal!= null ? datosPrincipal.Hora : string.Empty)" />
+                            <button class="btn btn-outline-secondary" id="recargarPagina">
+                                <i id="mostrarVistaGe1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+                                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
+                                    </svg>
+                                </i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>COMPONENTE </th>
+                        <td>:    <input attribute-class="componente" value="@(datosPrincipal!= null ? datosPrincipal.Componente : string.Empty)" /></td>
+                    </tr>
+                    <tr>
+                        <th>PROPIETARIO </th>
+                        <td>:    <input attribute-class="propietario" value="@(datosPrincipal!= null ? datosPrincipal.Propietario : "ELECTRODUNAS S.A.A")" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <div>
+                    <h3>2.  DESCRIPCIÓN DEL EVENTO</h3>
+                </div>
+                <textarea id="descripcionEvento" style="width: 100%;">@(detallePerturbacion != null ? detallePerturbacion.DescripcionEvento : string.Empty)</textarea>
+            </div>
+            <div>
+                <div>
+                    <h3>3.  CONDICIONES OPERATIVAS PREVIAS</h3>
+                </div>
+                <textarea id="condicionesPrevias" style="width: 100%;"> @(detallePerturbacion != null ? detallePerturbacion.CondicionesPrevias : string.Empty)</textarea>
+            </div>
+            <div>
+                <table class="table table-bordered" id="tblSecuenciaCronologica">
+                    <thead>
+                        <tr>
+                            <th colspan="4">4.  SECUENCIA CRONOLOGICA DE EVENTOS </th>
+                        </tr>
+                        <tr>
+                            <th>NRO</th>
+                            <th>HORA</th>
+                            <th>COMPONENTE</th>
+                            <th>DESCRIPCION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            if (datosSecuencia != null)
+                            {
+                                @foreach (var item in datosSecuencia)
+                                {
+                                    <tr>
+                                        <td>
+                                            <input type="number" attribute-class="posicion" id="nro" class="datoEvento" style="width: 20vh;" value="@item.Key">
+                                        </td>
+
+                                        @foreach (var detalle in item.Value)
+                                        {
+                                            <td>
+                                                <input value="@detalle.Hora" type="text" attribute-class="hora" id="hora" class="datoEvento" style="width: 30vh;">
+                                            </td>
+                                            <td>
+                                                <input value="@detalle.Componente" type="text" attribute-class="componente" id="componente" class="datoEvento" style="width: 30vh;">
+                                            </td>
+                                            <td>
+                                                <textarea attribute-class="descripcionEvento" type="text" id="descripcion" class="datoEvento" style="width: 100%; height: auto;">@(detalle.DescripcionEvento) </textarea>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>
+                                            </td>
+                                        }
+                                    </tr>
+                                    numeroSecuenciaCronologica++;
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+                <button class="btn btn-primary" onclick="agregarFilaSecuenciaCronologica()">Agregar</button>
+            </div>
+            <div>
+                <table id="informeSuministrosInterrumpitos" class="table table-bordered detalle-evento">
+                    <thead>
+                        <tr>
+                            <th colspan="5">5.  SUMINISTROS INTERRUMPIDOS</th>
+                        </tr>
+                        <tr>
+                            <th rowspan="2">EQUIPO</th>
+                            <th rowspan="2">POTENCIA</th>
+                            <th colspan="3">TIEMPO DE DESCONEXIÓN (min)</th>
+                        </tr>
+                        <tr>
+                            <th>INICIO</th>
+                            <th>FINAL</th>
+                            <th>DURACIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (datosSumInterrumpidos != null)
+                        {
+                            foreach (var item in datosSumInterrumpidos)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" attribute-class="equipo" id="equipo" class="datoEvento" value="@(item.Equipo)">
+                                    </td>
+                                    <td>
+                                        <input type="number" attribute-class="potencia" id="potencia" class="datoEvento" style="width: 25vh;" value="@(item.Potencia)">
+                                    </td>
+                                    <td>
+                                        <input type="text" attribute-class="TiempoInicio" id="TiempoInicio" class="datoEvento" value="@(item.TiempoInicio)">
+                                    </td>
+                                    <td>
+                                        <input type="text" attribute-class="Tiempofinal" id="Tiempofinal" class="datoEvento" value="@(item.Tiempofinal)">
+                                    </td>
+                                    <td>
+                                        <input type="text" attribute-class="TiempoDuracion" id="TiempoDuracion" class="datoEvento" value="@(item.TiempoDuracion)">
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                <button class="btn btn-primary" onclick="agregarFilaSecuenciaInterrumpidos()">Agregar</button>
+
+            </div>
+            <div>
+                <div>
+                    <h3>6.  ANEXOS</h3>
+                    <textarea id="anexos" style="width: 100%;">@(detallePerturbacion != null ? detallePerturbacion.Anexos : string.Empty)</textarea>
+                </div>
+            </div>
+
+            <div class="content-report-motors">
+                <div>
+                    imagenes
+                    <input type="file" id="inputImagen1" accept="image/*">
+                    <div class="content-generators-imagen" id="contenedorImagenes1">
+                        <!-- Aquí se mostrarán las imágenes -->
+                        @Html.Raw(detallePerturbacion?.RutaImagenes)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="position: fixed;bottom: 1rem;">
+    <button class="btn btn-primary" id="GuardarDatos"><i class="fas fa-download fa-sm text-white-50"></i>Guardar Datos</button>
+</div>
+
+<script>
+
+
+    $('#recargarPagina').on('click', function () {
+
+        var fechaInput = $('#fechaBusqueda');
+        var horaInput = $('#horaBusqueda');
+        if ((fechaInput.val() === '' || fechaInput.val() == null) || (horaInput.val() === '' || horaInput.val() == null)) {
+            alert('Por favor, ingrese una Fecha Valida.');
+            fechaInput.focus();
+        } else {
+            window.location.href = @*'/InformePerturbacion/Index'*@ '@Url.Action("Index", "InformePerturbacion")' + '?Fecha=' + fechaInput.val() + '&Hora=' + horaInput.val();
+        }
+    });
+
+
+    var btnGuardarDatos = document.getElementById('GuardarDatos');
+    btnGuardarDatos.addEventListener('click', async function () {
+
+        const datosImagenes = [];
+
+        const contenedorImagenes = document.querySelectorAll('.content-generators-imagen');
+
+        contenedorImagenes.forEach(function (img) {
+            const imagenes = img.querySelectorAll('img');
+            imagenes.forEach(function (imagen) {
+                const src = imagen.getAttribute('src');
+                fetch(src)
+                    .then(response => response.blob())
+                    .then(blob => {
+
+                        const reader = new FileReader();
+                        reader.onload = function () {
+                            const base64Data = reader.result;
+
+                            datosImagenes.push(base64Data);
+
+
+                            if (datosImagenes.length === imagenes.length) {
+                                // Enviar la solicitud POST una vez que se hayan procesado todas las imágenes
+                                GuardarDatosServidor(datosImagenes);
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                    });
+            });
+        });
+    });
+
+    function GuardarDatosServidor(imagenes) {
+        var datosInforme = obtenerDatosInforme();
+        var datosDetalle = obtenerDetallesDeInforme();
+        var datosSuministrosInterrumpidos = obtenerInformacionDeTabla("informeSuministrosInterrumpitos");
+        var datosCronlogica = obtenerInformacionDeTabla("tblSecuenciaCronologica");
+
+        const datos = {
+            informeGeneralPerturbacion: obtenerDatosInforme(),
+            detalleInformePerturbacion: obtenerDetallesDeInforme(),
+            suministrosInterrumpidos: obtenerInformacionDeTabla("informeSuministrosInterrumpitos"),
+            secuenciaCronologica: obtenerInformacionDeTabla("tblSecuenciaCronologica"),
+            imagenesbase64: imagenes
+        };
+
+        loader.style.display = 'block';
+
+        fetch('@Url.Action("GuardarDatosPerturbacion", "InformePerturbacion")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datos)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                loader.style.display = 'none';
+
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                        willClose: () => {
+                            var link = document.createElement("a");
+                            link.href = '@Url.Action("DescargarArchivo", "ReportesGenerales")' + '?name=informe_perturbacion-' + obtenerFecha("format") + '.pdf&reporte=informe_perturbacion';
+                            link.download = "informe_perturbacion-" + obtenerFecha("format") + ".pdf";
+                            link.click();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                loader.style.display = 'none';
+                console.error("Error:", error);
+            });
+    }
+
+
+    function obtenerInformacionDeTabla(idTabla) {
+        var table = document.getElementById(idTabla);
+        var tbody = table.getElementsByTagName('tbody')[0];
+        var filas = tbody.getElementsByTagName('tr');
+
+        var datosTabla = [];
+
+        for (var i = 0; i < filas.length; i++) {
+            var fila = filas[i];
+            var celdas = fila.getElementsByTagName('td');
+
+            var datosFila = {};
+
+            for (var j = 0; j < celdas.length - 1; j++) {
+                var atributoClass = celdas[j].querySelector('input, textarea').getAttribute('attribute-class');
+                var valor = celdas[j].querySelector('input, textarea');
+                var tipoValor = valor.getAttribute('type');
+
+                if (tipoValor === 'number') {
+                    datosFila[atributoClass] = parseInt(valor.value);
+                } else {
+                    datosFila[atributoClass] = valor.value;
+                }
+            }
+
+            if (idTabla === 'tblSecuenciaCronologica') {
+
+                datosFila["idSecuenciaCronologica"] = idDetalleInforme.replace('DET', 'CRON') + '_' + i;
+            }
+            if (idTabla === 'informeSuministrosInterrumpitos') {
+                datosFila["idSuministrosInterrumpidos"] = idDetalleInforme.replace('DET', 'INT') + '_' + i;
+            }
+
+            datosFila["idDetallePerturbacion"] = idDetalleInforme;
+
+            datosTabla.push(datosFila);
+        }
+
+        return datosTabla;
+    }
+
+
+
+    var idInforme = "";
+    var idDetalleInforme = "";
+
+    function obtenerDetallesDeInforme() {
+        var descripcionEvento = document.getElementById('descripcionEvento');
+        var condicionesPrevias = document.getElementById('condicionesPrevias');
+        var anexos = document.getElementById('anexos');
+
+
+        idDetalleInforme = idInforme.replace('INF', 'DET');
+        var datos = {
+            descripcionEvento: descripcionEvento.value,
+            condicionesPrevias: condicionesPrevias.value,
+            anexos: anexos.value,
+            idDetallePerturbacion: idDetalleInforme,
+            idReportePerturbacion: idInforme
+        }
+
+        return datos;
+    }
+
+
+    function obtenerDatosInforme() {
+        var tablaInforme = document.getElementById('informePerturbacion');
+
+        var datosInforme = {};
+        for (var i = 0; i < tablaInforme.rows.length; i++) {
+
+            if (tablaInforme.rows[i].cells[1] != undefined && tablaInforme.rows[i].cells[1] != null) {
+                var elemento = tablaInforme.rows[i].cells[1].querySelector('[attribute-class]');
+                var tipoValor = elemento.getAttribute('attribute-class');
+
+                var valor = elemento.value;
+                datosInforme[tipoValor] = valor;
+            }
+        }
+        idInforme = datosOperario.IdSitio + '_INF_PERTURBACION-' + obtenerFecha('format') + '-' + datosInforme["hora"].replaceAll(':', '_');
+        datosInforme["idReportePerturbacion"] = idInforme;
+        datosInforme["sitio"] = datosOperario.IdSitio;
+        return datosInforme;
+    }
+
+
+    $(document).ready(function () {
+
+
+        var tituloSitio = document.getElementById("tituloSitio");
+        tituloSitio.innerText = datosOperario.IdSitio;
+    });
+
+
+</script>
+
+
+<script>
+    function autoresizeTextarea(textarea) {
+        textarea.style.height = "auto";
+        textarea.style.height = (textarea.scrollHeight - 2) + "px";
+    }
+
+    var contadorFilas = @Html.Raw(JsonConvert.SerializeObject(numeroSecuenciaCronologica));
+    function agregarFilaSecuenciaCronologica() {
+        var table = document.getElementById("tblSecuenciaCronologica").getElementsByTagName('tbody')[0];
+        var newRow = table.insertRow(table.rows.length);
+
+        var columnas = ["nro", "hora", "componente", "descripcion"];
+        var idClass = ["posicion", "hora", "componente", "descripcionEvento"];
+        var tipoValor = ["number", "text", "text", "text"];
+        var textArea = ["descripcion"];
+
+        for (var i = 0; i < columnas.length; i++) {
+            var cell = newRow.insertCell(i);
+            var input;
+
+            if (textArea.includes(columnas[i])) {
+                input = document.createElement("textarea");
+                input.style.width = "100%"; // Ancho personalizado
+                input.addEventListener("input", function () {
+                    autoresizeTextarea(input);
+                });
+                autoresizeTextarea(input); // Ajusta el tamaño inicial
+            } else {
+                input = document.createElement("input");
+                input.type = "text";
+                if (i === 0) {
+                    input.value = contadorFilas++;
+                    input.style.width = '20vh';
+                } else if (i == 1 || i == 2) {
+                    input.style.width = '30vh';
+                }
+            }
+
+            input.setAttribute('attribute-class', idClass[i]);
+            input.setAttribute('type', tipoValor[i]);
+            input.id = columnas[i];
+            input.className = "datoEvento";
+            cell.appendChild(input);
+        }
+
+        var actionCell = newRow.insertCell(columnas.length);
+        actionCell.innerHTML = '<button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>';
+    }
+
+
+    var contadorFilasInt = 1;
+    function agregarFilaSecuenciaInterrumpidos() {
+        var table = document.getElementById("informeSuministrosInterrumpitos").getElementsByTagName('tbody')[0];
+        var newRow = table.insertRow(table.rows.length);
+
+        var columnas = ["equipo", "potencia", "TiempoInicio", "Tiempofinal", "TiempoDuracion"];
+        var idClass = ["equipo", "potencia", "TiempoInicio", "Tiempofinal", "TiempoDuracion"];
+        var tipoValor = ["text", "number", "text", "text", "text"];
+
+        for (var i = 0; i < columnas.length; i++) {
+            var cell = newRow.insertCell(i);
+            var input;
+
+            input = document.createElement("input");
+            input.type = "text";
+            if (i == 1) {
+                input.style.width = '25vh';
+            }
+
+            input.setAttribute('attribute-class', idClass[i]);
+            input.setAttribute('type', tipoValor[i]);
+            input.id = columnas[i];
+            input.className = "datoEvento";
+            if (idClass[i] === "Tiempofinal") {
+                input.addEventListener("change", function () {
+                    obtenerHorasEvetos(this); // Pasar el elemento actual a la función
+                });
+            }
+            cell.appendChild(input);
+        }
+
+        var actionCell = newRow.insertCell(columnas.length);
+        actionCell.innerHTML = '<button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>';
+    }
+
+    function obtenerHorasEvetos(elementoModificado) {
+        // Obtener la fila actual
+        var fila = elementoModificado.closest('tr');
+
+        var fechaInicioStr = fila.querySelector("#TiempoInicio");
+        var fechaFinStr = fila.querySelector("#Tiempofinal");
+
+        if (fechaInicioStr.value !== "" && fechaFinStr.value !== "") {
+            var resultado = calcularDiferenciaYFormatear(fechaInicioStr.value, fechaFinStr.value);
+
+            var externalTrips = fila.querySelector("#TiempoDuracion");
+
+            externalTrips.value = resultado;
+           
+        }
+    }
+
+    function eliminarFila(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        contadorFilas--;
+    }
+    function calcularDiferenciaYFormatear(fechaInicioStr, fechaFinStr) {
+        
+        var fechaBusquerda = document.getElementById("fechaBusqueda");
+        var fechaInicio = convertirAFecha(fechaBusquerda.value +" "+fechaInicioStr);
+        var fechaFin = convertirAFecha(fechaBusquerda.value + " " + fechaFinStr);
+
+        var diferenciaMillis = fechaFin - fechaInicio;
+
+        var segundos = Math.floor(diferenciaMillis / 1000);
+        var minutos = Math.floor(segundos / 60);
+        var horas = Math.floor(minutos / 60);
+
+        minutos %= 60;
+        segundos %= 60;
+
+        var diferenciaFormateada = horas + ":" + (minutos < 10 ? "0" : "") + minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
+
+        var formatoFecha = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+        var fechaInicioFormateada = fechaInicio.toLocaleDateString('es-ES', formatoFecha);
+        var fechaFinFormateada = fechaFin.toLocaleDateString('es-ES', formatoFecha);
+
+
+
+        return diferenciaFormateada ;
+    }
+
+    function convertirAFecha(cadenaFecha) {
+        var partes = cadenaFecha.split(/[\s/:\-]+/); // Dividir por espacio, barra y dos puntos
+        var dia = parseInt(partes[0], 10);
+        var mes = parseInt(partes[1], 10) - 1; // Restar 1 al mes (ya que en JavaScript los meses van de 0 a 11)
+        var año = parseInt(partes[2], 10);
+        var hora = parseInt(partes[3], 10);
+        var minutos = parseInt(partes[4], 10);
+        var segundos = parseInt(partes[5], 10);
+
+        return new Date(año, mes, dia, hora, minutos, segundos);
+    }
+
+
+
+
+
+
+
+    let numeroDivImagen = 0;
+    const imagenesSeleccionadas = []; // Array para almacenar las imágenes seleccionadas
+
+    const elementosImagen = document.querySelectorAll('.content-report-motors');
+    elementosImagen.forEach(function (input, index) {
+        numeroDivImagen++;
+        const inputImagen = document.getElementById('inputImagen' + numeroDivImagen);
+        const contenedorImagenes = document.getElementById('contenedorImagenes' + numeroDivImagen);
+        if (inputImagen != null) {
+            manejarCambioInput(inputImagen, contenedorImagenes);
+        }
+    });
+
+
+    function manejarCambioInput(input, contenedor) {
+
+        input.addEventListener('change', function () {
+            const files = input.files;
+
+            for (let i = 0; i < files.length; i++) {
+                const imagen = files[i];
+                imagenesSeleccionadas.push(imagen);
+
+                // Muestra la imagen en el contenedor
+                const imagenElement = document.createElement('img');
+                imagenElement.classList.add('imagen');
+                imagenElement.classList.add('img-carter');
+                imagenElement.src = URL.createObjectURL(imagen);
+
+                const contenedorId = contenedor.getAttribute('id');
+                imagenElement.setAttribute('casillaId', contenedorId);
+                contenedor.appendChild(imagenElement);
+            }
+
+            input.value = '';
+        });
+    }
+
+</script>
+

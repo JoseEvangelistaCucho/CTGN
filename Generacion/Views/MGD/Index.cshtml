@@ -1,0 +1,113 @@
+﻿@using Generacion.Models.ION;
+@using Generacion.Models.Usuario;
+@using Newtonsoft.Json;
+@{
+    @model List<DatosFormatoMGD>
+
+    DetalleOperario detalleOperario = ViewData["DetalleOperario"] as DetalleOperario;
+
+
+    DateTime fechaActual = DateTime.Now;
+    bool validacionDescarga = ViewBag.ValidacionReporte ?? false;
+
+}
+
+<style>
+    .titulo-cabeceraMGD {
+        text-align: center;
+        font-size: 45px;
+        font-weight: bold;
+        border: 1px solid #e3e6f0;
+    }
+
+    .fechaMGD {
+        border: 1px solid #e3e6f0;
+        display: flex;
+        width: 200px;
+    }
+</style>
+
+<div>
+    <div>
+        <div class="fechaMGD">
+            <div style="padding: 0 29px 0 20px;"> Fecha </div>
+            <div> @fechaActual.ToString("dd/MM/yyyy") </div>
+        </div>
+        <div style="padding: 20px 0 20px 0;">
+            <div class="titulo-cabeceraMGD">MGD @detalleOperario.IdSitio </div>
+        </div>
+    </div>
+    <div style="display: flex;">
+        <table class="table table-bordered EG">
+            <thead>
+                <tr>
+                    <th>Nro</th>
+                    <th>HORA</th>
+                    <th>Potencia Activa (MW)</th>
+                    <th>Potencia Reactiva (MVAR)</th>
+                    <th>Tensión (kV)</th>
+                    <th>Frecuencia (Hz)</th>
+
+                </tr>
+            </thead>
+            <tbody>
+
+                @{
+                    int index = 1;
+                    foreach (var item in @Model)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@item.Hora</td>
+                            <td>@item.KWDelInt</td>
+                            <td>@item.KVARDelInt</td>
+                            <td>@item.KWRecInt</td>
+                            <td>@item.KVARRecInt</td>
+                        </tr>
+                        index++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<script>
+    var validacionDescarga = @Html.Raw(JsonConvert.SerializeObject(validacionDescarga));
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if (validacionDescarga) {
+            // Simular un clic en el enlace de descarga al cargar la página
+            var link = document.createElement("a");
+            link.href = '@Url.Action("DescargarArchivo", "ReportesGenerales")' + "?name=Reporte-MGD-" + obtenerFecha("format") + ".pdf&reporte=Reporte-MGD";
+            link.click();
+        }
+    });
+
+
+
+    $(document).ready(function () {
+        $('#btnReload').on('click', function () {
+
+            var fecha = $('#datepicker').val();
+            $.ajax({
+                url: '@Url.Action("Index", "ION")' + '?fecha=' + fecha,
+                type: 'GET',
+                success: function (data) {
+                    console.log(data);
+                    $('#result').html(data);
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+
+
+
+
+
+</script>

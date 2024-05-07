@@ -1,0 +1,699 @@
+﻿@using Generacion.Models.DatosConsola;
+@{
+    Dictionary<string, CabecerasTabla> detalleCabeceras = ViewData["Datoscabecera"] as Dictionary<string, CabecerasTabla>;
+    var urlBujias = Url.Action("ObtenerControlCambio", "Bujias");
+}
+
+<style>
+    .detalle-bujia {
+        white-space: nowrap;
+        text-align-last: center;
+    }
+
+        .detalle-bujia input {
+            background-color: transparent;
+            width: 100px;
+        }
+
+        .detalle-bujia th, td {
+            border: 1px solid black;
+        }
+
+    thead {
+        background-color: #B7BDFF;
+    }
+
+        thead select {
+            background-color: #B7BDFF;
+        }
+
+    .texto {
+        background-color: #ffb588;
+    }
+
+    .texto2 {
+        background-color: #ffd966;
+    }
+
+    .contenido-detalle {
+        display: flex;
+    }
+
+        .contenido-detalle div {
+            width: 20%;
+            text-align: center;
+            border: solid 1px;
+            margin: 0 0 -1px -1px;
+            font-weight: bold;
+        }
+
+    .titulo-detalle-bujias div {
+        padding: 0 5% 0px 135px;
+        font-weight: bold;
+        font-size: 22px;
+    }
+
+    table {
+        margin: 30px;
+    }
+</style>
+<div>
+    <div style="padding:0 0 2% 0;">
+        <div style="display: flex;" class="titulo-detalle-bujias">
+            <div id="central-distribuida"></div>
+            <div>CONTROL DE CAMBIO Y TIEMPO DE OPERACIÓN DE BUJÍAS</div>
+        </div>
+        <div>
+            <div class="contenido-detalle">
+                <div>Unidad</div>
+                <div>
+                    <select onchange="obtenerRegistoControl()" id="EGSelect">
+                        <option value="1">EG-01</option>
+                        <option value="2">EG-02</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table style="display:none;" id="CambioAnterior" class="detalle-bujia">
+        <thead>
+            <tr>
+                <td colspan="3" style="border:none;background-color:white;">Ultimo Registro</td>
+            </tr>
+            <tr>
+                <th style="border: none; background-color: white"> </th>
+                <th colspan="2" id="ladoConsulta"></th>
+            </tr>
+            <tr>
+                <th>item</th>
+                <th>bujías</th>
+                <th id="filaConsulta"></th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTablaAnterior">
+            <tr id="@detalleCabeceras["FechaCambio"].IdTipoEngine">
+                <th id="itemAnterior" rowspan="4"></th>
+                <th> @detalleCabeceras["FechaCambio"].Detalle </th>
+                <td> <input type="text" id="@detalleCabeceras["FechaCambio"].IdTipoEngine">  </td>
+            </tr>
+            <tr>
+                <th>@detalleCabeceras["HorasCambio"].Detalle</th>
+                <td>  <input type="text" id="@detalleCabeceras["HorasCambio"].IdTipoEngine"> </td>
+            </tr>
+            <tr class="texto">
+                <th>@detalleCabeceras["TiempoDuracion"].Detalle</th>
+                <td> <input type="text" id="@detalleCabeceras["TiempoDuracion"].IdTipoEngine"> </td>
+            </tr>
+            <tr class="texto2">
+                <th>@detalleCabeceras["HorasEnCurso"].Detalle </th>
+                <td> <input type="text" id="@detalleCabeceras["HorasEnCurso"].IdTipoEngine"> </td>
+            </tr>
+        </tbody>
+    </table>
+    <div style="display:flex;">
+        <table id="CambioActual" class="detalle-bujia">
+            <thead>
+                <tr>
+                    <td colspan="3" style="border:none;background-color:white;">Registro Agregar</td>
+                </tr>
+                <tr>
+                    <th style="border: none; background-color: white"> </th>
+                    <th colspan="2">
+                        lado
+                        <select id="ladoSelect" onchange="obtenerRegistoControl()">
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                        </select>
+                </tr>
+                <tr>
+                    <th> item </th>
+                    <th> bujías </th>
+                    <th style="display: flex;height: 26px;place-content: center;">
+                        <p style="border: none;" id="ladoLabel">A</p>
+                        <select id="filaSelect" onchange="obtenerRegistoControl()">
+                            <option value="-1">0</option>
+
+                            @for (int i = 1; i <= 10; i++)
+                            {
+                                if (i >= 10)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                                else
+                                {
+                                    <option value="@i">0@(i)</option>
+
+                                }
+                            }
+                        </select>
+
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTablaActual">
+                <tr id="@detalleCabeceras["FechaCambio"].IdTipoEngine">
+                    <th id="itemActual" rowspan="4"></th>
+                    <th> @detalleCabeceras["FechaCambio"].Detalle </th>
+                    <td> <input type="text" value="@DateTime.Now.ToString("dd/MM/yyyy")"></td>
+                </tr>
+                <tr id="@detalleCabeceras["HorasCambio"].IdTipoEngine">
+                    <th>@detalleCabeceras["HorasCambio"].Detalle</th>
+                    <td> <input type="number" id="calcularHorasCambio"> </td>
+                </tr>
+                <tr id="@detalleCabeceras["TiempoDuracion"].IdTipoEngine" class="texto">
+                    <th>@detalleCabeceras["TiempoDuracion"].Detalle</th>
+                    <td> <input type="number" value="0" id="duplicarValor"> </td>
+                </tr>
+                <tr id="@detalleCabeceras["HorasEnCurso"].IdTipoEngine" class="texto2">
+                    <th>@detalleCabeceras["HorasEnCurso"].Detalle </th>
+                    <td> <input type="number" value="0"> </td>
+                </tr>
+            </tbody>
+        </table>
+        <div>
+            <p>NOTA :</p>
+            <textarea id="nota"></textarea>
+        </div>
+    </div>
+</div>
+
+<button id="btn-guardar" onclick="obtenerDatosTabla()" class="btn-primary">Guardar Datos</button>
+
+<script>
+    function cambiarEtiqueta() {
+        var ladoSelect = document.getElementById("ladoSelect");
+        var ladoLabel = document.getElementById("ladoLabel");
+
+        ladoLabel.textContent = "Lado " + ladoSelect.value;
+    }
+</script>
+
+<script>
+    var idControlAnterior = "";
+    var fechaAnterior = "";
+    document.addEventListener("DOMContentLoaded", function () {
+        var tituloSitio = document.getElementById("central-distribuida");
+        tituloSitio.innerText = "CENTRAL DE GENERACIÓN DISTRIBUIDA " + datosOperario.IdSitio;
+    });
+
+
+    var validacionDeActualizacionActual = false;
+
+    function obtenerRegistoControl() {
+
+        cambiarValoresTabla();
+        var ladoSelect = document.getElementById("ladoSelect");
+        var filaSelect = document.getElementById("filaSelect");
+        var generatorSelect = document.getElementById("EGSelect");
+
+        if (filaSelect.value !== "-1") {
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'lado': ladoSelect.value,
+                    'fila': parseInt(filaSelect.value),
+                    'EG': parseInt(generatorSelect.value)
+                },
+            };
+
+            fetch('@urlBujias', options)
+                .then(response => {
+                    if (!response.ok) {
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("data : ", data);
+                    var botonGuardar = document.getElementById("btn-guardar");
+
+                    if (data.respuesta.detalle != null && data.respuesta.detalle.length !== 0) {
+
+                        cambiarEtiqueta();
+
+                        var tablaActual = document.getElementById("CambioActual");
+                        var bodyActual = tablaActual.getElementsByTagName('tbody')[0];
+                        var fechaActual = bodyActual.querySelector('#FechaCambio input');
+                        if (fechaActual) {
+                            fechaActual.value = obtenerFecha("fechaVista");
+                        }
+
+                        var itemActual = document.getElementById("itemActual");
+
+                        var tablaAnterior = document.getElementById("CambioAnterior");
+
+                        var ladoSelectAnterior = document.getElementById("ladoConsulta");
+                        var filaSelectAnterior = document.getElementById("filaConsulta");
+                        var itemAnterior = document.getElementById("itemAnterior");
+
+
+                        /*  if (parseInt(data.respuesta.mensaje) + 1 !== data.respuesta.detalle[0].item
+                              && data.respuesta.detalle[0].fecha.split(' ')[0] != fechaActual.value) {
+                              botonGuardar.style.display = "initial";
+                          } else {
+                              botonGuardar.style.display = "none";
+                          }*/
+
+
+
+
+
+                        console.log("data.respuesta.mensaje : ", data.respuesta.mensaje);
+                        console.log("data.respuesta.detalle[0].item : ", data.respuesta.detalle[0].item);
+                        
+                        tablaAnterior.style.display = "initial";
+                        ladoSelectAnterior.innerText = "lado " + data.respuesta.detalle[0].lado;
+                        filaSelectAnterior.innerText = data.respuesta.detalle[0].lado + data.respuesta.detalle[0].fila;
+                        itemAnterior.innerText = data.respuesta.detalle[0].item;
+                        idControlAnterior = data.respuesta.detalle[0].idControlCambio;
+                        fechaAnterior = data.respuesta.detalle[0].fecha;
+
+
+
+                        console.log("fechaAnterior : ", fechaAnterior, "   fechaActual : ", fechaActual.value);
+
+
+
+                        var tbody = "";
+                        if (fechaAnterior.split(' ')[0] === fechaActual.value) {
+                            validacionDeActualizacionActual=true;
+                            tablaAnterior.style.display = "none";
+
+                            itemActual.innerText = parseInt(data.respuesta.mensaje);
+
+                            tbody = tablaActual.getElementsByTagName("tbody")[0];
+
+                            for (var i = 0; i < tbody.rows.length; i++) {
+                                var row = tbody.rows[i];
+                                console.log("row : ", row);
+
+                                for (var j = 0; j < row.cells.length; j++) {
+                                    var cell = row.cells[j];
+                                    console.log("cell : ", cell);
+
+                                    var inputs = cell.getElementsByTagName("input");
+                                    console.log("inputs : ", inputs);
+
+                                    for (var k = 0; k < inputs.length; k++) {
+                                        var inputId = inputs[k].id;
+                                        console.log("inputs[k].value : ", inputs[k].value);
+
+                                        if (inputId == 'FechaCambio') {
+                                            inputs[k].value = data.respuesta.detalle[0].fecha.split(' ')[0];
+                                            console.log("inputs[k].value : ", inputs[k].value);
+
+                                        }
+
+
+                                        console.log("rowData : ", rowData);
+                                        console.log("row.id : ", row.id);
+
+                                        var rowData = data.respuesta.detalle.find(item => item.idSubtituloCampo === row.id);
+                                        console.log("data.respuesta.detalle : ", data.respuesta.detalle);
+
+                                        if (rowData) {
+                                            inputs[k].value = rowData.detalle;
+                                            console.log("inputs[k].value : ", inputs[k].value);
+
+                                            inputs[k].setAttribute("idDetalleAnterior", rowData.idDetalleControlCambio);
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            tbody = tablaAnterior.getElementsByTagName("tbody")[0];
+                            itemActual.innerText = parseInt(data.respuesta.mensaje) + 1;
+
+
+                            for (var i = 0; i < tbody.rows.length; i++) {
+                                var row = tbody.rows[i];
+
+                                for (var j = 0; j < row.cells.length; j++) {
+                                    var cell = row.cells[j];
+
+                                    var inputs = cell.getElementsByTagName("input");
+
+                                    for (var k = 0; k < inputs.length; k++) {
+                                        var inputId = inputs[k].id;
+
+                                        if (inputId == 'FechaCambio') {
+                                            inputs[k].value = data.respuesta.detalle[0].fecha.split(' ')[0];
+                                            // inputs[k].setAttribute("data-info", data.respuesta.detalle[0].fecha.split(' ')[0])
+                                        }
+
+                                        var rowData = data.respuesta.detalle.find(item => item.idSubtituloCampo === inputId);
+
+                                        if (rowData) {
+                                            inputs[k].value = rowData.detalle;
+                                            inputs[k].setAttribute("idDetalleAnterior", rowData.idDetalleControlCambio);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        var table = document.getElementById("CambioAnterior");
+                        table.style.display = "none";
+
+                        cambiarEtiqueta();
+
+                        var itemActual = document.getElementById("itemActual");
+                        itemActual.innerText = data.respuesta.mensaje != null && data.respuesta.mensaje !== "" ? parseInt(data.respuesta.mensaje) + 1 : "1";
+                        botonGuardar.style.display = "initial";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        } else {
+            cambiarEtiqueta();
+            Swal.fire({
+                title: "Error",
+                text: "seleccione una fila",
+                icon: "error",
+                button: "OK",
+            });
+        }
+
+    }
+
+    function cambiarValoresTabla() {
+        var tabla = document.getElementById("CambioAnterior");
+        var inputs = tabla.getElementsByTagName("input");
+
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].value = "";
+        }
+        var itemAnterior = document.getElementById("itemAnterior");
+        itemAnterior.innerText = "";
+    }
+
+
+
+    var inputCambio = document.getElementById("duplicarValor");
+    inputCambio.addEventListener('change', duplicarValor);
+
+    function duplicarValor() {
+        var tableActual = document.getElementById("CambioActual").getElementsByTagName('tbody')[0];
+        var horasActual = tableActual.querySelector('#HorasCambio input');
+        var tiempoActual = tableActual.querySelector('#TiempoDuracion input');
+
+        var tableAnterior = document.getElementById("CambioAnterior").getElementsByTagName('tbody')[0];
+        var horasAnterior = tableAnterior.querySelector('#HorasEnCurso');
+
+        var itemAnterior = document.getElementById("itemAnterior");
+        var itemActual = document.getElementById("itemActual");
+
+        if (parseInt(itemAnterior.innerText) + 1 === parseInt(itemActual.innerText)) {
+            horasAnterior.value = tiempoActual.value;
+        }
+    }
+
+
+</script>
+
+
+<script>
+
+    var tablaActualCambio = document.getElementById("calcularHorasCambio");
+    tablaActualCambio.addEventListener('change', calcularDuracionBujias);
+
+    function calcularDuracionBujias() {
+        var tableActual = document.getElementById("CambioActual").getElementsByTagName('tbody')[0];
+        var horasActual = tableActual.querySelector('#HorasCambio input');
+        var tiempoActual = tableActual.querySelector('#TiempoDuracion input');
+
+
+        if (!validacionDeActualizacionActual) {
+        tiempoActual.value = 0;
+        }
+
+
+        var tableAnterior = document.getElementById("CambioAnterior").getElementsByTagName('tbody')[0];
+        var horasAnterior = tableAnterior.querySelector('#HorasCambio');
+
+
+
+        if (horasAnterior.value !== "") {
+            tiempoActual.value = parseInt(horasActual.value) - parseInt(horasAnterior.value)
+
+        }
+
+        validarCalculosItems();
+    }
+
+    function validarCalculosItems() {
+        var tableActual = document.getElementById("CambioActual").getElementsByTagName('tbody')[0];
+        var horasActual = tableActual.querySelector('#HorasCambio input');
+        var tiempoActual = tableActual.querySelector('#TiempoDuracion input');
+
+        var tableAnterior = document.getElementById("CambioAnterior").getElementsByTagName('tbody')[0];
+        var horasAnterior = tableAnterior.querySelector('#HorasCambio');
+        var horasCursoActual = tableAnterior.querySelector('#HorasEnCurso');
+
+
+        var itemAnterior = document.getElementById("itemAnterior");
+        var itemActual = document.getElementById("itemActual");
+
+        if (parseInt(itemAnterior.innerText) + 1 === parseInt(itemActual.innerText)) {
+            horasCursoActual.value = parseInt(tiempoActual.value);
+        } else {
+            horasCursoActual.value = parseInt(horasActual.value) - parseInt(horasAnterior.value);
+        }
+    }
+</script>
+
+
+<script>
+
+    async function obtenerDatosTabla() {
+        const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+
+        var filaSelect = document.getElementById("filaSelect");
+        if (filaSelect.value !== "-1") {
+
+            try {
+                const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+
+                var datosAnterior = obtenerDatosTablaAnterior();
+                console.log("datosAnterior ", datosAnterior);
+                if (datosAnterior.length > 2) {
+                    var datos = obtenerDatosTablaActual().concat(datosAnterior);
+                } else {
+                    var datos = obtenerDatosTablaActual();
+                }
+
+                console.log("datos : ", datos);
+
+                fetch('@Url.Action("GuardarDetalleDatosBujias", "Bujias")', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(datos)
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                            Swal.fire({
+                                title: "Success!!",
+                                text: "Se guardaro los datos.",
+                                icon: "success",
+                                button: "Aww yiss!",
+                                willClose: () => {
+                                    GuardarDatosControlador();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: "Error",
+                                text: data.respuesta.mensaje,
+                                icon: "error",
+                                button: "OK",
+                            });
+                        }
+                    })
+                    .catch(function (error) {
+                        Swal.fire({
+                            title: "Error",
+                            text: "Error en la solicitud.",
+                            icon: "error",
+                            button: "OK",
+                        });
+                        console.error("Error:", error);
+                    });
+
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        } else {
+            Swal.fire({
+                title: "Error",
+                text: "seleccione una fila",
+                icon: "error",
+                button: "OK",
+            });
+        }
+    }
+
+    var HorasCambioActual = 0;
+
+    function obtenerDatosTablaAnterior() {
+
+        try {
+            var ladoSelect = document.getElementById("ladoSelect");
+            var filaSelect = document.getElementById("filaSelect");
+            var generatorSelect = document.getElementById("EGSelect");
+
+            const cuerpoTabla = document.getElementById('cuerpoTablaAnterior');
+
+            const datos = [];
+            const tabla = cuerpoTabla.closest('table');
+
+            for (let i = 1; i < cuerpoTabla.rows.length; i++) {
+                const fila = cuerpoTabla.rows[i];
+
+                const valorItem = cuerpoTabla.rows[cuerpoTabla.rows.length - 4].querySelector('th[id="itemAnterior"]').textContent.trim();
+
+                for (let j = 0; j < fila.cells.length; j++) {
+                    const celda = fila.cells[j];
+
+                    const idFila = fila.cells[0].id;
+                    const input = celda.querySelector('input');
+                    const idInput = input ? input.id : null;
+
+                    const iddetalle = input ? input.getAttribute('iddetalleanterior') : null;
+
+
+                    if (input && input.value !== "") {
+                        const datosFila = {
+                            idDetalleControlCambio: iddetalle,
+                            detalle: parseInt(input.value),
+                            fecha: fechaAnterior.split(' ')[0],
+                            lado: ladoSelect.value,
+                            idSubtituloCampo: idInput,
+                            fila: parseInt(filaSelect.value),
+                            item: parseInt(valorItem),
+                            IdControlCambio: idControlAnterior,
+                            sitio: datosOperario.IdSitio,
+                            numeroGenerador: generatorSelect.value
+                        };
+
+                        datos.push(datosFila);
+                    }
+                }
+            }
+            return datos;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+    }
+
+    var fechaInputActual = "";
+    var idControlCambio = 'CtrlCambioBujias' + '-';
+
+    function obtenerDatosTablaActual() {
+
+        try {
+            var ladoSelect = document.getElementById("ladoSelect");
+            var filaSelect = document.getElementById("filaSelect");
+            var generatorSelect = document.getElementById("EGSelect");
+
+            const cuerpoTabla = document.getElementById('cuerpoTablaActual');
+
+            const datos = [];
+            const tabla = cuerpoTabla.closest('table');
+
+            fechaInputActual = cuerpoTabla.rows[0].cells[2].querySelector('input').value;
+
+                for (let i = 1; i < cuerpoTabla.rows.length; i++) {
+                    const fila = cuerpoTabla.rows[i];
+
+                    const valorItem = cuerpoTabla.rows[cuerpoTabla.rows.length - 4].querySelector('th[id="itemActual"]').textContent.trim();
+
+                    for (let j = 0; j < fila.cells.length; j++) {
+                        const celda = fila.cells[j];
+
+                        const idFila = fila.cells[0].id;
+                        const input = celda.querySelector('input');
+
+                        var nota = '';
+                        if (input && input.value !== "") {
+                            if (fila.id === "HorasCambio") {
+                                HorasCambioActual = parseInt(input.value)
+                                nota = document.getElementById("nota").value;
+                            }
+
+                            const datosFila = {
+                            idDetalleControlCambio: datosOperario.IdSitio + '-' + generatorSelect.value + '-' + ladoSelect.value + '-' + valorItem + '-' + filaSelect.value + '-' + fila.id + '-' + fechaInputActual.replace(/\//g, '_'), //obtenerFecha("format"),
+                                detalle: parseInt(input.value),
+                                fecha: fechaInputActual,
+                                lado: ladoSelect.value,
+                                idSubtituloCampo: fila.id,
+                                fila: parseInt(filaSelect.value),
+                                item: parseInt(valorItem),
+                                IdControlCambio: datosOperario.IdSitio + '-' + idControlCambio + generatorSelect.value + '-' + fechaInputActual.replace(/\//g, '_'), //,
+                                sitio: datosOperario.IdSitio,
+                                numeroGenerador: generatorSelect.value,
+                                nota: nota
+                            };
+                            datos.push(datosFila);
+                        }
+                    }
+                }
+
+            return datos;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+    }
+
+    function GuardarDatosControlador() {
+
+        try {
+
+            var generatorSelect = document.getElementById("EGSelect");
+
+            var datos = {
+                IdControlCambio: datosOperario.IdSitio+ '-'+ idControlCambio + generatorSelect.value + '-' + fechaInputActual.replace(/\//g, '_'),
+                HorasOperacion: HorasCambioActual,
+                Fecha: fechaInputActual,
+                NumeroGenerador: parseInt(generatorSelect.value),
+                IdOperario: datosOperario.IdOperario,
+                sitio: datosOperario.IdSitio
+            };
+
+            fetch("/Bujias/GuardarDatosBujias", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.error("data:", data);
+
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+    }
+
+</script>
+

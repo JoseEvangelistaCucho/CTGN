@@ -1,0 +1,532 @@
+﻿@using Generacion.Models.DashBoard;
+@using Generacion.Models.FiltroCentrifugo;
+
+@model List<DetalleFiltro>;
+
+@{
+
+    Dictionary<decimal, EspecificacionFiltro> especificacionesFiltro = ViewData["especificacionesFiltro"] as Dictionary<decimal, EspecificacionFiltro>;
+
+
+}
+
+<style>
+    .table {
+        white-space: nowrap;
+        color: black;
+        font-size: 13px;
+        width: 110%;
+    }
+
+        .table td, .table th {
+            padding: 0rem;
+            border: 1px solid black !important;
+        }
+
+
+        .table thead, .table tbody {
+            text-align: center;
+        }
+
+    p {
+        margin: 0;
+        border: none;
+    }
+
+    .cabeceras-sombreadas {
+        background-color: darkgray;
+    }
+
+    input {
+        width: 100%;
+        border: none;
+        text-align: center;
+    }
+
+    .cabeceraGenerador th {
+        text-align: left;
+        padding: 0 0 0 5px;
+    }
+
+    .img-produccion {
+        float: left;
+        height: 100%;
+        width: 85%;
+    }
+
+    textarea {
+        height: 26px;
+        resize: none;
+        overflow: hidden;
+        transition: height 0.3s;
+        border: none;
+    }
+
+    .detalleReporte input {
+        text-align: center;
+    }
+    /*****************/
+    .contenedor-imagen {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .contenedor-imagen img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+    .superpuesto {
+        top: 0;
+        left: 0;
+        width: 715px;
+        height: 90%;
+        background: rgba(0, 0, 0, 0.7);
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+        padding: 0 0 0 10%;
+    }
+
+        .superpuesto.activo {
+            opacity: 1;
+            position: fixed;
+            display: flex;
+            margin: 0 0 0 128px;
+        }
+
+            .superpuesto.activo img {
+                width: 420px;
+            }
+
+</style>
+<div style="display:flex;overflow-x:scroll;">
+    <div style="width: 110%;">
+        <table id="ReporteCentrifugo" style="margin: 0;" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th style="width: 165px;" rowspan="4"> <img class="img-produccion" src="./img/logo_elec.png"></th>
+                    <th style="height: 70px;" rowspan="2" colspan="5" id="TituloGeneral"></th>
+                    <th colspan="2"><div style="display: flex;"><p> Código:&nbsp; </p><p style="font-weight: 500;"> O&M - FOR - 01</p></div></th>
+                </tr>
+                <tr>
+                    <th colspan="2"><div style="display: flex;">Versión:&nbsp; <p style="font-weight: 500;">001</p></div></th>
+                </tr>
+                <tr>
+                    <th rowspan="2" colspan="5">REGISTRO DE MANTENIMIENTO CAMBIO DE PAPEL FILTRO CENTRIFUGO DE UNIDADES EG01 - EG02</th>
+                    <th colspan="2" style="text-align: left;">Elaborado: Angel Calderon</th>
+                </tr>
+                <tr>
+                    <th colspan="2"><div style="display: flex;">Página: &nbsp;<p style="font-weight: 500;">1 de 1 </p></div></th>
+                </tr>
+                <tr>
+                    <th colspan="8">&nbsp;</th>
+                </tr>
+                <tr class="cabeceraGenerador">
+                    <th class="cabeceras-sombreadas">EQUIPO</th>
+                    <td> FILTRO CENTRIFUGO</td>
+                    <th class="cabeceras-sombreadas"> Sistema:</th>
+                    <td>LUBRICACION</td>
+                    <th class="cabeceras-sombreadas">Tipo:</th>
+                    <td style=" width: 100px;"></td>
+                    <th class="cabeceras-sombreadas">Grupo:</th>
+                    <td>EG01 / EG02</td>
+                </tr>
+                <tr>
+                    <th colspan="8">&nbsp;</th>
+                </tr>
+                <tr class="cabeceras-sombreadas">
+                    <th colspan="8">ESPECIFICACIONES</th>
+                </tr>
+                <tr>
+                    <th colspan="8">&nbsp;</th>
+                </tr>
+                <tr class="cabeceras-sombreadas">
+                    <th style="width: 50%; text-align:center;" colspan="4">EG01</th>
+                    <th style=" text-align:center;" colspan="4">EG02</th>
+                </tr>
+            </thead>
+            <tbody class="cabeceraGenerador">
+                @if (especificacionesFiltro != null && especificacionesFiltro.Count != 0)
+                {
+                    <tr>
+                        <th colspan="2">TIPO:</th>
+                        <td colspan="2"><input id-class="tipo" id="tipo1" value="@especificacionesFiltro[1].Tipo"></td>
+                        <th colspan="2">TIPO:</th>
+                        <td style="width: 275px;" colspan="2"><input id-class="tipo" id="tipo2" value="@especificacionesFiltro[2].Tipo"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">SERIE:</th>
+                        <td colspan="2"><input id-class="serie" id="serie1" value="@especificacionesFiltro[1].Serie"></td>
+                        <th colspan="2">SERIE:</th>
+                        <td colspan="2"><input id-class="serie" id="serie2" value="@especificacionesFiltro[2].Serie"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">ESPECIFICACIÓN:</th>
+                        <td colspan="2"><input id-class="especificacion" id="especificacion1" value="@especificacionesFiltro[1].Especificacion"></td>
+                        <th colspan="2">ESPECIFICACIÓN:</th>
+                        <td colspan="2"><input id-class="especificacion" id="especificacion2" value="@especificacionesFiltro[2].Especificacion"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">TIPO DE MANTTO:</th>
+                        <td colspan="2"><input id-class="tipoMantenimiento" id="tipoMantenimiento1" value="@especificacionesFiltro[1].TipoMantenimiento"></td>
+                        <th colspan="2">TIPO DE MANTTO:</th>
+                        <td colspan="2"><input id-class="tipoMantenimiento" id="tipoMantenimiento2" value="@especificacionesFiltro[2].TipoMantenimiento"></td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <th colspan="2">TIPO:</th>
+                        <td colspan="2"><input id-class="tipo" id="tipo1" value=" "></td>
+                        <th colspan="2">TIPO:</th>
+                        <td style="width: 275px;" colspan="2"><input id-class="tipo" id="tipo2" value=" "></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">SERIE:</th>
+                        <td colspan="2"><input id-class="serie" id="serie1" value=" "></td>
+                        <th colspan="2">SERIE:</th>
+                        <td colspan="2"><input id-class="serie" id="serie2" value=" "></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">ESPECIFICACIÓN:</th>
+                        <td colspan="2"><input id-class="especificacion" id="especificacion1" value=" "></td>
+                        <th colspan="2">ESPECIFICACIÓN:</th>
+                        <td colspan="2"><input id-class="especificacion" id="especificacion2" value=" "></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">TIPO DE MANTTO:</th>
+                        <td colspan="2"><input id-class="tipoMantenimiento" id="tipoMantenimiento1" value="PREVENTIVO"></td>
+                        <th colspan="2">TIPO DE MANTTO:</th>
+                        <td colspan="2"><input id-class="tipoMantenimiento" id="tipoMantenimiento2" value="PREVENTIVO"></td>
+                    </tr>
+                }
+
+                <tr>
+                    <th colspan="2">PERIODO DE MANTTO:</th>
+                    <td colspan="2">CADA 1000 HORAS</td>
+                    <th colspan="2">PERIODO DE MANTTO:</th>
+                    <td colspan="2">CADA 1000 HORAS"</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table id="FiltroCentrifugo" class="table table-bordered">
+            <thead>
+                <tr style="height: 60px;">
+                    <th colspan="8">&nbsp;</th>
+                </tr>
+                <tr style="background-color: #92B087;">
+                    <th>FECHA DE CAMBIO</th>
+                    <th>H.OP.UNIDAD</td>
+                    <th>UNIDAD</th>
+                    <th>H.T.FILTRO</td>
+                    <th>ESPESOR/F</td>
+                    <th>H.OP.UNIDAD.P/MANTTO</td>
+                    <th>R/TRABAJO</td>
+                    <th>OBSERVACIONES</td>
+                </tr>
+            </thead>
+            <tbody class="detalleReporte">
+                @if (Model != null)
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr id="@item.IdDetalleFiltro" idReporteFiltro="@item.IdReporteFiltro">
+                            <td><input id-class="fecha" value="@item.Fecha.Split(' ')[0]"></td>
+                            <td><input id-class="horasOperacion" type="number" value="@item.HorasOperacion"></td>
+                            <td style="width: 95px;">
+                                EG
+                                <input style="width: 32px;text-align: left;padding: 0;" id-class="numeroGenerador" type="number" value="@item.NumeroGenerador">
+                            </td>
+                            <td style="width: 125px;"><input id-class="horasTrabajadasFiltro" type="number" value="@item.HorasTrabajadasFiltro"></td>
+                            <td style="width: 120px;">
+                                <div style="display: flex;">
+                                    <input id-class="espesor" style="text-align: right;width: 70px" type="number" value="@item.Espesor"><p style="width: 30px;"> mm</p>
+                                </div>
+                            </td>
+                            <td><input id-class="horasOperacionMantto" type="number" value="@item.HorasOperacionMantto"></td>
+                            <td><input id-class="operadorEjecutor" value="@item.OperadorEjecutor"></td>
+                            <td style="width: 200px;">
+                                <textarea id-class="Observaciones" class="autoresize" style="@( string.IsNullOrEmpty(item.Observaciones.Trim()) ?"" : "height: inherit;")">&nbsp;@item.Observaciones</textarea>
+                            </td>
+                        </tr>
+                    }
+                }
+                <tr>
+                    <td><input id-class="fecha"></td>
+                    <td><input id-class="horasOperacion"></td>
+                    <td style="width: 95px;">
+                        EG
+                        <input style="width: 32px;text-align: left;padding: 0;" id-class="numeroGenerador" type="number">
+                    </td>
+                    <td><input id-class="horasTrabajadasFiltro"></td>
+                    <td style="width: 120px;">
+                        <div style="display: flex;">
+                            <input id-class="espesor" style="text-align: right;width: 70px"><p style="width: 30px;"> mm</p>
+                        </div>
+                    </td>
+                    <td><input id-class="horasOperacionMantto"></td>
+                    <td><input id-class="operadorEjecutor"></td>
+                    <td>
+                        <textarea id-class="Observaciones" class="autoresize">&nbsp;</textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin: 0 0 0 18vh;height: 350px;" class="contenedor-imagen" onmouseover="activarSuperposicion(this)" onmouseout="desactivarSuperposicion(this)">
+        <img alt="Descripción de la imagen" src="./img/DetallefiltroCentrifugo.jpg">
+        <div class="superpuesto">
+            <img alt="Descripción de la imagen" src="./img/DetallefiltroCentrifugo.jpg">
+            <p></p>
+        </div>
+    </div>
+</div>
+<button onclick="guardardatos()">Obtener Valores</button>
+
+<script>
+
+    function activarSuperposicion(elemento) {
+        elemento.querySelector('.superpuesto').classList.add('activo');
+    }
+
+    function desactivarSuperposicion(elemento) {
+        elemento.querySelector('.superpuesto').classList.remove('activo');
+    }
+
+    async function guardardatos() {
+
+        const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+
+        loader.style.display = 'block';
+
+        try {
+            await Promise.all([
+                guardarDatosFiltro(),
+                guardarDetalleFiltro(),
+                guardarDatosReporteFiltro()
+            ]);
+
+            Swal.fire({
+                title: "Success!!",
+                text: "Se guardaron los datos.",
+                icon: "success",
+                button: "Aww yiss!"
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+
+            Swal.fire({
+                title: "Error",
+                text: error.toString(),
+                icon: "error",
+                button: "OK",
+            });
+
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    async function guardarDatosReporteFiltro() {
+        var datos = {
+            'idReporteFiltro': idReporteFiltro,
+            'Fecha': obtenerFecha("fechaVista"),
+            'Tipo': 'FiltroCentrifugo'
+        };
+
+        try {
+            var response = await fetch('@Url.Action("GuardarReporteFiltro", "FiltroCentrifugo")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+
+            var data = await response.json();
+
+            if (data.respuesta.idRespuesta !== 0 && data.respuesta.idRespuesta !== 1) {
+                throw new Error(data.respuesta.mensaje);
+            }
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async function guardarDatosFiltro() {
+        var datos = DatosFiltro();
+
+        try {
+            var response = await fetch('@Url.Action("GuardarDatosFiltro", "FiltroCentrifugo")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+
+            var data = await response.json();
+
+            if (data.respuesta.idRespuesta !== 0 && data.respuesta.idRespuesta !== 1) {
+                throw new Error(data.respuesta.mensaje);
+            }
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async function guardarDetalleFiltro() {
+        var datos = datosDetalleFiltro();
+
+        try {
+            var response = await fetch('@Url.Action("GuardarDetalleFiltro", "FiltroCentrifugo")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+
+            var data = await response.json();
+
+            if (data.respuesta.idRespuesta !== 0 && data.respuesta.idRespuesta !== 1) {
+                throw new Error(data.respuesta.mensaje);
+            }
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+
+    function datosDetalleFiltro() {
+        var listaFiltroID = ["tipo", "serie", "especificacion", "tipoMantenimiento"];
+
+        var datos = [];
+        for (var i = 1; i < 3; i++) {
+
+            var valores = {};
+            for (var j = 0; j < listaFiltroID.length; j++) {
+                var input = document.getElementById(listaFiltroID[j] + i);
+                var nombreClase = input.getAttribute("id-class");
+                console.log("input : ", input.value);
+                console.log("nombreClase : ", nombreClase);
+                if (input.type === 'number') {
+                    valores[nombreClase] = parseFloat(input.value);
+                } else {
+                    valores[nombreClase] = input.value;
+                }
+            }
+
+            if (idReporteFiltro !== "") {
+                valores["IdReporteFiltro"] = idReporteFiltro;
+            } else {
+                valores["IdReporteFiltro"] = datosOperario.IdSitio + "-CENTRIFUGO-O&M-FOR-01-" + obtenerFecha("format");
+            }
+
+            valores["idFiltro"] = datosOperario.IdSitio + "-FiltroCentrifugo-" + i + "-" + obtenerFecha("format");
+            valores["numeroGenerador"] = parseFloat(i);
+            valores["fecha"] = obtenerFecha("fechaVista");
+            datos.push(valores);
+        }
+
+        return datos;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function DatosFiltro() {
+        var tabla = document.getElementById("FiltroCentrifugo");
+        var filasTr = tabla.querySelector('tbody').getElementsByTagName('tr');
+        var datos = [];
+        for (var i = 0; i < filasTr.length; i++) {
+            var valores = obtenerValoresFila(filasTr[i]);
+
+            if (listaVacia) {
+                datos.push(valores);
+            }
+        }
+        return datos;
+    }
+
+    var idReporteFiltro = "";
+    var listaVacia = true;
+    function obtenerValoresFila(fila) {
+        listaVacia = true;
+        var valores = {};
+        for (var i = 0; i < fila.cells.length; i++) {
+
+            var input = fila.cells[i].querySelector('input');
+            if (input == null) {
+                input = fila.cells[i].querySelector('textarea');
+            }
+            var idClass = input.getAttribute("id-class");
+
+            if (input.value !== "") {
+                if (input.type === 'number') {
+                    valores[idClass] = parseFloat(input.value);
+                } else {
+                    valores[idClass] = input.value;
+                }
+            }
+            if (idClass === "Observaciones") {
+                var idDetalleFiltro = fila.getAttribute("id");
+
+                if (idDetalleFiltro !== null) {
+                    idReporteFiltro = fila.getAttribute("IdReporteFiltro");
+
+                    valores["IdDetalleFiltro"] = idDetalleFiltro;
+                    valores["IdReporteFiltro"] = idReporteFiltro;
+                } else {
+                    valores["IdReporteFiltro"] = datosOperario.IdSitio + "-CENTRIFUGO-O&M-FOR-01-" + obtenerFecha("format");
+                    valores["IdDetalleFiltro"] = datosOperario.IdSitio + "-FiltroCentrifugo-" + valores["numeroGenerador"] + "-" + obtenerFecha("format");
+                    idReporteFiltro = datosOperario.IdSitio + "-CENTRIFUGO-O&M-FOR-01-" + obtenerFecha("format");
+                }
+            }
+            if (idClass === "fecha" && input.value === "") {
+                listaVacia = false;
+            }
+        }
+        return valores;
+    }
+
+
+
+
+    $(document).ready(function () {
+
+        var tituloGeneral = document.getElementById('TituloGeneral');
+        tituloGeneral.innerText = "CENTRAL GENERACION DISTRIBUIDA " + datosOperario.IdSitio + " - ICA";
+        // Aplica autoajuste de altura a todos los elementos <textarea> con la clase 'autoresize'
+        $('.autoresize').on('input', function () {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+</script>

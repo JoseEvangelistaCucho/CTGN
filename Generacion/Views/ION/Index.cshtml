@@ -1,0 +1,115 @@
+﻿@using Generacion.Models.ION;
+@using Newtonsoft.Json;
+@{
+    @model List<DatosFormatoMGD>
+
+
+    bool validacionDescarga = ViewBag.ValidacionReporte ?? false;
+}
+
+<div style="display: flex;">
+    <table style="font-size: 10px;" class="table table-bordered EG">
+        <thead>
+            <tr>
+                <th>Nro</th>
+                <th>Date/Time</th>
+                <th>kWh del int</th>
+                <th>kVARh del int</th>
+                <th>kWh rec int</th>
+                <th>kVARh rec int</th>
+                <th>Vll avg</th>
+                <th>Freq</th>
+                <th>kW del int</th>
+                <th>kVAR del int</th>
+                <th>kW del int</th>
+                <th>kVAR rec int</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                if (Model != null && Model.Count > 0)
+                {
+                    var index = 1;
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@item.Date_Time</td>
+                            <td>@item.kWhDelInt</td>
+                            <td>@item.kVARhDelInt</td>
+                            <td>@item.kWhRecInt</td>
+                            <td>@item.kVARhRecInt</td>
+                            <td>@item.VllAvg</td>
+                            <td>@item.Freq</td>
+                            <td>@item.KWDelInt</td>
+                            <td>@item.KVARDelInt</td>
+                            <td>@item.KWRecInt</td>
+                            <td>@item.KVARRecInt</td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                }
+
+            }
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+
+    var validacionDescarga = @Html.Raw(JsonConvert.SerializeObject(validacionDescarga));
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if (validacionDescarga) {
+            var link = document.createElement("a");
+            link.href = '@Url.Action("DescargarArchivo", "ReportesGenerales")' + "?name=ION-" + obtenerFecha("format") + ".pdf&reporte=Reporte-ION";
+            link.click();
+        }
+
+    });
+
+
+
+    $(document).ready(function () {
+        $('#btnReload').on('click', function () {
+
+            var fecha = $('#datepicker').val();
+            $.ajax({
+                url: '@Url.Action("Index", "ION")' + '?fecha=' + fecha,
+                type: 'GET',
+                success: function (data) {
+                    console.log(data);
+                    $('#result').html(data);
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+
+
+
+
+
+</script>
+
+

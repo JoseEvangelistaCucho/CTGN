@@ -1,0 +1,1104 @@
+﻿@using Generacion.Models.DatosConsola;
+@using Generacion.Models.FotoVoltaica;
+@using Newtonsoft.Json;
+@{
+
+    DateTime fechaSeleccionado = DateTime.Parse(ViewBag.Fecha);
+
+    int CantidadDiasMes = DateTime.DaysInMonth(fechaSeleccionado.Year, fechaSeleccionado.Month);
+
+    Dictionary<string, CabecerasTabla> datosCabecera =   ViewData["datosCabecera"] as Dictionary<string, CabecerasTabla>;
+
+    ReporteFotovoltaica reporteFotovoltaica = ViewData["datosReporte"] as ReporteFotovoltaica;
+    List<FotovoltaicaGenerada> detalleGenerado = ViewData["detalleGenerado"] as List<FotovoltaicaGenerada>;
+
+
+
+    FotovoltaicaGenerada fotovoltaica = detalleGenerado.Where(x => DateTime.Parse(x.Fecha) == fechaSeleccionado).Select(x => x).FirstOrDefault();
+
+
+}
+
+
+
+
+<style>
+    .table {
+        margin: 0;
+    }
+
+    .contendor-cabecera-titulo {
+        display: flex;
+        border-bottom: solid 3px gray;
+        height: 15vh;
+    }
+
+    .contendor-titulo {
+        background: royalblue;
+        width: 100%;
+    }
+
+    .tabla-detalle-titulo {
+        background: royalblue;
+        color: white;
+    }
+
+    .contendor-titulo h2 {
+        text-align: center;
+        color: white;
+        padding: 4vh 6vh 0 6vh;
+        font-size: 3vh;
+    }
+
+    .tabla-detalle-subtitulo {
+        background: rgb(221,235,247);
+    }
+
+    .tabla-detalle-subtitulo-normal {
+        background: rgb(221,235,247);
+        font-weight: normal;
+    }
+
+    .imagen-titulo-cabecera {
+        width: 30vh;
+    }
+
+    .limitador-contenido {
+        background: cornflowerblue;
+        height: 4vh;
+        border: solid 1px;
+    }
+
+    .tabla-detalle-status {
+       /*width: 25vh;*/ 
+    }
+
+        .tabla-detalle-status thead tr th {
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .tabla-detalle-status tbody tr td {
+            text-align: center;
+            font-size: 12px;
+            width: 10vh;
+        }
+
+            .tabla-detalle-status tbody tr td input {
+                /*width: 7vh;*/
+                text-align: center;
+            }
+
+
+    .table td, .table th {
+        padding: 0;
+    }
+
+    input {
+        border: none;
+        background: transparent;
+    }
+
+    .descripcion-general {
+        padding: 2vh 0 2vh 0;
+        display: flex;
+    }
+
+
+    .contenedor-tablas-demanda table {
+        width: 70vh;
+        font-size: 12px;
+        margin: 0;
+        border: solid 1px black;
+    }
+
+
+    .contenedor-nota {
+        display: flex;
+    }
+
+        .contenedor-nota input {
+            width: 50%;
+            height: 4vh;
+        }
+
+    .detalle-manager-safety div {
+        display: grid;
+    }
+
+        .detalle-manager-safety div input {
+            border: solid 1px !important;
+        }
+
+    .detalle-manager-safety input {
+        width: 100%;
+    }
+
+    .detalle-evento th {
+        font-size: 11px;
+        padding: 2px;
+    }
+
+    .detalle-evento thead {
+        text-align: center;
+    }
+
+    .justify-content-between {
+        background-color: transparent;
+        border-bottom: none;
+    }
+
+    .table-bordered td, .table-bordered th {
+        border: solid 1px black !important;
+    }
+
+    textarea {
+        height: 24px;
+        width: 30vh;
+        overflow-y: hidden;
+        resize: none;
+        font-size: 12px;
+    }
+
+
+    .contenedor-imagen-contribucion-social {
+        padding: 2vh 0 0 2vh;
+    }
+
+    .detalle-controbucion-social {
+        display: flex;
+        padding: 0 0 0 1.8vh;
+    }
+
+        .detalle-controbucion-social input, .detalle-controbucion-social p {
+            width: 14.5vh;
+            text-align: center;
+            border: none;
+        }
+
+
+    .contenedor-detalle-controbucion-social {
+        display: flex;
+        padding: 0 0 0 1.8vh;
+    }
+
+    .contenedor-controbucion-social {
+        border: 2px solid;
+        margin: 8px;
+        width: 52vh;
+        height: 28vh;
+        border-radius: 4vh;
+        text-align:center;
+    }
+    .contenedor-controbucion-social p{
+        font-size:1.7vh;
+        border:none;
+    }
+    .contenedor-controbucion-social input{
+        width:100%;
+        text-align:center;
+    }
+
+    /*.contenedorImagenes img-energy-trend {
+        width: 92vh;
+        height: 54vh;
+    }*/
+
+    #contenedorImagenes img {
+        width: 92vh;
+        height: 54vh;
+    }
+    .contendor-reporte-fotovoltaica{
+        background: white;
+        width: 145vh;
+    }
+    .contenedor-status-tabla {
+        width: 50vh;
+        font-size: 13px;
+        text-align: center;
+    }
+    .contenedor-status-tabla input{
+        width:10vh;
+        text-align: right;
+    }
+</style>
+
+
+<div class="contendor-reporte-fotovoltaica" >
+    <div class="contendor-cabecera-titulo">
+        <div>
+            <img class="imagen-titulo-cabecera" src="/img/PeruPowerCo.png">
+        </div>
+        <div class="contendor-titulo">
+            <h2>INFORME DIARIO DE OPERACIÓN CENTRAL FOTOVOLTAICA ICA NORTE</h2>
+        </div>
+    </div>
+    <div>
+        <div style="display: flex;">
+            <p1>Fecha :</p1><input value="@(fechaSeleccionado.ToString("dd/MM/yyyy"))"/>
+        </div>
+        <div class="limitador-contenido"></div>
+        <div class="descripcion-general">
+            <div>
+                <table id="tablaDetalleEnergiaGenerada" class="table table-bordered tabla-detalle-status">
+                    <thead>
+                        <tr>
+                            <th class="tabla-detalle-titulo">@(fechaSeleccionado.ToString("MMMM"))"</th>
+                            <th class="tabla-detalle-titulo">ENERGIA  GENERADA(kWh)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            List<decimal> listaGenerado = new List<decimal>();
+                            List<string> listaFechaGenerado = new List<string>();
+                            decimal totalGenerado = 0;
+                            @for (int i = 1; i <= CantidadDiasMes; i++)
+                            {
+                                string valorDia = i < 10 ? "0" : string.Empty;
+                                string valorMes = fechaSeleccionado.Month < 10 ? "0" : string.Empty;
+
+                                DateTime fechaMes = DateTime.Parse($"{valorDia}{i}/{valorMes}{fechaSeleccionado.Month}/{fechaSeleccionado.Year}");
+
+                                decimal coincidente = detalleGenerado.Where(x => DateTime.Parse(x.Fecha) == fechaMes).Select(x => x.Detalle).FirstOrDefault();
+                                listaGenerado.Add(coincidente);
+                                listaFechaGenerado.Add(fechaMes.ToString("dd/MM/yyyy"));
+                                totalGenerado = totalGenerado + coincidente;
+                                <tr>
+                                      <td>@(fechaMes.ToString("dd/MM/yyyy"))</td>
+                                    <td><input plantacionArboles="1" ahorroCarbono="3" reduccionCo2="2" fecha-in="@(fechaMes.ToString("dd/MM/yyyy"))" desc="montoDia" value="@(coincidente.Equals(0)?"0":coincidente)" /></td>
+                                </tr>
+                            }
+                        <tr>
+                                <td class="tabla-detalle-titulo">TOTAL</td>
+                                <td class="tabla-detalle-titulo" id="ener-gen-total-mes">@(totalGenerado)</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div style="display:flex;text-align: center;">
+                    <div class="contenedor-controbucion-social">
+                        <div style="display:flex;border-bottom: 2px solid;">
+                            <div class="contenedor-imagen-contribucion-social">
+                                <img style="width: 5vh;" src="/img/reciclar.png">
+                            </div>
+                            <h4 style="padding: 2vh 0 0 4vh;">
+                                Contribuciones Sociales
+                            </h4>
+                        </div>
+                        <div style="display:flex;">
+                            <div style="width: 18vh;">
+                                <div class="contenedor-imagen-contribucion-social">
+                                    <img style="width: 7vh;" src="/img/ahorro_estandar.png">
+                                </div>
+                                <p style="text-align: center;border: none;margin: 0;">
+                                    Ahorro Estandar de carbono
+                                </p>
+                                <input id="Ahorro-estandar-carbono" value="@(fotovoltaica.EstandarCarbono)">
+                                <p style="text-align: center;border: none;">
+                                   Toneladas
+                                </p>
+                            </div>
+                            <div style="width: 15vh;">
+                                <div class="contenedor-imagen-contribucion-social" style="padding: 2vh 0 0 1vh;">
+                                    <img style="width: 10.7vh;" src="/img/reduccion_co2.png">
+                                </div>
+                                <p style="text-align: center;border: none;">
+                                    Reducción de CO2
+                                </p>
+                                <input id="Reducción-CO2" value="@(fotovoltaica.ReduccionCo2)">
+                            <p>Toneladas</p>
+                            </div>
+                            <div style="width: 17vh;">
+                                <div class="contenedor-imagen-contribucion-social">
+                                    <img style="width: 8.8vh;" src="/img/equivalentes_plantacion.png">
+                                </div>
+                                <p style="text-align: center;border: none;margin: 0;">
+                                    Equivalente de plantación de árboles
+                                </p>
+                                <input id="Equivalente-plantación-arboles" value="@(fotovoltaica.PlantacionArboles)">
+                                <p>Arboles</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <img style="width: 50vh;height: 28vh;" src="/img/datos_generales_fotovoltaica.png">
+                    </div>
+                </div>
+
+                <div style="    padding: 0 0 1vh 1vh;">
+                    <div class="card shadow" style="width: 110vh;height: 64vh;">
+                        <!-- Card Header - Dropdown -->
+                        <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary" id="titulo-reporte-fotovoltaica">
+                                PRODUCCION kWh CENTRAL FOTOVOLTAICA ICA NORTE
+                            </h6>
+                        </div>
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <div class="chartjs-size-monitor-shrink">
+                                </div>
+                                <canvas id="grafica-produccion-central-fotovoltaica"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="display: flex;">
+        <div class="contenedor-status-tabla">
+            <table id="tablaDetalleGenerada" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th class="tabla-detalle-titulo">STATUS</th>
+                        <th  class="tabla-detalle-titulo">UNITS</th>
+                        <th class="tabla-detalle-titulo">PLANTA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>
+                             @(datosCabecera["ener-trend-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["ener-trend-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["ener-trend-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                     <tr>
+                        <th>
+                             @(datosCabecera["ext-trip-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["ext-trip-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["ext-trip-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                             @(datosCabecera["mant-plan-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["mant-plan-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["mant-plan-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                     <tr>
+                        <th>
+                             @(datosCabecera["mant-forz-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["mant-forz-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["mant-forz-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                     <tr>
+                        <th>
+                             @(datosCabecera["stand-by-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["stand-by-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["stand-by-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                     <tr>
+                        <th>
+                             @(datosCabecera["rung-hrs-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["rung-hrs-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["rung-hrs-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                             @(datosCabecera["ener-dia-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["ener-dia-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["ener-dia-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                             @(datosCabecera["ener-mens-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["ener-mens-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["ener-mens-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                             @(datosCabecera["ener-año-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["ener-año-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["ener-año-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                             @(datosCabecera["efici-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["efici-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["efici-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                            @(datosCabecera["avai-fac-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["avai-fac-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["avai-fac-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                            @(datosCabecera["util-fac-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["util-fac-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["util-fac-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                            @(datosCabecera["cap-fac-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["cap-fac-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["cap-fac-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                     <tr>
+                        <th>
+                            @(datosCabecera["load-fac-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["load-fac-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["load-fac-ftvol"].IdTipoEngine)" type="number"></td>
+                    </tr>
+                     <tr>
+                        <th>
+                            @(datosCabecera["fec-cnx-fac-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["fec-cnx-fac-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["fec-cnx-fac-ftvol"].IdTipoEngine)" value="11/02/2021"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                            @(datosCabecera["fec-hoy-ftvol"].Detalle)
+                        </th>
+                        <td>@(datosCabecera["fec-hoy-ftvol"].Descripcion)</td>
+                        <td><input class-name="@(datosCabecera["fec-hoy-ftvol"].IdTipoEngine)"  value="@(fechaSeleccionado.ToString("dd/MM/yyyy"))"></td>
+                    </tr>
+                    <tr>
+                        <th>
+                            PLANT
+                        </th>
+                        <td>f.p.</td>
+                        <td><input type="number"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="width: 98vh;">
+            <input type="file" id="inputImagen" style="display:initial;" accept="image/*">
+            <div class="content-generators-imagen" id="contenedorImagenes">
+                @Html.Raw(reporteFotovoltaica?.ImagenReporte)
+            </div>
+        </div>
+    </div>
+    <div class="contenedor-nota">
+        <p style="width:99%;">Nota :<input style="width:96%;" id="nota" value="@(reporteFotovoltaica != null ? reporteFotovoltaica.Nota : string.Empty) " /></p>
+    </div>
+    <div>
+        <div>
+           <div id="manager" class="detalle-manager-safety">
+                <div style="background: #C2FBFC;color: blue;font-weight: bold;">MANAGER</div>
+                <div>
+                    @{
+                        if(reporteFotovoltaica != null){
+                            string[] countManager = reporteFotovoltaica.Manager.Split("|#");
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                string valorExiste = countManager.Length > i ? countManager[i] : string.Empty ;
+                                <input value="@valorExiste.Trim()" />
+                            }
+                        }
+                        else
+                        {
+                            <input />
+                            <input  />
+                        }
+                    }
+
+                </div>
+            </div>
+            <div id="safety" class="detalle-manager-safety">
+                <div style="background: #C2FBFC;color: blue;font-weight: bold;">
+                    SAFETY
+                </div>
+                <div>
+                     <input value="@(reporteFotovoltaica !=null ? reporteFotovoltaica.Safety : string.Empty )" />
+                </div>
+            </div>
+            <div id="humanResources" class="detalle-manager-safety">
+                <div style=" background: #C6FEC6;  color: black;  font-weight: bold;">
+                    HUMAN RESOURCES
+                </div>
+                <div>
+                     <input value="@(reporteFotovoltaica !=null ? reporteFotovoltaica.HumanResources : string.Empty )" />
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-bordered detalle-evento" id="tablaEventos">
+            <thead style="background: orange;color: black; font-size:10px;">
+                <tr>
+                    <th rowspan="2">Fecha y Hora de inicio de carga o descarga</th>
+                    <th rowspan="2">Fecha y Hora final de carga o descarga</th>
+                    <th rowspan="2" style=" width: 30vh;">Sistema</th>
+                    <th colspan="4" style=" width: 50vh;">Tipo de Parada (Horas)</th>
+                    <th rowspan="2" style=" width: 30vh;">Descripcion del Evento</th>
+                </tr>
+                <tr>
+                    <th style=" width: 15vh;">External Trips</th>
+                    <th style=" width: 15vh;">Forced Maint</th>
+                    <th style=" width: 15vh;">Planned Maint</th>
+                    <th style=" width: 15vh;">Worked</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <button class="btn btn-primary" id="agregarFilaEvento">Agregar</button>
+       <div>
+            <button class="btn btn-primary" id="guardarDatosReporte">Guardar Datos</button>
+       </div>
+    </div>
+</div>
+
+
+<script src="vendor/chart.js/Chart.min.js"></script>
+<script>
+$(document).ready(function () {
+
+
+
+    function GenerarGraficoProduccion(){
+            var ctx = document.getElementById("grafica-produccion-central-fotovoltaica");
+            
+            const Utils = Chart.helpers;
+            var myLineChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(JsonConvert.SerializeObject(listaFechaGenerado)),
+                    datasets: [
+                        {
+                            label: 'POTENCIA MARCONA',
+                            data: @Html.Raw(JsonConvert.SerializeObject(listaGenerado)),
+                            borderColor: 'blue',
+                            backgroundColor: 'blue',
+                            yAxisID: 'y-axis-1'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        yAxes: [
+                            {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                id: 'y-axis-1',
+                                ticks: {
+                                    min: 0,
+                                    max: 700
+                                }
+                            }
+                        ]
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            });
+    }
+        GenerarGraficoProduccion();
+
+
+    document.getElementById("guardarDatosReporte").addEventListener("click", function () {
+        var detalleGenerado = ObtenerDatosGenerado();
+        var resourceAndSafery = obtenerResourceAndSafery();
+
+        var detalleReporte = ObtenerDetalleGenerado(); //.concat(resourceAndSafery);
+
+        ObtenerReporteGeneral().then(function (datosGenerales) {
+            var datos = {
+                RegistroEventos: obtenerDatosEvento(),
+                detalleFotovoltaicas: detalleReporte,
+                detalleGenerada: detalleGenerado,
+                reporteFotovoltaica:  Object.assign({},datosGenerales,resourceAndSafery) 
+            };
+            console.log("datos", datos);
+
+            guardarDatosControl('@Url.Action("GuardarDetalleGenerado", "Fotovoltaica")', datos);
+        }).catch(function (error) {
+            console.error('Error al obtener el reporte general:', error);
+        });
+    });
+
+
+    var idReporteFotoVol  = datosOperario.IdSitio +"-FtVol-"+obtenerFecha("format");
+
+
+
+    async function ObtenerReporteGeneral(){
+
+        /*
+        var plantacionArboles = document.getElementById("Equivalente-plantación-arboles");
+        var ahorroCarbono = document.getElementById("Ahorro-estandar-carbono");
+        var reduccionCo2 = document.getElementById("Reducción-CO2");*/
+        var contenedorImagen = document.getElementById("contenedorImagenes");
+        var nota = document.getElementById("nota");
+        
+
+         var imagenBase64 = await ObtenerImagenBase64(contenedorImagen);
+
+
+            var dato = {
+                 idReporteFotoVol : idReporteFotoVol,
+                /*estandarCarbono :ahorroCarbono.value,
+                 reduccionCo2 : reduccionCo2.value,
+                 plantacionArboles : plantacionArboles.value,*/
+                 ImagenReporte: imagenBase64,
+                 nota: nota.value,
+                 fecha : obtenerFecha("fechaVista")
+            };
+
+        return dato;
+    }
+
+        function getBase64Image(contenedorImagen) {
+            console.log("contenedorImagen",contenedorImagen);
+            var img = contenedorImagen.querySelector('img');
+            var dataURL = "";
+            if (img) {
+                var canvas = document.createElement("canvas");
+                var ctx = canvas.getContext("2d");
+
+                img.onload = function () {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    dataURL = canvas.toDataURL();
+                    console.log("dataURL",dataURL);
+
+                };
+
+                img.onerror = function () {
+                    console.error("Error al cargar la imagen.");
+                };
+            }
+
+            return dataURL;
+        }
+         function ObtenerImagenBase64(contenedorImagen) {
+           var imagen = contenedorImagen.querySelector('img');
+
+               if(imagen){
+                       return new Promise((resolve, reject) => {
+                        var src = imagen.getAttribute('src');
+                        fetch(src)
+                            .then(response => response.blob())
+                            .then(blob => {
+                                var reader = new FileReader();
+
+                                reader.onload = function () {
+                                    var imagenBase64 = reader.result;
+                                    resolve(imagenBase64);
+                                };
+
+                                // Leer la imagen como una URL de datos
+                                reader.readAsDataURL(blob);
+                            })
+                            .catch(error => {
+                                console.error('Error al obtener la imagen:', error);
+                                reject(error);
+                            });
+                    });
+               }
+            return "";
+        }
+
+        function obtenerDatosEvento() {
+            var datos = [];
+
+            var inputs = document.getElementsByClassName("datoEvento");
+            let tamañoTablaEventos = 0;
+            var dato = {};
+
+            for (var i = 0; i < inputs.length; i++) {
+
+                dato[inputs[i].id] = inputs[i].value;
+                tamañoTablaEventos++;
+
+                if (tamañoTablaEventos == 8) {
+                    dato["idReporte"] = idReporteFotoVol;
+                    dato["idRegEventos"] = datosOperario.IdSitio + "-Reg-Event-" + obtenerFecha("fecha");
+                    dato["numeroGenerador"] = 0;
+                    dato["nombreReporte"] = "FotoVoltaica";
+
+                    datos.push(dato);
+                    dato = {};
+                    tamañoTablaEventos = 0;
+                }
+            }
+            return datos;
+        }
+
+
+       var campoDetalle = ["manager", "safety", "humanResources"];
+        function obtenerResourceAndSafery() {
+
+            var dato = {};
+            campoDetalle.forEach(function (campo) {
+                var contenedor = document.getElementById(campo);
+                var inputs = contenedor.getElementsByTagName("input");
+                var detalle = "";
+
+                for (var i = 0; i < inputs.length; i++) {
+                    var valor = inputs[i].value ?? '';
+
+                    detalle = detalle + valor;
+                       
+                        if (i === inputs.length - 1) {
+
+                            dato[campo] =  detalle ;
+                        } else if(detalle != '') {
+                            detalle = detalle + " |# ";
+                        }
+                }
+            });
+            return dato;
+        }
+
+
+
+    function ObtenerDetalleGenerado(){
+        var tablaDetalle = document.getElementById("tablaDetalleGenerada");
+
+        var inputs = tablaDetalle.querySelectorAll('tbody input');
+        var datos =[];
+
+        inputs.forEach(function(input) {
+
+            var nombreClase = input.getAttribute("class-name");
+            var valorInput = input.value;
+
+             if(valorInput != ''){
+                var dato ={
+                    Planta : parseFloat(input.value),
+                    fecha : obtenerFecha("fechaVista"),
+                    IdDetalleGenerado : datosOperario.IdSitio +'-'+nombreClase+"-Det-Gen-"+obtenerFecha("format"),
+                    idReporteFotoVol : idReporteFotoVol,
+                    IdTipoEngine:nombreClase
+                };
+                datos.push(dato);
+            }
+        });
+        return datos;
+    }
+
+       
+    function ObtenerDatosGenerado(){        
+        var tablaDetalle = document.getElementById("tablaDetalleEnergiaGenerada");
+        var inputs = document.querySelectorAll('[desc]');
+        
+        var datos =[];
+        inputs.forEach(function(input) {
+            var fechaInput = input.getAttribute('fecha-in');
+
+            var plantacionArboles = input.getAttribute('plantacionArboles');
+            var ahorroCarbono = input.getAttribute('ahorroCarbono');
+            var reduccionCo2 = input.getAttribute('reduccionCo2');
+
+            var fechaSeleccionado = "@(ViewBag.Fecha)";
+            //obtenerFecha("fechaVista")
+            
+            if(fechaInput == fechaSeleccionado) {
+                   plantacionArboles = document.getElementById("Equivalente-plantación-arboles");
+                   ahorroCarbono = document.getElementById("Ahorro-estandar-carbono");
+                   reduccionCo2 = document.getElementById("Reducción-CO2");
+            }
+
+            var numeroMes = fechaInput.split('/');
+             
+            if(input.value != ''){
+                var dato ={
+                    estandarCarbono: ahorroCarbono.value,
+                    plantacionArboles: plantacionArboles.value,
+                    reduccionCo2: reduccionCo2.value,
+                    detalle : parseFloat(input.value),
+                    fecha : fechaInput,
+                    numeroMes: parseFloat(numeroMes[1]),
+                    idVoltajeGenerado : datosOperario.IdSitio +"-FtVol-Gen-"+fechaInput.replaceAll('/','_'),
+                    idReporteFotoVol : idReporteFotoVol
+                };
+                datos.push(dato);
+            }
+        });
+        return datos;
+    }
+
+
+
+      function guardarDatosControl(url, datos) {
+                    fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(datos)
+                    })
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            console.log("url:", url);
+                            console.log("data:", data);
+
+                            mostrarMensaje(data);
+                        })
+                        .catch(function (error) {
+                            console.error("Error:", error);
+                            mostrarError();
+                        });
+                }
+
+                function mostrarMensaje(data) {
+                    if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                            willClose: () => {
+                                var link = document.createElement("a");
+                        link.href = '@Url.Action("DescargarArchivo", "ReportesGenerales")' + '?name=Reporte_fotovoltaica-' + obtenerFecha("format") + '.pdf&reporte=Reporte_fotovoltaica';
+                                link.download = "Reporte_fotovoltaica-" + obtenerFecha("format") + ".pdf";
+                                link.click();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.respuesta.mensaje,
+                            icon: "error",
+                            button: "OK",
+                        });
+                    }
+                }
+
+                function mostrarError() {
+                    Swal.fire({
+                        title: "Error",
+                        text: "Error en la solicitud.",
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+
+    agregarSumatoriaMensual();
+
+    function agregarSumatoriaMensual() {
+        var tablaDetalle = document.getElementById("tablaDetalleEnergiaGenerada");
+        var inputs = document.querySelectorAll('[desc]');
+
+        inputs.forEach(function(input) {
+            input.addEventListener("change", function() {
+                detalleSumaGenerado(this);
+            });
+        });
+    }
+
+    var sumaGenerado = @(Html.Raw(JsonConvert.SerializeObject(totalGenerado)));
+
+    function detalleSumaGenerado(input) {
+        var valorAnterior = parseFloat(input.getAttribute("data-valor-anterior")) || 0;
+        var valorActual = parseFloat(input.value) || 0;
+
+        sumaGenerado = sumaGenerado - valorAnterior + valorActual;
+        input.setAttribute("data-valor-anterior", valorActual);
+
+        var cantidadGenerada = document.getElementById("ener-gen-total-mes");
+        cantidadGenerada.innerText = sumaGenerado;
+    }
+
+
+
+        document.getElementById("agregarFilaEvento").addEventListener("click", function () {
+                agregarFila();
+            });
+
+            function agregarFila() {
+                var table = document.getElementById("tablaEventos").getElementsByTagName('tbody')[0];
+                var newRow = table.insertRow(table.rows.length);
+
+                var columnas = ["fechaParada", "fechaArranque", "sistema", "externalTrips", "forcedMaint", "plannedMaint", "standBy", "descripcionEvento"];
+                var tamañoImputs = ["externalTrips", "forcedMaint", "plannedMaint", "standBy"];
+                var textArea = ["descripcionEvento"];
+
+                for (var i = 0; i < columnas.length; i++) {
+                    var cell = newRow.insertCell(i);
+                    var input;
+                    if (textArea.includes(columnas[i])) {
+                        input = document.createElement("textarea");
+                        input.addEventListener("input", function () {
+                            autoresizeTextarea(input);
+                        });
+                        autoresizeTextarea(input); // Ajusta el tamaño inicial
+                    } else {
+                        input = document.createElement("input");
+                        input.type = "text";
+
+                        if (tamañoImputs.includes(columnas[i])) {
+                            input.style.width = "15vh";
+                            input.addEventListener('change', obtenerValoresAgrupados);
+                        } else {
+                            input.style.width = "140px";
+                        }
+
+                        // Agregar evento input a campos de fecha
+                        if (columnas[i] === "fechaArranque") {
+                            input.addEventListener("change", function () {
+                                obtenerHorasEvetos(this); // Pasar el elemento actual a la función
+                            });
+                        }
+                    }
+
+                    input.id = columnas[i];
+                    input.className = "datoEvento";
+                    cell.appendChild(input);
+                }
+
+                var actionCell = newRow.insertCell(columnas.length);
+                actionCell.innerHTML = '<button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>';
+            }
+
+            function autoresizeTextarea(textarea) {
+                textarea.style.height = "auto";
+                textarea.style.height = (textarea.scrollHeight - 2) + "px";
+            }
+
+            function obtenerValoresAgrupados() {
+
+            valoresAgrupados = {
+                EG1: [],
+                EG2: []
+            };
+
+            var filas = document.getElementById("tablaEventos").getElementsByTagName('tbody')[0].getElementsByTagName("tr");
+
+            for (var i = 0; i < filas.length; i++) {
+                var unidadFuncional = filas[i].querySelector("#unidadFuncional");
+                var externalTrips = filas[i].querySelector("#externalTrips");
+                var forcedMaint = filas[i].querySelector("#forcedMaint");
+                var plannedMaint = filas[i].querySelector("#plannedMaint");
+                var standBy = filas[i].querySelector("#standBy");
+
+                var valores = {
+                    //unidadFuncional: parseFloat(obtenerHorasConvertidas(unidadFuncional.value)) || 0,
+                    externalTrips: parseFloat(obtenerHorasConvertidas(externalTrips.value)) || 0,
+                    forcedMaint: parseFloat(obtenerHorasConvertidas(forcedMaint.value)) || 0,
+                    plannedMaint: parseFloat(obtenerHorasConvertidas(plannedMaint.value)) || 0,
+                    standBy: parseFloat(obtenerHorasConvertidas(standBy.value)) || 0
+                };
+
+                // Determinar si es EG1 o EG2 en función de unidadFuncional
+                var unidadFuncionalNumerico = unidadFuncional.value.match(/\d+/);
+
+                var tipoEG = parseInt(unidadFuncionalNumerico) === 1 ? "EG1" : "EG2";
+
+                // Agregar valores al array correspondiente
+                valoresAgrupados[tipoEG].push(valores);
+
+                var valoresRunning = sumarValoresPorPropiedad(valoresAgrupados);
+                agregarValoresRunning(valoresRunning);
+            }
+
+            activarEventosInput();
+        }
+
+                /*actualizar monto de paradas y sincronizacion */
+            function obtenerHorasEvetos(elementoModificado) {
+                // Obtener la fila actual
+                var fila = elementoModificado.closest('tr');
+
+                // Buscar elementos relacionados en la misma fila
+                var fechaInicioStr = fila.querySelector("#fechaParada");
+                var fechaFinStr = fila.querySelector("#fechaArranque");
+
+                if (fechaInicioStr.value !== "" && fechaFinStr.value !== "") {
+                    var resultado = calcularDiferenciaYFormatear(fechaInicioStr.value, fechaFinStr.value);
+
+                    var externalTrips = fila.querySelector("#externalTrips");
+
+                    externalTrips.value = resultado.diferencia;
+                    fechaInicioStr.value = resultado.fechaInicioFormateada;
+                    fechaFinStr.value = resultado.fechaFinFormateada;
+                }
+            }
+
+            function calcularDiferenciaYFormatear(fechaInicioStr, fechaFinStr) {
+
+                var fechaInicio = convertirAFecha(fechaInicioStr);
+                var fechaFin = convertirAFecha(fechaFinStr);
+
+                var diferenciaMillis = fechaFin - fechaInicio;
+
+                var segundos = Math.floor(diferenciaMillis / 1000);
+                var minutos = Math.floor(segundos / 60);
+                var horas = Math.floor(minutos / 60);
+
+                minutos %= 60;
+                segundos %= 60;
+
+                var diferenciaFormateada = horas + ":" + (minutos < 10 ? "0" : "") + minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
+
+                var formatoFecha = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+                var fechaInicioFormateada = fechaInicio.toLocaleDateString('es-ES', formatoFecha);
+                var fechaFinFormateada = fechaFin.toLocaleDateString('es-ES', formatoFecha);
+
+
+
+                return {
+                    diferencia: diferenciaFormateada,
+                    fechaInicioFormateada: fechaInicioFormateada,
+                    fechaFinFormateada: fechaFinFormateada
+                };
+            }
+
+            function convertirAFecha(cadenaFecha) {
+                var partes = cadenaFecha.split(/[\s/:\-]+/); // Dividir por espacio, barra y dos puntos
+                var dia = parseInt(partes[0], 10);
+                var mes = parseInt(partes[1], 10) - 1; // Restar 1 al mes (ya que en JavaScript los meses van de 0 a 11)
+                var año = parseInt(partes[2], 10);
+                var hora = parseInt(partes[3], 10);
+                var minutos = parseInt(partes[4], 10);
+                var segundos = parseInt(partes[5], 10);
+
+                return new Date(año, mes, dia, hora, minutos, segundos);
+            }
+
+    const inputImagen = document.getElementById('inputImagen');
+    const contenedorImagenes = document.getElementById('contenedorImagenes');
+    if (inputImagen != null) {
+        manejarCambioInput(inputImagen, contenedorImagenes);
+    }
+
+    function manejarCambioInput(input, contenedor) {
+        input.addEventListener('change', function () {
+            const files = input.files;
+
+            contenedor.innerHTML = '';
+
+            for (let i = 0; i < files.length; i++) {
+                const imagen = files[i];
+
+                const imagenElement = document.createElement('img');
+                //imagenElement.classList.add('img-energy-trend');
+                imagenElement.src = URL.createObjectURL(imagen);
+
+                const contenedorId = contenedor.getAttribute('id');
+                imagenElement.setAttribute('casillaId', contenedorId);
+                contenedor.appendChild(imagenElement);
+            }
+
+            input.value = '';
+        });
+    }
+
+});
+</script>

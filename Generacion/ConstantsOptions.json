@@ -1,0 +1,62 @@
+{
+  "RutaReportes": {
+    "pathJson": "C:\\aplicaciones\\PortalGeneracion\\\\DataJson",
+    "pathReporteMRT": "C:\\aplicaciones\\PortalGeneracion\\\\Reportes\\\\MRT",
+    "pathReporteExcel": "C:\\aplicaciones\\PortalGeneracion\\\\Reportes\\\\Excel",
+    "pathReporte": "C:\\aplicaciones\\PortalGeneracion\\\\Reportes\\\\Centrales",
+    "pathImagenes": "C:\\aplicaciones\\PortalGeneracion\\\\Imagenes",
+    "pathLicence": "C:\\aplicaciones\\PortalGeneracion"
+  },
+  "HorarioOperario": {
+    "mañana": [ 0, 8 ],
+    "Tarde": [ 8, 16 ],
+    "Noche": [ 16, 24 ]
+  },
+
+  "IdDatosCampo": [
+    "potencia",
+    "operacion",
+    "temperatura",
+    "humedad",
+    "Gas",
+    "GasPrinc",
+    "GasMotor",
+    "Contador",
+    "MotorT001",
+    "MotorP001",
+    "MotorP007",
+    "MotorP006",
+    "LtT003",
+    "LtP002",
+    "HtT005",
+    "HtP004",
+    "HtTE006",
+    "HtP005",
+    "TempRadiadores",
+    "PresRadiadores",
+    "TempSalidaRadiad",
+    "PresEntradaRadiad",
+    "Operacion_ci",
+    "TempTrabajo",
+    "Presion",
+    "Aceite",
+    "HrsOperacion",
+    "AceiteLubr",
+    "PresBomba",
+    "Bomba02",
+    "Generador",
+    "GeneraNd",
+    "Mastegate",
+    "NivelCarter",
+    "FugaGas",
+    "FugaAireInstr",
+    "FugaAguaSist",
+    "FugaAceite",
+    "NivelTanqueBessel",
+    "LimpiezaEG00",
+    "AlarmasSala",
+    "NivelTanqueAgua",
+    "LimpiezaExteriores"
+  ]
+
+}

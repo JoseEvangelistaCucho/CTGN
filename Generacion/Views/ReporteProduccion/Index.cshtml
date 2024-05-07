@@ -1,0 +1,2743 @@
+﻿@using Generacion.Models.DatosConsola;
+@using Generacion.Models.ION;
+@using Generacion.Models.LecturasCampo;
+@using Generacion.Models.Mantenimiento;
+@using Generacion.Models.ReporteProduccion;
+@using Generacion.Models.Session;
+@using Microsoft.AspNetCore.Html;
+@using Newtonsoft.Json;
+@using System.Text;
+
+@{
+    DateTime fecha = DateTime.Now;
+
+    Dictionary<string, List<SessionOperario>> datoHorario = ViewData["horarioOperarios"] as Dictionary<string, List<SessionOperario>>;
+        List<SessionOperario> mañana = datoHorario.ContainsKey("mañana") ? datoHorario["mañana"] : new List<SessionOperario>();
+    List<SessionOperario> tarde = datoHorario.ContainsKey("tarde") ? datoHorario["tarde"] : new List<SessionOperario>();
+    List<SessionOperario> noche = datoHorario.ContainsKey("noche") ? datoHorario["noche"] : new List<SessionOperario>();
+
+
+    List<decimal> datosBFA901 = ViewData["datosBFA901"] as List<decimal>;
+    Dictionary<string, Dictionary<int, ArranqueSincronizacion>> datosArranqueSincro = ViewData["DatosSincro"] as Dictionary<string, Dictionary<int, ArranqueSincronizacion>>;
+
+    Dictionary<int, ArranqueSincronizacion> datosArraque = null;
+    Dictionary<int, ArranqueSincronizacion> datosSincro = null;
+
+    datosArraque = datosArranqueSincro != null && datosArranqueSincro.Count > 0 ? datosArranqueSincro["arranque"] : null;
+    datosSincro = datosArranqueSincro != null && datosArranqueSincro.Count > 0 ? datosArranqueSincro["sincronizacion"] : null;
+
+
+    List<DatosFormatoMGD> datosION = ViewData["DatosGraficoION"] as List<DatosFormatoMGD>;
+    var generacion = datosION.Select(x => x.KWDelInt).ToArray();
+    var horasGeneracion = datosION.Select(x => x.Hora).ToArray();
+
+    double TotalPlantExportION = datosION.Sum(x => double.Parse(x.kWhDelInt.ToString()));
+
+    TotalPlantExportION = Math.Round(TotalPlantExportION / 1000, 2);
+
+    Dictionary<string, CabecerasTabla> detalleCabeceras = ViewData["DatoscabeceraCampo"] as Dictionary<string, CabecerasTabla>;
+    List<EnergiaProducida> produccion = ViewData["Produccion"] as List<EnergiaProducida>;
+    List<LevelLubeOilCartel> produccionCarter = ViewData["ProduccionCarter"] as List<LevelLubeOilCartel>;
+    List<CityGateFlow> produccionCity = ViewData["ProduccionCity"] as List<CityGateFlow>;
+    // List<TkCleanLube> produccionTkClean = ViewData["ProduccionTkClean"] as List<TkCleanLube>;
+    Dictionary<string, TkCleanLube> produccionTkClean = ViewData["ProduccionTkClean"] as Dictionary<string, TkCleanLube>;
+
+
+    Dictionary<int, Dictionary<string, DetalleFecha>> detalleOperacionCampoHoy = ViewData["DetalleOperacionCampoHoy"] as Dictionary<int, Dictionary<string, DetalleFecha>>;
+    Dictionary<int, Dictionary<string, DetalleFecha>> detalleOperacionCampoAyer = ViewData["DetalleOperacionCampoAyer"] as Dictionary<int, Dictionary<string, DetalleFecha>>;
+
+    Dictionary<string, List<RegistrosDatosEngine>> datosEngine = ViewData["datosEngine"] as Dictionary<string, List<RegistrosDatosEngine>>;
+    Dictionary<string, ManttoVessel> datosMantoVessel = ViewData["datosMantoVessel"] as Dictionary<string, ManttoVessel>;
+
+
+
+    Dictionary<string, Dictionary<int, LecturasMedianoche>> energiaProducida = ViewData["datosLecturas"] as Dictionary<string, Dictionary<int, LecturasMedianoche>>;
+
+
+    /***************CALCULO PARA LA ENEGERGIA PRODUCIDA***********/
+
+    decimal energiaproducidaHoy1 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][1].GasEnergiaEG : 0;
+    decimal energiaproducidaAyer1 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][1].GasEnergiaEG : 0;
+    decimal energiaproducidaHoy2 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][2].GasEnergiaEG : 0;
+    decimal energiaproducidaAyer2 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][2].GasEnergiaEG : 0;
+
+    /*************CALCULO PARA LA CANTIDAD DE GAS CONSUMIDO************/
+
+    decimal gasUtilizadoHoy1 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][1].GasconsumedEG : 0;
+    decimal gasUtilizadoAyer1 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][1].GasconsumedEG : 0;
+    decimal gasUtilizadoHoy2 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][2].GasconsumedEG : 0;
+    decimal gasUtilizadoAyer2 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][2].GasconsumedEG : 0;
+
+    decimal tatalGasUtilizado1 = gasUtilizadoHoy1 - gasUtilizadoAyer1;
+    decimal tatalGasUtilizado2 = gasUtilizadoHoy2 - gasUtilizadoAyer2;
+
+    decimal restaProduccionHoyYAyer1 = energiaproducidaHoy1 - energiaproducidaAyer1;
+    decimal restaProduccionHoyYAyer2 = energiaproducidaHoy2 - energiaproducidaAyer2;
+
+    decimal heatRate1 = ((tatalGasUtilizado1 * 48428) / ((restaProduccionHoyYAyer1 == 0 ? 1 : restaProduccionHoyYAyer1) * 1000));
+    decimal heatRate2 = ((tatalGasUtilizado2 * 48428) / ((restaProduccionHoyYAyer2 == 0 ? 1 : restaProduccionHoyYAyer2) * 1000));
+
+    /**********LOAD FACTOR****************/
+    decimal loadFactor1 = Math.Round((restaProduccionHoyYAyer1 / (decimal.Parse("9.341") * 24)) * 100, 2);
+    decimal loadFactor2 = Math.Round((restaProduccionHoyYAyer2 / (decimal.Parse("9.341") * 24)) * 100, 2);
+
+
+    /************** EFFICIENCY  ******************/
+    decimal effiency1 = Math.Round((3600 / Math.Round((heatRate1 == 0 ? 1 : heatRate1), 2)) * 100, 2);
+    decimal effiency2 = Math.Round((3600 / Math.Round((heatRate2 == 0 ? 1 : heatRate2), 2)) * 100, 2);
+
+
+
+    Func<Dictionary<int, Dictionary<string, DetalleFecha>>, int, string, DetalleFecha> ValidarcionValorDecimal = (valor, key, busqueda) =>
+        {
+            DetalleFecha respuesta = new DetalleFecha();
+            if (valor.ContainsKey(key))
+            {
+                respuesta = valor[key][busqueda];
+            }
+            return respuesta;
+        };
+
+
+     Func<List<SessionOperario>, int, IHtmlContent> MostrarTurno = (operarios, maxOperarios) =>
+                   {
+                       StringBuilder sb = new StringBuilder();
+                       int cantidadDeDatos = 0;
+
+                       foreach (SessionOperario operario in operarios)
+                       {
+                           cantidadDeDatos++;
+                           if(maxOperarios< cantidadDeDatos)
+                           continue;
+
+                           if (cantidadDeDatos == maxOperarios)
+                           {
+                               sb.Append($"<td>{operario.NombreOperario}</td>");
+                           }
+                           else
+                           {
+                               sb.Append($"<td>{operario.NombreOperario}</td>");
+                           }
+                       }
+
+                       if (cantidadDeDatos == 0)
+                       {
+                           return new HtmlString("<td></td><td></td>");
+                       }
+                       else
+                       {
+                           return new HtmlString($"{sb.ToString()}");
+                       }
+                   };
+
+}
+
+<style>
+
+    body {
+        background-color: white;
+        background: white;
+    }
+
+    .title-table {
+        text-align-last: center;
+        background: gainsboro;
+        font-weight: bold;
+        font-size: 20px;
+    }
+
+    .operadores-posicion td {
+        height: 25px;
+        width: 170px;
+        padding: 0;
+    }
+
+    .operadores-posicion {
+        width: 45%;
+        height: fit-content;
+        display: table-row;
+    }
+
+        .operadores-posicion th {
+            width: 300px;
+            height: auto;
+        }
+
+        .operadores-posicion tr {
+            width: 100px;
+        }
+
+    .titulo-produccion th {
+        height: 70px;
+        line-height: 3;
+        width: 280px;
+    }
+
+    table {
+        text-align: center;
+        font-size: 13px;
+    }
+
+    .contenedor-tablas {
+        display: flex;
+    }
+
+    .tabla-detalle-titulo {
+        width: 45%;
+        height: fit-content;
+        border: none !important;
+        display: contents;
+    }
+
+    .tabla-detalle {
+        width: 45%;
+        height: fit-content;
+        border: none !important;
+        display: contents;
+    }
+
+
+    .tabla-detalle-titulo th {
+        width: 10%;
+    }
+
+    .contenido-nombres {
+        display: grid;
+    }
+
+    .subtitulo-generador th {
+        width: 200px;
+    }
+
+
+    .img-produccion {
+        float: left;
+        height: 100%;
+        width: 75%;
+    }
+
+    .detalle-totales td {
+        display: block;
+        height: auto;
+    }
+
+    .border-clean {
+        border: none !important;
+        width: 20% !important;
+    }
+
+    @@media print {
+        #myAreaChart {
+            max-width: 100%;
+            max-height: 80%;
+        }
+
+        table {
+            width: 80%;
+        }
+
+        .tabla-detalle-titulo {
+            width: 66% !important;
+            height: fit-content;
+        }
+    }
+
+    @@media (min-width: 768px) {
+
+        .chart-area {
+            height: 11rem !important;
+        }
+    }
+
+    .tabla-EG-Arranque input {
+        width: 75px;
+    }
+
+    .datoEvento {
+        width: 110px !important;
+    }
+
+    .detalle-evento th {
+        white-space: nowrap;
+        padding: 3px;
+        font-size: 11px;
+    }
+
+    textarea {
+        height: 24px;
+        width: 300px;
+        overflow-y: hidden;
+        resize: none;
+    }
+
+    .detalle-manager-safety {
+        display: grid;
+        border: solid 2px;
+        margin: -1px;
+    }
+
+    table th {
+        white-space: nowrap !important;
+        /* width: 5% !important;*/
+        padding: 0.20rem !important;
+    }
+
+    /*table td {
+                                                                    padding: 0.20rem !important;
+                                                                }*/
+
+    input {
+        /*width: 80px;*/
+        width: 100% !important;
+        height: 25px;
+        border: none;
+        text-align: center;
+        background-color: transparent;
+    }
+
+    .detalle-manager-safety div {
+        display: grid;
+    }
+
+    .detalle-manager-safety input {
+        width: 100%;
+    }
+
+    .detalle-compresor td {
+        background: #42FF48;
+    }
+
+    .detalle-compresor input {
+        background: transparent;
+        border: none;
+    }
+
+    .st-arraque-sincronizacion input {
+        background: transparent;
+        color: blue;
+        font-weight: bold;
+        border: none;
+    }
+
+
+    .st-arraque-sincronizacion thead th {
+        background: #2F2F2F;
+        color: white;
+        font-weight: bold;
+    }
+
+    .btn-outline-danger {
+        padding: 0;
+        height: 25px;
+    }
+
+</style>
+<div>
+
+    <a id="imprimirReporteProduccionId" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+</div>
+<div style="    border: groove;" id="ReporteProduccionDiaria">
+    <div class="contenedor-tablas">
+        <table class="table table-bordered tabla-detalle">
+            <tbody class="table">
+                <tr>
+                    <th style="height: 100px;border: none;" colspan="2"> <img class="img-produccion" src="./img/logo_elec.png" /></th>
+                    <!--
+                    <th style="height: 210px; text-align: -webkit-center;" colspan="4">
+                    -->
+                    <th style="height: 107px; padding: 0 0 0 12% !important; border: none !important;" colspan="4">
+                        <table class="table table-bordered" style="width: 275px;    border: none;">
+                            <tbody>
+                                <tr><td id="TiotuloReporteCentralProduccion" style="padding: 0 35px 0 0 !important;" class="border-clean" colspan="4">CENTRAL TERMICA</td></tr>
+                                <tr>
+                                    <td style="padding: 0 35px 0 0 !important;color: red;" class="border-clean" colspan="4">
+                                        OPERATIONS REPORT FOR 24 HOURS
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="border-clean">DAY</th>
+                                    <th class="border-clean">MONTH</th>
+                                    <th class="border-clean">YEAR</th>
+                                    <th class="border-clean"></th>
+                                </tr>
+                                <tr>
+                                    <th style="color:blue;">@fecha.ToString("dd")</th>
+                                    <th style="color:blue;">@fecha.ToString("MM")</th>
+                                    <th style="color:blue;">@fecha.ToString("yyyy")</th>
+                                    <th class="border-clean"></th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </th>
+                </tr>
+                <tr class="subtitulo-generador ">
+                    <th>STATUS</th>
+                    <th>INUTS</th>
+                    <th style="background: #BEBEBE;color: black;">ENG 1</th>
+                    <th style="background: #BEBEBE;color: black;">ENG 2</th>
+                    <th class="border-clean"></th>
+                </tr>
+                @if (datosEngine["Engine1"].Count > 5 && datosEngine["Engine2"].Count > 5)
+                {
+                    <tr>
+                        @*datosEngine*@
+                        <th style="background: #BEBEBE;">SERVICE ACCUMULATED</th>
+                        <td>hrs</td>
+                        <td style="color:blue" id="SAEG1" type="number" casillaid="serviceAccumulated">@datosEngine["Engine1"][5].RunHours</td>
+                        <td style="color:blue" id="SAEG2" type="number" casillaid="serviceAccumulated">@datosEngine["Engine2"][5].RunHours</td>
+                        <td class="border-clean"></td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        @*datosEngine*@
+                        <th style="background: #BEBEBE;">SERVICE ACCUMULATED</th>
+                        <td>hrs</td>
+                        <td><input style="color:blue" id="SAEG1" type="number" casillaid="serviceAccumulated" value="0" /></td>
+                        <td><input style="color:blue" id="SAEG2" type="number" casillaid="serviceAccumulated" value="0" /></td>
+                        <td class="border-clean"></td>
+                    </tr>
+                }
+                <tr>
+                    <th>PLANNED MAINTEN</th>
+                    <td>hrs</td>
+                    <td><input id="PMEG1" type="number" casillaid="plannedMainten" value="0" /></td>
+                    <td><input id="PMEG2" type="number" casillaid="plannedMainten" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th>FORCED MAINT MECH</th>
+                    <td>hrs</td>
+                    <td><input id="FMMEG1" type="number" casillaid="forcedMaintMech" value="0" /></td>
+                    <td><input id="FMMEG2" type="number" casillaid="forcedMaintMech" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th>FORCED MAINT ELEC</th>
+                    <td>hrs</td>
+                    <td><input id="FMEEG1" type="number" casillaid="forcedMaintElec" value="0" /></td>
+                    <td><input id="FMEEG2" type="number" casillaid="forcedMaintElec" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th>FORCED AUXILIARIES</th>
+                    <td>hrs</td>
+                    <td><input id="FAEG1" type="number" casillaid="forcedAuxiliaries" value="0" /></td>
+                    <td><input id="FAEG2" type="number" casillaid="forcedAuxiliaries" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th style="background: #BEBEBE;">EXTERNAL TRIPS</th>
+                    <td>hrs</td>
+                    <td><input id="ETEG1" type="number" casillaid="externalTrips" value="0" /></td>
+                    <td><input id="ETEG2" type="number" casillaid="externalTrips" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th style="background: #BEBEBE;">STAND BY</th>
+                    <td>hrs</td>
+                    <td><input id="SBEG1" type="number" casillaid="standBy" value="0" /></td>
+                    <td><input id="SBEG2" type="number" casillaid="standBy" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th>RUNNING HOURS</th>
+                    <td>hrs</td>
+                    <td style="background: #7BA0CF;"><input disabled style="background: transparent; border:none;" id="RHEG1" disabled casillaid="runningHours" value="24" /></td>
+                    <td style="background: #7BA0CF;"><input disabled style="background: transparent; border:none;" id="RHEG2" disabled casillaid="runningHours" value="24" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <th>HOURS AVAILABLE</th>
+                    <td>hrs</td>
+                    <td><input type="number" casillaid="hoursAvailable" id="HAEG1" value="0" /></td>
+                    <td><input type="number" casillaid="hoursAvailable" id="HAEG2" value="0" /></td>
+                    <td class="border-clean"></td>
+                </tr>
+                <tr>
+                    <td style="border:none;"></td>
+                    <td style="border:none;"></td>
+                    <td style="border:none;"></td>
+                    <td style="border:none;"></td>
+                    <td class="border-clean"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="padding: 0 0 0 95px;">
+            <table class="table table-bordered operadores-posicion">
+                <tbody class-name="Operadores" id="listaOperariosTurno">
+                    <tr>
+                        <th rowspan="2">OPERATORS 00:00 - 08:00 Horas: </th>
+                    </tr>
+                    @{
+                        int cantidadDeDatos = 0;
+                        <tr class="contenido-nombres">
+
+                            @MostrarTurno(mañana,2)
+                        </tr>
+                    }
+
+                    <tr>
+                        <th rowspan="2">OPERATORS 08:00 - 16:00 Horas: </th>
+                    </tr>
+                    @{
+                        cantidadDeDatos = 0;
+                        <tr class="contenido-nombres">
+
+                            @MostrarTurno(tarde,2)
+                        </tr>
+                    }
+                    <tr>
+                        <th rowspan="2">OPERATORS 16:00 - 24:00 Horas: </th>
+                    </tr>
+                    @{
+                        cantidadDeDatos = 0;
+                        <tr class="contenido-nombres">
+
+                            @MostrarTurno(noche,2)
+                        </tr>
+
+                    }
+                <tbody class="detalle-totales">
+                    <tr>
+                        <th style="background: #7BA0CF;color: black;" colspan="2">TOTALS</th>
+                    </tr>
+                    <tr>
+                        <th>Total Plant Gen (MWh)</th>
+                        <td><input disable type="number" class-name="TotalPlantGen" id="TotalPlantGen" placeholder=" referencia ENERGY PRODUCED" value="@((energiaproducidaHoy1-energiaproducidaAyer1)+(energiaproducidaHoy2-energiaproducidaAyer2))" /></td>
+                    </tr>
+                    <tr>
+                        <th style="background:yellow;">Total Plant Export ION (MWh)</th>
+                        <td><input style="background:transparent;" disable type="number" class-name="TotalPlantExportION" id="TotalPlantExport" value="@TotalPlantExportION" /></td>
+                    </tr>
+                    <tr>
+                        <th>Total gas Consumption (kg)</th>
+                        <td><input disable type="number" class-name="TotalGasConsumption" id="TotalGasConsumption" value="@(Math.Round(tatalGasUtilizado1+tatalGasUtilizado2, 2))" /></td>
+                    </tr>
+                    <tr style="border:none;">
+                        <th style="border:none;"></th>
+                        <td style="border:none;"></td>
+                    </tr>
+                    <tr style="border:none;">
+                        <th style="border:none;"></th>
+                        <td style="border:none;"></td>
+                    </tr>
+                    <tr>
+                        <th>Efficiency</th>
+                        <td><input type="number" class-name="Efficiency" id="Efficiency-view" value="@(Math.Round((effiency1+effiency2)/2, 2))" /></td>
+                    </tr>
+                    <tr>
+                        <th>Consumo de Servicios auxiliares(MWh)</th>
+                        <td>
+                                @if (datosBFA901 != null && datosBFA901.Count > 1)
+                                {
+                                <input class="color: blue;font-weight: bold;" id="bfa-TOTAL" class-name="ConsumoServiciosAuxiliares" type="number" disabled value=@(datosBFA901[1]-datosBFA901[0] ) />
+                                }
+                                else
+                                {
+                                <input class="color: blue;font-weight: bold;" id="bfa-TOTAL" class-name="ConsumoServiciosAuxiliares" type="number" />
+                                }
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4" style="width: 130%;">
+            <!-- Card Header - Dropdown -->
+            <div style="place-self: center;" class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary" id="tituloGrafico"></h6>
+            </div>
+            <!-- Card Body -->
+            <div class="card-body">
+                <div class="chart-area">
+                    <div class="chartjs-size-monitor-shrink">
+                        <div class=""></div>
+                    </div>
+                    <!--  <canvas id="myAreaChart" style="display: block;  height: 230px !important;   width: 1157px;"></canvas>-->
+                    <canvas id="myAreaChart" style="display: block;  height: 180px !important;   width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <br /><br />
+    <div>
+        <div class="contenedor-tablas">
+            <table class="table table-bordered tabla-detalle-titulo-10">
+                <tbody class="table" style="margin: 0;">
+                    <tr class="subtitulo-generador ">
+                        <th>ENERGY PRODUCE</th>
+                        <th>UNITS</th>
+                        <th style="white-space: normal !important;">PMU ENG-01</th>
+                        <th style="white-space: normal !important;">PMU ENG-02</th>
+                        <th style="white-space: normal !important;" rowspan="3">GROSS ENERGY PRODUCED</th>
+                    </tr>
+                    <tr data-id="ReadingToday">
+                        <th>READING TODAY</th>
+                        <td>MW/h</td>
+
+                        <td id="TodayEng_001"> <input type="number" value="@(energiaproducidaHoy1)"></td>
+                        <td id="TodayEng_002"> <input type="number" value="@(energiaproducidaHoy2)"></td>
+                    </tr>
+                    <tr data-id="ReadingYesterday">
+                        <th>READING YESTERDAY</th>
+                        <td>MW/h</td>
+                        <td id="YesterdayEng_001"><input type="number" value="@(energiaproducidaAyer1)"></td>
+                        <td id="YesterdayEng_002"><input type="number" value="@(energiaproducidaAyer2)"></td>
+                    </tr>
+                    <tr data-id="EnergyProduced">
+                        <th style="background-color:black; color:white;">ENERGY PRODUCED</th>
+                        <td>MW/h</td>
+                        <td id="EnergProdEng-001"><input type="number" value="@(energiaproducidaHoy1-energiaproducidaAyer1)" /></td>
+                        <td id="EnergProdEng-002"><input type="number" value="@(energiaproducidaHoy2-energiaproducidaAyer2)"></td>
+                        <td id="GrosEnergProd"><input type="number" value="@((energiaproducidaHoy1-energiaproducidaAyer1)+(energiaproducidaHoy2-energiaproducidaAyer2))"></td>
+                    </tr>
+                    <tr data-id="AvailabFactor">
+                        <th>AVAILABILITY FACTOR</th>
+                        <td>%</td>
+                        <td id="FactorENG1"><input style="width: 60% !important;text-align: right;" type="number" value="100">%</td>
+                        <td id="FactorENG2"><input style="width: 60% !important;text-align: right;" type="number" value="100">%</td>
+                        <td style="display:flex;"><input style="width: 60% !important;text-align: right;" type="number" value="100">%</td>
+                    </tr>
+                    <tr data-id="Efficiency">
+                        <th>EFFICIENCY</th>
+                        <td>%</td>
+                        <td id="EficENG1"><input style="width: 60% !important;text-align: right;" type="number" value="@(effiency1)">%</td>
+                        <td id="EficENG2"><input style="width: 60% !important;text-align: right;" type="number" value="@(effiency2)">%</td>
+                        <td style="display:flex;"><input style="width: 60% !important;text-align: right;" type="number" value="@(Math.Round((effiency1+effiency2)/2, 2))">%</td>
+                    </tr>
+                    <tr data-id="UtilizatFactor">
+                        <th>UTILIZATION FACTOR</th>
+                        <td>%</td>
+                        <td id="UtilENG1"><input style="width: 60% !important;text-align: right;" type="number">%</td>
+                        <td id="UtilENG2"><input style="width: 60% !important;text-align: right;" type="number">%</td>
+                        <td style="display:flex;"><input style="width: 60% !important;text-align: right;" type="number">%</td>
+                    </tr>
+                    <tr data-id="CapacityFactor">
+                        <th>CAPACITY FACTOR</th>
+                        <td>%</td>
+                        @{
+                            decimal capacityFactor1 = Math.Round(((energiaproducidaHoy1 - energiaproducidaAyer1) / decimal.Parse("9.341") * 24) * 100, 2);
+                            decimal capacityFactor2 = Math.Round(((energiaproducidaHoy2 - energiaproducidaAyer2) / decimal.Parse("9.341") * 24) * 100, 2);
+                        }
+                        <td id="CapacityENG1"><input style="width: 60% !important;text-align: right;" type="number" value="@(capacityFactor1)">%</td>
+                        <td id="CapacityENG2"><input style="width: 60% !important;text-align: right;" type="number" value="@(capacityFactor2)">%</td>
+                        <td style="display:flex;"><input style="width: 60% !important;text-align: right;" type="number" value="@(Math.Round((capacityFactor1+ capacityFactor2)/2,1))">%</td>
+                    </tr>
+                    <tr data-id="LoadFactor">
+                        <th>LOAD FACTOR</th>
+                        <td>%</td>
+                        <td id="LoadENG1"><input style="width: 60% !important;text-align: right;" type="number" value="@(loadFactor1)">%</td>
+                        <td id="LoadENG2"><input style="width: 60% !important;text-align: right;" type="number" value="@(loadFactor2)">%</td>
+                        <td style="display:flex;"><input style="width: 60% !important;text-align: right;" type="number" value="@(loadFactor1+loadFactor2)">%</td>
+                    </tr>
+
+                    <tr data-id="HeatRate">
+                        <th>HEAT RATE</th>
+                        <td>KJ/KWh</td>
+                        <td id="HeatENG1"><input type="number" value="@(Math.Round(heatRate1, 2))"></td>
+                        <td id="HeatENG2"><input type="number" value="@(Math.Round(heatRate2, 2))"></td>
+                        <td><input type="number" value="@(Math.Round(heatRate1+heatRate2, 2))"></td>
+                    </tr>
+                    <tr data-id="GasConsumed">
+                        <th>GAS  CONSUMED</th>
+                        <td>KG</td>
+                        <td id="GasENG1"><input type="number" value="@(Math.Round(tatalGasUtilizado1, 2))"></td>
+                        <td id="GasENG2"><input type="number" value="@(Math.Round(tatalGasUtilizado2, 2))"></td>
+                        <td>TOTAL GAS DEL DIA</td>
+                    </tr>
+                    <tr data-id="Plant">
+                        <th style="background: #B8FBC6; color:blue;">PLANT</th>
+                        <td style="background: #B8FBC6; color:blue;">f.p</td>
+                        <td id="PlantENG1" colspan="2"><input type="number" value="1.00"></td>
+                        <td><input type="number" value="@(Math.Round(tatalGasUtilizado1+tatalGasUtilizado2, 2))"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="padding: 0 0 0 120px;">
+                <table class="table table-bordered tabla-EG-Arranque st-arraque-sincronizacion" style="height: 130px;width: 250px;">
+                    <thead>
+                        <tr>
+                            <th colspan="3"> NUMERO DE ARRANQUES</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2"> EG1</th>
+                            <th>EG2</th>
+                        </tr>
+                    </thead>
+                    <tbody class="st-arraque-sincronizacion" id="arranque">
+                        <tr casillaid="diario">
+                            <th>DIARIO</th>
+                            <td style="background: yellow;">
+                                <input type="number" casillaid="EG1" id="arranqueDiario1" />
+                            </td>
+                            <td style="background: yellow;"><input id="arranqueDiario2" type="number" casillaid="EG2" /></td>
+                        </tr>
+                        <tr casillaid="mensual">
+                            <th>MENSUAL</th>
+                            @{
+                                if (datosArraque != null)
+                                {
+                                    <td><input type="number" casillaid="EG1" placeholder="@datosArraque[1].Mensual" value="@datosArraque[1].Mensual" /></td>
+                                    <td><input type="number" casillaid="EG2" placeholder="@datosArraque[2].Mensual" value="@datosArraque[2].Mensual" /></td>
+                                }
+                                else
+                                {
+                                    <td><input type="number" casillaid="EG1" /></td>
+                                    <td><input type="number" casillaid="EG2" /></td>
+                                }
+                            }
+                        </tr>
+                        <tr casillaid="anual">
+                            <th>ANUAL</th>
+                            @{
+                                if (datosArraque != null)
+                                {
+                                    <td><input type="number" casillaid="EG1" value="@datosArraque[1].Anual" placeholder="@datosArraque[1].Anual" /></td>
+                                    <td><input type="number" casillaid="EG2" value="@datosArraque[2].Anual" placeholder="@datosArraque[2].Anual" /></td>
+                                }
+                                else
+                                {
+                                    <td><input type="number" casillaid="EG1" /></td>
+                                    <td><input type="number" casillaid="EG2" /></td>
+                                }
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table class="table table-bordered tabla-EG-Arranque st-arraque-sincronizacion" style="height: 130px;width: 250px;">
+                    <thead>
+                        <tr>
+                            <th colspan="3">NUMERO DE SINCRONIZACIONES</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">EG1</th>
+                            <th>EG2</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sincronizacion">
+                        <tr casillaid="diario">
+                            <th>DIARIO</th>
+                            <td style="background: yellow;"><input type="number" casillaid="EG1" id="sincroDiario1" /></td>
+                            <td style="background: yellow;"><input type="number" casillaid="EG2" id="sincroDiario2" /></td>
+                        </tr>
+                        <tr casillaid="mensual">
+                            <th>MENSUAL</th>
+                            @{
+                                if (datosArraque != null)
+                                {
+                                    <td><input type="number" casillaid="EG1" value="@datosSincro[1].Mensual" placeholder="@datosSincro[1].Mensual" /></td>
+                                    <td><input type="number" casillaid="EG2" value="@datosSincro[2].Mensual" placeholder="@datosSincro[2].Mensual" /></td>
+                                }
+                                else
+                                {
+                                    <td><input type="number" casillaid="EG1" /></td>
+                                    <td><input type="number" casillaid="EG2" /></td>
+                                }
+                            }
+
+                        </tr>
+                        <tr casillaid="anual">
+                            <th>ANUAL</th>
+                            @{
+                                if (datosArraque != null)
+                                {
+                                    <td><input type="number" casillaid="EG1" value="@datosSincro[1].Anual" placeholder="@datosSincro[1].Anual" /></td>
+                                    <td><input type="number" casillaid="EG2" value="@datosSincro[2].Anual" placeholder="@datosSincro[2].Anual" /></td>
+                                }
+                                else
+                                {
+                                    <td><input type="number" casillaid="EG1" /></td>
+                                    <td><input type="number" casillaid="EG2" /></td>
+                                }
+                            }
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div style="display: flex;">
+        <div style="width: 71%;">
+            <table class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo2">
+                <thead>
+                    <tr class="title-table">
+                        <th style="color:black" colspan="5">LEVEL LUBE OIL CARTER</th>
+                    </tr>
+                </thead>
+                <tbody class="table">
+                    @if (detalleOperacionCampoAyer.Count > 0 && detalleOperacionCampoHoy.Count > 0)
+                    {
+
+                        <tr data-id="CarterYesterday">
+                            <th style="width: 7.5% !important;">YESTERDAY</th>
+                            <td style="width: 5%;">MW/h</td>
+                            <td style="width: 4%;" id="CarterYesterdayG1"> <input value=@detalleOperacionCampoAyer[1][detalleCabeceras["NivelCarter"].IdTipoEngine].detalle disable /> </td>
+                            <td style="width: 4%;" id="CarterYesterdayG2"><input value=@detalleOperacionCampoAyer[2][detalleCabeceras["NivelCarter"].IdTipoEngine].detalle disable /> </td>
+                            <td style="width: 4%;" style="color:blue" rowspan="2">TOTAL</td>
+                        </tr>
+                        <tr data-id="CarterToday">
+                            <th>TODAY</th>
+                            <td>MW/h</td>
+                            <td style="background: #42FF48;" id="CarterTodayG1"><input value=@detalleOperacionCampoHoy[1][detalleCabeceras["NivelCarter"].IdTipoEngine].detalle disable /></td>
+                            <td style="background: #42FF48;" id="CarterTodayG2"><input value=@detalleOperacionCampoHoy[2][detalleCabeceras["NivelCarter"].IdTipoEngine].detalle disable /></td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr data-id="CarterYesterday">
+                            <th style="width: 150px;">YESTERDAY</th>
+                            <td style="width: 128px;">MW/h</td>
+                            <td id="CarterYesterdayG1"><input type="number"></td>
+                            <td id="CarterYesterdayG2"><input type="number"></td>
+                            <td style="color:blue" rowspan="2">TOTAL</td>
+                        </tr>
+                        <tr data-id="CarterToday">
+                            <th>TODAY</th>
+                            <td>MW/h</td>
+                            <td style="background: #42FF48;" id="CarterTodayG1"><input type="number"></td>
+                            <td style="background: #42FF48;" id="CarterTodayG2"><input type="number"></td>
+                        </tr>
+                    }
+
+                    <tr data-id="CarterAdded">
+                        <th>ADDED</th>
+                        <td>MW/h</td>
+                        <td id="TotalYesterday"><input type="number" style="color:blue" /></td>
+                        <td id="TotalToday"><input type="number" style="color:blue" /></td>
+                        <td><input type="number" style="color:blue"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="padding: 0 0 0 4.3%;">
+            <table class="table table-bordered tabla-detalle-titulo" style="height: 130px;width: 250px;">
+                <thead>
+                    <tr>
+                        <th class="border-clean"></th>
+                        <th style="background: #BEBEBE;color: black;">Internal Service Meter MWh BFA 901</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>YESTERDAY</td>
+                        <td>
+                            @if (datosBFA901 != null && datosBFA901.Count > 0)
+                            {
+                                <input style="color: blue; font-weight: bold;" id="bfa-YESTERDAY" type="number" disabled value="@datosBFA901[0]" />
+                            }
+                            else
+                            {
+                                <input style="color: blue; font-weight: bold;" id="bfa-YESTERDAY" type="number" disabled />
+                            }
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #BEBEBE;">TODAY</td>
+                        <td>
+                            @if (datosBFA901 != null && datosBFA901.Count > 1)
+                            {
+                                <input style="color: blue;font-weight: bold;" id="bfa-TODAY" type="number" disabled value="@datosBFA901[1]" />
+                            }
+                            else
+                            {
+                                <input style="color: blue;font-weight: bold;" id="bfa-TODAY" type="number" />
+                            }
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>TOTAL</td>
+                        <td style="background: #42FF48;">
+                            @if (datosBFA901 != null && datosBFA901.Count > 1)
+                            {
+                                <input class="color: blue;font-weight: bold;" id="bfa-TOTAL" type="number" disabled value=@(datosBFA901[1]-datosBFA901[0] ) />
+                            }
+                            else
+                            {
+                                <input class="color: blue;font-weight: bold;" id="bfa-TOTAL" type="number" />
+                            }
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <div style="width: 70.2%;">
+            <table class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo3">
+                <thead>
+                    <tr class="title-table">
+                        <th style="color:black;" colspan="5">REFRESCAMIENTO DEL CARTER</th>
+                    </tr>
+                </thead>
+                <tbody class="table">
+                    <tr data-id="SeExtrae">
+                        <th style="width: 13.3% !important;">SE EXTRAE</th>
+                        <td style="width: 8.2% !important;">MW/h</td>
+                        <td style="width: 9% !important;" id="SeExtraeG1"><input type="number" /></td>
+                        <td style="width: 9% !important;" id="SeExtraeG2"><input type="number" /></td>
+                        <td style="width: 9% !important;" colspan="3"><input type="number" value=""></td>
+                        @*           <td colspan="3"></td> *@
+                    </tr>
+                    <tr data-id="SeRellena">
+                        <th>SE RELLENA</th>
+                        <td>MW/h</td>
+                        <td id="SeRellenaG1"><input type="number" /></td>
+                        <td id="SeRellenaG2"><input type="number" /></td>
+                        <td colspan="3"><input type="number" value=""></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="display: flex;">
+            <div style="width: 44%;">
+                <table class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo4">
+                    <thead>
+                        <tr style="font-size: 17px;font-weight: bold;color: black;">
+                            <th colspan="3">CITY GATE FLOW METER</th>
+                        </tr>
+                        <tr style="font-size: 15px !important" class="title-table">
+                            <th></th>
+                            <th>KG ENG1</th>
+                            <th>KG ENG2</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table">
+
+                        <tr data-id="CityToday">
+                            <th>READING TODAY</th>
+                            <td id="CityTodayG1"><input type="number" value="@gasUtilizadoHoy1" /></td>
+                            <td id="CityTodayG2"><input type="number" value="@gasUtilizadoHoy2" /></td>
+                        </tr>
+                        <tr data-id="CityYesterday">
+                            <th>READING YESTERDAY</th>
+                            <td id="CityYesterdayG1"><input type="number" value="@gasUtilizadoAyer1" /></td>
+                            <td id="CityYesterdayG2"><input type="number" value="@gasUtilizadoAyer2" /></td>
+                        </tr>
+                        <tr data-id="TotalCityG1">
+                            <th>CONSUMPTION</th>
+                            <td style="background: #42FF48;"><input style="background:transparent; border:none;" disabled id="CityG1" value="@(Math.Round(tatalGasUtilizado1, 2))" /></td>
+                            <td style="background: #42FF48;"><input style="background:transparent; border:none;" disabled id="CityG2" value="@(Math.Round(tatalGasUtilizado2, 2))" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="padding: 0 0 0 10%;width: 56%;">
+
+                <table id="Compresor" class="table table-bordered tabla-detalle-titulo">
+                    <thead>
+                        <tr>
+                            <th style="font-size: 17px !important; background: #2F2F2F;color: red;font-weight: bold;" colspan="5">COMPRESORS</th>
+                        </tr>
+                        <tr style="font-size: 15px !important;" class="title-table">
+                            <th></th>
+                            <th>START 1</th>
+                            <th>START 2</th>
+                            <th>INSTRUMENT 1</th>
+                            <th>INSTRUMENT 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (detalleOperacionCampoHoy.Count > 0)
+                        {
+
+                            <tr>
+                                <th>Hrs Today</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoHoy,1,detalleCabeceras["HrsOperacion"].IdTipoEngine).detalle</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoHoy,2,detalleCabeceras["HrsOperacion"].IdTipoEngine).detalle</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoHoy,1,detalleCabeceras["Operacion_ci"].IdTipoEngine).detalle</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoHoy,2,detalleCabeceras["Operacion_ci"].IdTipoEngine).detalle</th>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th>Hrs Today</th>
+                                <th><input type="number" value="0" /></th>
+                                <th><input type="number" value="0" /></th>
+                                <th><input type="number" value="0" /></th>
+                                <th><input type="number" value="0" /></th>
+                            </tr>
+                        }
+                        @if (detalleOperacionCampoAyer.Count > 0)
+                        {
+
+                            <tr>
+                                <th>Hrs Yester</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoAyer,1,detalleCabeceras["HrsOperacion"].IdTipoEngine).detalle</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoAyer,2,detalleCabeceras["HrsOperacion"].IdTipoEngine).detalle</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoAyer,1,detalleCabeceras["Operacion_ci"].IdTipoEngine).detalle</th>
+                                <th>@ValidarcionValorDecimal(detalleOperacionCampoAyer,2,detalleCabeceras["Operacion_ci"].IdTipoEngine).detalle</th>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th>Hrs Yester</th>
+                                <th><input type="number" value="0" /></th>
+                                <th><input type="number" value="0" /></th>
+                                <th><input type="number" value="0" /></th>
+                                <th><input type="number" value="0" /></th>
+                            </tr>
+                        }
+                        @if (detalleOperacionCampoHoy.Count > 0 && detalleOperacionCampoAyer.Count > 0)
+                        {
+
+                            <tr>
+                                <th>DIFERENCE</th>
+                                <th style="background: #42FF48;">@(detalleOperacionCampoHoy[1][detalleCabeceras["HrsOperacion"].IdTipoEngine].detalle - detalleOperacionCampoAyer[1][detalleCabeceras["HrsOperacion"].IdTipoEngine].detalle)</th>
+                                <th style="background: #42FF48;">@(detalleOperacionCampoHoy[2][detalleCabeceras["HrsOperacion"].IdTipoEngine].detalle - detalleOperacionCampoAyer[2][detalleCabeceras["HrsOperacion"].IdTipoEngine].detalle)</th>
+                                <th style="background: #42FF48;">@(detalleOperacionCampoHoy[1][detalleCabeceras["Operacion_ci"].IdTipoEngine].detalle - detalleOperacionCampoAyer[1][detalleCabeceras["Operacion_ci"].IdTipoEngine].detalle) </th>
+                                <th style="background: #42FF48;">@(detalleOperacionCampoHoy[2][detalleCabeceras["Operacion_ci"].IdTipoEngine].detalle - detalleOperacionCampoAyer[2][detalleCabeceras["Operacion_ci"].IdTipoEngine].detalle)  </th>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th>DIFERENCE</th>
+                                <th style="background: #42FF48;"><input type="number" /></th>
+                                <th style="background: #42FF48;"><input type="number" /></th>
+                                <th style="background: #42FF48;"><input type="number" /></th>
+                                <th style="background: #42FF48;"><input type="number" /></th>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            @*TABLA LARGA*@
+            <table style="font-size: 10px;" class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo5">
+                <tbody class="table">
+                    @{
+                        if (datosMantoVessel.Count > 0 && datosMantoVessel.ContainsKey("TK VESSEL") && datosMantoVessel.ContainsKey("TK MANTTO"))
+                        {
+                            <tr data-id="TkMantto">
+                                <th style="width: 18% !important;">TK Mantto (cms)</th>
+                                <th style="width: 13% !important;">EG1-YESTERDAY</th>
+                                <td style="width: 13% !important;" id="G1ManttoYesterday"><input type="number" value="@datosMantoVessel["TK MANTTO"].Eg1_Today" disabled /></td>
+
+                                <th style="width: 10.1% !important;">EG1-TODAY </th>
+                                <td style="width: 8.3% !important;" id="G1ManttoToday"><input type="number" /></td>
+
+                                <th style="width: 5% !important;">EG2-YESTERDAY  </th>
+                                <td style="width: 7.5% !important;" id="G2ManttoYesterday"><input type="number" value="@datosMantoVessel["TK MANTTO"].Eg2_Today" disabled /></td>
+                                <th style="width: 11.5% !important;">EG2-TODAY  </th>
+                                <td id="G2ManttoToday"><input type="number" /></td>
+                            </tr>
+
+                            <tr data-id="TkVessel">
+                                <th>TK Vessel (cms)</th>
+                                <th>EG1-YESTERDAY</th>
+                                <td id="G1VesselYesterday"><input type="number" value="@datosMantoVessel["TK VESSEL"].Eg1_Today" disabled /></td>
+
+                                <th>EG1-TODAY </th>
+                                <td style="background: #42FF48;" id="G1VesselToday"><input type="number" /></td>
+
+                                <th>EG2-YESTERDAY  </th>
+                                <td id="G2VesselYesterday"><input type="number" value="@datosMantoVessel["TK VESSEL"].Eg2_Today" disabled /></td>
+                                <th>EG2-YESTERDAY  </th>
+                                <td style="background: #42FF48;" id="G2VesselToday"><input type="number" /></td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr data-id="TkMantto">
+                                <th style="width: 18% !important;">TK Mantto (cms)</th>
+                                <th style="width: 13% !important;">EG1-YESTERDAY</th>
+                                <td style="width: 13% !important;" id="G1ManttoYesterday"><input type="number" /></td>
+
+                                <th style="width: 10.1% !important;">EG1-TODAY </th>
+                                <td style="width: 8.3% !important;" id="G1ManttoToday"><input type="number" /></td>
+
+                                <th style="width: 5% !important;">EG2-YESTERDAY  </th>
+                                <td style="width: 7.5% !important;" id="G2ManttoYesterday"><input type="number" /></td>
+                                <th style="width: 11.5% !important;">EG2-TODAY  </th>
+                                <td id="G2ManttoToday"><input type="number" /></td>
+                            </tr>
+
+                            <tr data-id="TkVessel">
+                                <th>TK Vessel (cms)</th>
+                                <th>EG1-YESTERDAY</th>
+                                <td id="G1VesselYesterday"><input type="number" /></td>
+
+                                <th>EG1-TODAY </th>
+                                <td style="background: #42FF48;" id="G1VesselToday"><input type="number" /></td>
+
+                                <th>EG2-YESTERDAY  </th>
+                                <td id="G2VesselYesterday"><input type="number" /></td>
+                                <th>EG2-YESTERDAY  </th>
+                                <td style="background: #42FF48;" id="G2VesselToday"><input type="number" /></td>
+                            </tr>
+                        }
+                    }
+
+                </tbody>
+            </table>
+        </div>
+        <div style="display: flex;">
+            <div style="width: 50%;">
+                @* TABLA TK CLEAN LUBE  OIL*@
+                <table class="table table-bordered tabla-detalle-titulo-5">
+                    <tbody class="table">
+                        <tr class="subtitulo-generador">
+                            <th class="title-table" style="font-size: 15px;color: black;" class="title-table">TK CLEAN LUBE OIL</th>
+                            <th>UNITS</th>
+                            <th>LEVEL (%)</th>
+                            <th>READ (Gls)</th>
+                        </tr>
+                        <tr data-id="TkCleanYesterday">
+                            <th>YESTERDAY</th>
+                            <th>%/gls</th>
+                            <td id="LevelYesterday"><input type="number" value="@(produccionTkClean != null && produccionTkClean.ContainsKey("TODAY") ? produccionTkClean["TODAY"].TkLevel: 0)" /></td>
+                            <td id="ReadYesterday"><input type="number" value="@(produccionTkClean != null &&  produccionTkClean.ContainsKey("TODAY") ? produccionTkClean["TODAY"].TkRead: 0)" /></td>
+                        </tr>
+                        <tr data-id="TkCleanToday">
+                            <th>TODAY</th>
+                            <th>%/gls</th>
+                            <td style="background: #42FF48;" id="LevelToday"><input type="number" value="0" /></td>
+                            <td id="ReadToday"><input type="number" value="0" /></td>
+                        </tr>
+                        <tr data-id="TkCleanDiference">
+                            <th>DIFERENCE</th>
+                            <th>%/gls</th>
+                            <td id="LevelDiference"><input type="number" /></td>
+                            <td id="ReadDiference"><input type="number" /></td>
+                        </tr>
+                        <tr data-id="TkCleanReceived">
+                            <th>RECEIVED</th>
+                            <th>%/gls</th>
+                            <td id="LevelReceived"><input type="number" /></td>
+                            <td id="ReadReceived"><input type="number" /></td>
+                        </tr>
+                        <tr data-id="TkContadorToday">
+                            <th>CONTADOR TODAY</th>
+                            <th>LTS</th>
+                            <td style="background: #42FF48;" id="LevelContToday"><input type="number" /></td>
+                            <td id="ReadContToday" rowspan="3">
+                                <input type="number" style="width: 100%;height: 89px !important;text-align:center;" value="0" />
+                            </td>
+                        </tr>
+                        <tr data-id="TkContadorYesterday">
+                            <th>CONTADOR YESTERDAY</th>
+                            <th>LTS</th>
+                            <td id="LevelContYesterday"><input type="number" value="@(produccionTkClean.ContainsKey("CONTADOR YESTERDAY") ? produccionTkClean["CONTADOR YESTERDAY"].TkLevel: 0)" /></td>
+                        </tr>
+                        <tr data-id="TkAdicion">
+                            <th>ADICION OIL</th>
+                            <th>LTS</th>
+                            <td id="LevelAdicion"><input type="number" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div style="width: 627px !important;">
+                    <table class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo6">
+                        <thead>
+                            <tr>
+                                <th class="title-table" style="font-size: 15px;color: black;">TK LUBE OIL USED</th>
+                                <th>UNITS</th>
+                                <th>LEVEL (%)</th>
+                                <th>READ (Gls)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tkLubeOilUsed">
+                            <tr data-id="TkOilUsedYesterday">
+                                <th>YESTERDAY</th>
+                                <th>%/gls</th>
+                                <td><input type="number" /></td>
+                                <td><input type="number" /></td>
+                            </tr>
+                            <tr data-id="TkOilUsedToday">
+                                <th>TODAY</th>
+                                <th>%/gls</th>
+                                <td><input type="number" /></td>
+                                <td><input type="number" /></td>
+                            </tr>
+                            <tr data-id="TkOilUsedConsumed">
+                                <th>CONSUMED</th>
+                                <th>%/gls</th>
+                                <td><input type="number" /></td>
+                                <td><input type="number" /></td>
+                            </tr>
+                            <tr data-id="TkOilUsedReceived">
+                                <th>RECEIVED</th>
+                                <th>%/gls</th>
+                                <td><input type="number" /></td>
+                                <td><input type="number" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display: flex;width: 71%;">
+                    <table style="display: flow;" class="table table-bordered tabla-detalle-titulo">
+                        <thead>
+                            <tr>
+                                <th class="title-table" style="font-size: 15px;color: black;" colspan="2">FUEL LEVEL BLACK START</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>YESTERDAY</th>
+                                <td><input type="number" /></td>
+                            </tr>
+                            <tr>
+                                <th>TODAY</th>
+                                <td style="background: #42FF48;"><input type="number" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table style="display: flow;" class="table table-bordered tabla-detalle-titulo">
+                        <thead>
+                            <tr>
+                                <th class="title-table" style="font-size: 15px;color: black;">GALL ADD (GLS)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td rowspan="2"><input type="number" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table style="display: flow;" class="table table-bordered tabla-detalle-titulo">
+                        <thead>
+                            <tr>
+                                <th class="title-table" style="font-size: 15px;color: black;" colspan="2">NIVEL AGUA Tq CONTRA INCENDIO (Mt)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>YESTERDAY</th>
+                                <td><input type="number" /></td>
+                            </tr>
+                            <tr>
+                                <th>TODAY</th>
+                                <td style="background: #42FF48;"><input type="number" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="manager" class="detalle-manager-safety">
+            <div style="background: #C2FBFC;color: blue;font-weight: bold;">MANAGER</div>
+            <div>
+                <input />
+                <input />
+            </div>
+        </div>
+        <div id="safety" class="detalle-manager-safety">
+            <div style="background: #C2FBFC;color: blue;font-weight: bold;">
+                SAFETY
+            </div>
+            <div>
+                <input />
+            </div>
+        </div>
+        <div id="humanResources" class="detalle-manager-safety">
+            <div style=" background: #C6FEC6;  color: black;  font-weight: bold;">
+                HUMAN RESOURCES
+            </div>
+            <div>
+                <input />
+            </div>
+        </div>
+    </div>
+    <div style="padding: 20px 0 0 0;">
+        <div>
+            <h5>LISTADO DE EVENTOS</h5>
+        </div>
+        <div>
+            <table class="table table-bordered detalle-evento" id="tablaEventos">
+                <thead style="background: orange;color: black; font-size:10px;">
+                    <tr>
+                        <th rowspan="2">Fecha y Hora de parada</th>
+                        <th rowspan="2">Fecha y Hora de Arranque</th>
+                        <th rowspan="2">Sistema</th>
+                        <th rowspan="2">Unidad Funcional</th>
+                        <th colspan="4">Tipo de Parada (Horas)</th>
+                        <th rowspan="2">Descripcion del Evento</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 50px;">External Trips</th>
+                        <th style="width: 50px;">Forced Maint</th>
+                        <th style="width: 50px;">Planned Maint</th>
+                        <th style="width: 50px;">Stand By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<button class="btn btn-primary" id="agregarFilasEvento" >Agregar</button>
+<!--<button class="btn btn-primary" onclick="eliminarFila(this)">Eliminar</button>-->
+
+
+<script src="vendor/chart.js/Chart.min.js"></script>
+<script>
+
+            function eliminarFila(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var idReporteProduccion = datosOperario.IdSitio + "-ELD-RPT-PROD_" + obtenerFecha("fecha");
+
+        var inputs = document.querySelectorAll('input');
+
+        inputs.forEach(function (input) {
+            var tipoInput = input.getAttribute('type');
+            if (input.type === 'number' && input.value.trim() === '' && tipoInput != 'file') {
+                input.value = 0;
+            }
+        });
+
+
+
+
+        function calcularDiferencia(input) {
+            var startToday = parseFloat(input.value) || 0;
+
+            var nombreId = input.id;
+            var valorSplit = nombreId.split('-');
+
+            var numero = valorSplit[2];
+
+            var valor2 = parseFloat(document.getElementById(valorSplit[0] + '-yester-' + numero).value) || 0;
+
+            var diferencia = valor2 - startToday;
+
+            document.getElementById(valorSplit[0] + '-diference-' + numero).value = diferencia.toFixed(2);
+        }
+
+
+        var sincroDiario1 = document.getElementById('sincroDiario1');
+        sincroDiario1.addEventListener('input', function () {
+            actualizarValores('sincroDiario1');
+        });
+        var sincroDiario2 = document.getElementById('sincroDiario2');
+        sincroDiario2.addEventListener('input', function () {
+            actualizarValores('sincroDiario2');
+        });
+
+              var valorDiarioAnterior = {};
+
+        function actualizarValores2(id) {
+            var input = document.getElementById(id);
+            var tbody = input.closest('tbody');
+            var inputs = tbody.querySelectorAll('input[casillaid]');
+
+            var diarioEG2 = parseInt(inputs[1].value) || 0;
+            var mensualEG2 = parseInt(inputs[3].value) || 0;
+            var anualEG2 = parseInt(inputs[5].value) || 0;
+
+              if (!valorDiarioAnterior.hasOwnProperty(id)) {
+                valorDiarioAnterior[id] =0;
+            }
+
+            mensualEG2 = mensualEG2 - valorDiarioAnterior[id] + diarioEG2;
+            anualEG2 = anualEG2 - valorDiarioAnterior[id] + diarioEG2;
+
+            valorDiarioAnterior[id] = diarioEG2;
+
+            inputs[3].value = mensualEG2;
+            inputs[5].value = anualEG2;
+        }
+
+
+        var arranqueDiario1 = document.getElementById('arranqueDiario1');
+        arranqueDiario1.addEventListener('input', function () {
+            actualizarValores('arranqueDiario1');
+        });
+        var arranqueDiario2 = document.getElementById('arranqueDiario2');
+        arranqueDiario2.addEventListener('input', function () {
+            actualizarValores('arranqueDiario2');
+        });
+
+        function actualizarValores(id) {
+            var input = document.getElementById(id);
+            var tbody = input.closest('tbody');
+
+            var inputs = tbody.querySelectorAll('input[casillaid]');
+
+            var soloNumeros = id.match(/\d+/);
+            var numeroPosicion = 0;
+            if (parseInt(soloNumeros[0])===2) {
+                numeroPosicion=1;
+            }
+
+            var diarioEG1 = parseInt(inputs[0+numeroPosicion].value) || 0;
+            
+            var mensualEG1 = parseInt(inputs[2+numeroPosicion].value) || 0;
+
+            var anualEG1 = parseInt(inputs[4 + numeroPosicion].value) || 0;
+
+            if (!valorDiarioAnterior.hasOwnProperty(id)) {
+                valorDiarioAnterior[id] =0;
+            }
+
+            mensualEG1 = mensualEG1 - valorDiarioAnterior[id] + diarioEG1;
+            anualEG1 = anualEG1 - valorDiarioAnterior[id] + diarioEG1;
+
+            valorDiarioAnterior[id] = diarioEG1;
+
+            inputs[2+numeroPosicion].value = mensualEG1;
+            inputs[4 + numeroPosicion].value = anualEG1;
+        }
+
+
+
+        function obtenerHorasEvetos(elementoModificado) {
+            var fila = elementoModificado.closest('tr');
+
+            var fechaInicioStr = fila.querySelector("#fechaParada");
+            var fechaFinStr = fila.querySelector("#fechaArranque");
+
+            if (fechaInicioStr.value !== "" && fechaFinStr.value !== "") {
+                var resultado = calcularDiferenciaYFormatear(fechaInicioStr.value, fechaFinStr.value);
+
+                var externalTrips = fila.querySelector("#externalTrips");
+
+                externalTrips.value = resultado.diferencia;
+                fechaInicioStr.value = resultado.fechaInicioFormateada;
+                fechaFinStr.value = resultado.fechaFinFormateada;
+            }
+        }
+
+        /* document.body.addEventListener("input", function (event) {
+            /* if (event.target.id === "fechaParada") {
+                 obtenerHorasEvetos(event.target);
+             }*/
+        /*   if (event.target.id === "fechaArranque") {
+               obtenerHorasEvetos(event.target);
+           }
+        });*/
+
+        function convertirAFecha(cadenaFecha) {
+            var partes = cadenaFecha.split(/[\s/:\-]+/);
+            var dia = parseInt(partes[0], 10);
+            var mes = parseInt(partes[1], 10) - 1;
+            var año = parseInt(partes[2], 10);
+            var hora = parseInt(partes[3], 10);
+            var minutos = parseInt(partes[4], 10);
+            var segundos = parseInt(partes[5], 10);
+
+            return new Date(año, mes, dia, hora, minutos, segundos);
+        }
+
+        function calcularDiferenciaYFormatear(fechaInicioStr, fechaFinStr) {
+
+            var fechaInicio = convertirAFecha(fechaInicioStr);
+            var fechaFin = convertirAFecha(fechaFinStr);
+
+            var diferenciaMillis = fechaFin - fechaInicio;
+
+            var segundos = Math.floor(diferenciaMillis / 1000);
+            var minutos = Math.floor(segundos / 60);
+            var horas = Math.floor(minutos / 60);
+
+            minutos %= 60;
+            segundos %= 60;
+
+            var diferenciaFormateada = horas + ":" + (minutos < 10 ? "0" : "") + minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
+
+            var formatoFecha = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+            var fechaInicioFormateada = fechaInicio.toLocaleDateString('es-ES', formatoFecha);
+            var fechaFinFormateada = fechaFin.toLocaleDateString('es-ES', formatoFecha);
+
+
+
+            return {
+                diferencia: diferenciaFormateada,
+                fechaInicioFormateada: fechaInicioFormateada,
+                fechaFinFormateada: fechaFinFormateada
+            };
+        }
+        // Objeto para almacenar los valores agrupados por EG1 y EG2
+        var valoresAgrupados = {
+            EG1: [],
+            EG2: []
+        };
+        //obtener valores de evento
+        function obtenerValoresAgrupados() {
+
+            valoresAgrupados = {
+                EG1: [],
+                EG2: []
+            };
+
+            var filas = document.getElementById("tablaEventos").getElementsByTagName('tbody')[0].getElementsByTagName("tr");
+
+            for (var i = 0; i < filas.length; i++) {
+                var unidadFuncional = filas[i].querySelector("#unidadFuncional");
+                var externalTrips = filas[i].querySelector("#externalTrips");
+                var forcedMaint = filas[i].querySelector("#forcedMaint");
+                var plannedMaint = filas[i].querySelector("#plannedMaint");
+                var standBy = filas[i].querySelector("#standBy");
+
+                var valores = {
+                    //unidadFuncional: parseFloat(obtenerHorasConvertidas(unidadFuncional.value)) || 0,
+                    externalTrips: parseFloat(obtenerHorasConvertidas(externalTrips.value)) || 0,
+                    forcedMaint: parseFloat(obtenerHorasConvertidas(forcedMaint.value)) || 0,
+                    plannedMaint: parseFloat(obtenerHorasConvertidas(plannedMaint.value)) || 0,
+                    standBy: parseFloat(obtenerHorasConvertidas(standBy.value)) || 0
+                };
+
+                // Determinar si es EG1 o EG2 en función de unidadFuncional
+                var unidadFuncionalNumerico = unidadFuncional.value.match(/\d+/);
+
+                var tipoEG = parseInt(unidadFuncionalNumerico) === 1 ? "EG1" : "EG2";
+
+                // Agregar valores al array correspondiente
+                valoresAgrupados[tipoEG].push(valores);
+
+                var valoresRunning = sumarValoresPorPropiedad(valoresAgrupados);
+                agregarValoresRunning(valoresRunning);
+            }
+
+            activarEventosInput();
+        }
+
+        var idRunning = ["PMEG", "FMMEG", "FMEEG", "FAEG", "ETEG", "SBEG"];
+        function activarEventosInput() {
+            for (var i = 1; i <= 2; i++) {
+                idRunning.forEach(function (elementId) {
+                    var elemento = document.getElementById(elementId + i);
+                    if (elemento) {
+                        // Crear un evento input y activarlo en el elemento
+                        var eventoInput = new Event("input");
+                        elemento.dispatchEvent(eventoInput);
+                    }
+                });
+            }
+        }
+
+        // Llamar a la función que activa los eventos
+
+
+        function agregarValoresRunning(valoresRunning) {
+            /*var ids = ["ETEGETEG", "FMMEG", "PMEG", "SBEG"];
+
+            let count = 0;
+            ids.forEach(function (id) {
+                var elemento1 = document.getElementById(id + '1');
+                var elemento2 = document.getElementById(id + '2');
+                elemento1.value = valoresRunning[propiedad]["EG1"];
+                if (valoresRunning[propiedad]["EG2"] != undefined) {
+                    elemento2.value = valoresRunning[propiedad]["EG2"];
+                }
+            });*/
+            var externalTrips1 = document.getElementById("ETEG1");
+            var externalTrips2 = document.getElementById("ETEG2");
+
+            var forcedMaintMech1 = document.getElementById("FMMEG1");
+            var forcedMaintMech2 = document.getElementById("FMMEG2");
+
+            var plannedMainten1 = document.getElementById("PMEG1");
+            var plannedMainten2 = document.getElementById("PMEG2");
+
+            var standBy1 = document.getElementById("SBEG1");
+            var standBy2 = document.getElementById("SBEG2");
+
+            externalTrips1.value = valoresRunning["externalTrips"]["EG1"];
+            externalTrips2.value = valoresRunning["externalTrips"]["EG2"];
+
+            forcedMaintMech1.value = valoresRunning["forcedMaint"]["EG1"];
+            forcedMaintMech2.value = valoresRunning["forcedMaint"]["EG2"];
+
+            plannedMainten1.value = valoresRunning["plannedMaint"]["EG1"];
+            plannedMainten2.value = valoresRunning["plannedMaint"]["EG2"];
+
+            standBy1.value = valoresRunning["standBy"]["EG1"];
+            standBy2.value = valoresRunning["standBy"]["EG2"];
+
+        }
+
+        var cityG1 = document.getElementById('CityG1');
+        cityG1.addEventListener('input', function () {
+            actualizarConsumoIon();
+        });
+        var cityG2 = document.getElementById('CityG2');
+        cityG2.addEventListener('input', function () {
+            actualizarConsumoIon();
+        });
+
+
+        function actualizarConsumoIon() {
+
+            var totalGasConsumption = document.getElementById("TotalGasConsumption");
+
+            var city1 = document.getElementById("CityG1").value || 0;
+            var city2 = document.getElementById("CityG2").value || 0;
+            totalGasConsumption.value = parseFloat(city1) + parseFloat(city2);
+        }
+
+
+
+        function obtenerHorasConvertidas(value) {
+            var valorParseado = 0;
+            if (value != null && value != "") {
+                var horasArray = value.split(':');
+
+                valorParseado = parseFloat(horasArray[0]) + (parseFloat(horasArray[1]) / 60) + (parseFloat(horasArray[2]) / 3600);
+            }
+
+            return valorParseado.toFixed(2);
+        }
+
+        function sumarValoresPorPropiedad(data) {
+            const sumaPorPropiedad = {};
+
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    const arr = data[key];
+
+                    arr.forEach(obj => {
+                        for (const prop in obj) {
+                            if (obj.hasOwnProperty(prop) && typeof obj[prop] === 'number') {
+                                if (!sumaPorPropiedad[prop]) {
+                                    sumaPorPropiedad[prop] = {};
+                                }
+
+                                if (!sumaPorPropiedad[prop][key]) {
+                                    sumaPorPropiedad[prop][key] = 0;
+                                }
+
+                                sumaPorPropiedad[prop][key] += obj[prop];
+                            }
+                        }
+                    });
+                }
+            }
+            return sumaPorPropiedad;
+        }
+        /*tabla Eventos */
+        function autoresizeTextarea(textarea) {
+            textarea.style.height = "auto";
+            textarea.style.height = (textarea.scrollHeight - 2) + "px";
+        }
+
+         var agregarFilasEvento = document.getElementById('agregarFilasEvento');
+        agregarFilasEvento.addEventListener('click', function () {
+            agregarFila();
+        });
+        
+        function agregarFila() {
+            var table = document.getElementById("tablaEventos").getElementsByTagName('tbody')[0];
+            var newRow = table.insertRow(table.rows.length);
+
+            var columnas = ["fechaParada", "fechaArranque", "sistema", "unidadFuncional", "externalTrips", "forcedMaint", "plannedMaint", "standBy", "descripcionEvento"];
+            var tamañoImputs = ["unidadFuncional", "externalTrips", "forcedMaint", "plannedMaint", "standBy"];
+            var textArea = ["descripcionEvento"];
+
+            for (var i = 0; i < columnas.length; i++) {
+                var cell = newRow.insertCell(i);
+                var input;
+                if (textArea.includes(columnas[i])) {
+                    input = document.createElement("textarea");
+                    input.addEventListener("input", function () {
+                        autoresizeTextarea(input);
+                    });
+                    autoresizeTextarea(input); // Ajusta el tamaño inicial
+                } else {
+                    input = document.createElement("input");
+                    input.type = "text";
+
+                    if (tamañoImputs.includes(columnas[i])) {
+                        input.style.width = "64px";
+                        input.addEventListener('change', obtenerValoresAgrupados);
+                    }
+
+                    // Agregar evento input a campos de fecha
+                    if (columnas[i] === "fechaArranque") {
+                        input.addEventListener("change", function () {
+                            obtenerHorasEvetos(this); // Pasar el elemento actual a la función
+                        });
+                    }
+                }
+
+                input.id = columnas[i];
+                input.className = "datoEvento";
+                cell.appendChild(input);
+            }
+
+            var actionCell = newRow.insertCell(columnas.length);
+            actionCell.innerHTML = '<button class="btn btn-outline-danger" onclick="eliminarFila(this)">X</button>';
+        }
+
+
+
+
+        function obtenerDatosEvento() {
+            var datos = [];
+
+            var inputs = document.getElementsByClassName("datoEvento");
+            let tamañoTablaEventos = 0;
+            var dato = {};
+
+            for (var i = 0; i < inputs.length; i++) {
+                dato[inputs[i].id] = inputs[i].value;
+                tamañoTablaEventos++;
+
+                if (tamañoTablaEventos == 9) {
+                    dato["idReporte"] = idReporteProduccion;
+                    dato["idRegEventos"] = datosOperario.IdSitio + "-Reg-Event-" + obtenerFecha("fecha");
+                    dato["numeroGenerador"] = i;
+                    dato["nombreReporte"] = "ReporteProduccion";
+
+                    datos.push(dato);
+                    dato = {};
+                    tamañoTablaEventos = 0;
+                }
+            }
+            return datos;
+        }
+
+        /* Grafico ION */
+        var ctx = document.getElementById("myAreaChart");
+
+        const Utils = Chart.helpers;
+        var myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(JsonConvert.SerializeObject(horasGeneracion)),
+                datasets: [
+                    {
+                        label: 'Dataset',
+                        data: @Html.Raw(JsonConvert.SerializeObject(generacion)),
+                        borderColor: 'blue',
+                        backgroundColor: 'transparent',
+                        pointStyle: 'false',
+                        pointRadius: 0,
+                        pointHoverRadius: 100
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                }
+            }
+        });
+
+
+        var id = ["PMEG", "FMMEG", "FMEEG", "FAEG", "ETEG", "SBEG"];
+        var listaValoresRunningGe1 = [];
+        var listaValoresRunningGe2 = [];
+
+
+
+        var tituloGrafico = document.getElementById("tituloGrafico");
+        tituloGrafico.innerText = "GT " + datosOperario.IdSitio
+
+        var horasGe1 = document.getElementById("RHEG1");
+        var horasGe2 = document.getElementById("RHEG2");
+
+        function crearEvento(elementId, numero, resultadoElement) {
+            return function () {
+                actualizarResultados(id, numero, resultadoElement);
+            };
+        }
+
+        function actualizarResultados(idArray, numero, resultadoElement) {
+            var suma = 0;
+            listaValoresRunning = [];
+            listaValoresRunningGe1 = [];
+            listaValoresRunningGe2 = [];
+
+
+            idArray.forEach(function (elementId) {
+                var input = parseFloat(document.getElementById(elementId + numero).value) || 0;
+                var input2 = document.getElementById(elementId + numero);
+
+                listaValoresRunning.push(input);
+                suma += input;
+            });
+            resultadoElement.value = (24 - suma).toFixed(2).toString();
+
+            //1-(PMEG1+FMMEG1+FMEEG1+FAEG1)/(PMEG1+FMMEG1+FMEEG1+FAEG1+ETEG1+SBEG1+RHEG1))
+
+            var availabityFactorTotal = (1 - (listaValoresRunning[0] + listaValoresRunning[1] + listaValoresRunning[2] + listaValoresRunning[3]) / (listaValoresRunning[0] + listaValoresRunning[1] + listaValoresRunning[2] + listaValoresRunning[3] + listaValoresRunning[4] + listaValoresRunning[5] + (24 - suma))) * 100;
+
+            var tdAvailabityFactor = document.getElementById('FactorENG' + numero).querySelector('input');
+            tdAvailabityFactor.value = availabityFactorTotal.toFixed(2).toString();
+
+
+            //C15/(C15+C13+C14+C9+C10+C11+C12);0)
+            var utilizacionFactorTotal = ((24 - suma) / (listaValoresRunning[0] + listaValoresRunning[1] + listaValoresRunning[2] + listaValoresRunning[3] + listaValoresRunning[4] + listaValoresRunning[5] + (24 - suma))) * 100;
+            var tdUtilizacionFactor = document.getElementById('UtilENG' + numero).querySelector('input');
+            tdUtilizacionFactor.value = utilizacionFactorTotal.toFixed(2).toString();
+
+
+
+
+            calcularPromedioFactor()
+            calcularPromedioLoad()
+            calcularPromedioUtil()
+
+        }
+
+        for (var i = 1; i <= 2; i++) {
+            id.forEach(function (elementId) {
+                document.getElementById(elementId + i).addEventListener("input", crearEvento(elementId, i, (i === 1) ? horasGe1 : horasGe2));
+            });
+        }
+        var runningElement = id.slice();
+        runningElement.push("HAEG", "RHEG", "SAEG");
+
+        //obtiene los datos de Status Running Inicio
+        function obtenerDatosRunning() {
+
+            var datosRunning = [];
+            var datos = {};
+
+            for (var i = 1; i <= 2; i++) {
+
+                runningElement.forEach(function (campo) {
+
+                    var campoId = document.getElementById(campo + i);
+
+                    var valorDeCampo = campoId.getAttribute('casillaid');
+
+                    datos[valorDeCampo] = parseFloat(campoId.value) || 0;
+                });
+                datos["idReporteProdStatus"] = datosOperario.IdSitio + "-Prod-Status-" + i.toString() + "-" + obtenerFecha("fecha");
+                datos["idReporteProduccion"] = idReporteProduccion;
+                datos["numeroGenerador"] = i;
+                datos["fecha"] = "";
+                //datos[valorDeCampo] = campoId.value;
+
+                datosRunning.push(datos);
+                datos = {};
+            }
+            return datosRunning;
+        }
+
+
+        function obtenerDatosTabla(tablaId) {
+            var tbody = document.getElementById(tablaId);
+            var filas = tbody.getElementsByTagName("tr");
+
+            var datos = [];
+            var EG1 = {};
+            var EG2 = {};
+
+            for (var i = 0; i < filas.length; i++) {
+                var fila = filas[i];
+                var casillaId = fila.getAttribute("casillaid");
+
+                var inputs = fila.getElementsByTagName("input");
+
+                EG1["tipo"] = tablaId;
+                EG1["idReporteProduccion"] = idReporteProduccion;
+                EG2["tipo"] = tablaId;
+                EG2["idReporteProduccion"] = idReporteProduccion;
+
+
+                for (var j = 0; j < inputs.length; j++) {
+                    var numeroGenerador = inputs[j].getAttribute("casillaid");
+                    var valor = parseInt(inputs[j].value) || 0;
+
+                    if (numeroGenerador === "EG1") {
+                        EG1[casillaId] = valor;
+                        EG1["numeroGenerador"] = 1;
+                    } else {
+                        EG2[casillaId] = valor;
+                        EG2["numeroGenerador"] = 2;
+                    }
+                }
+
+                if (i === 2) {
+                    datos.push(EG1);
+                    datos.push(EG2);
+                    EG1 = {};
+                    EG2 = {};
+                }
+            }
+
+            return datos;
+        }
+
+
+        var campoDetalle = ["manager", "safety", "humanResources"];
+        function obtenerResourceAndSafery() {
+
+            var datos = [];
+            var dato = {};
+            campoDetalle.forEach(function (campo) {
+                var contenedor = document.getElementById(campo);
+                var inputs = contenedor.getElementsByTagName("input");
+                var detalle = "";
+
+                for (var i = 0; i < inputs.length; i++) {
+                    var valor = inputs[i].value;
+
+                    detalle = detalle + valor;
+
+                    if (i === inputs.length - 1) {
+
+                        dato = {
+                            idReporteProduccion: idReporteProduccion,
+                            tipo: campo,
+                            Detalle: detalle
+                        }
+                        datos.push(dato);
+                    } else {
+                        detalle = detalle + " |# ";
+                    }
+                }
+            });
+            return datos;
+        }
+
+
+
+
+        var datosReporte = {};
+        async function enviarDatos() {
+            const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+
+            var datosArranque = obtenerDatosTabla("arranque");
+            var datosSincronizacion = obtenerDatosTabla("sincronizacion");
+            datosArranque = datosArranque.concat(datosSincronizacion);
+
+            datosReporte = {
+                reporteProduccionStatus: obtenerDatosRunning(),
+                arranqueSincronizacion: datosArranque,
+                registroEventos: obtenerDatosEvento(),
+                detalleProduccion: obtenerResourceAndSafery(),
+                datosGeneralesroduccion: obtenerDatosGeneralesProduccion()
+            };
+
+
+            loader.style.display = 'block';
+
+            fetch('@Url.Action("GuardarDetalleProduccion", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datosReporte)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+
+                    if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                        GuardarOtrosDatos();
+                        //insertarTkManttoYTkVessel();
+                        GuardarReportePDF();
+
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                            willClose: () => {
+                                //  location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.respuesta.mensaje,
+                            icon: "error",
+                            button: "OK",
+                        });
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+        }
+        document.getElementById('imprimirReporteProduccionId').addEventListener('click', enviarDatos);
+
+
+        var datosGraficoION = {
+            horas: @Html.Raw(JsonConvert.SerializeObject(horasGeneracion)),
+            valores: @Html.Raw(JsonConvert.SerializeObject(generacion))
+                                        };
+
+        function GuardarDatosJson() {
+
+            var datos = {
+                Produccion: datosReporte,
+                LevelLubeOilCartel: ListaOilCarter,
+                RefrescamientoCartel: ListaRefrescamiento,
+                CityGateFlow: ListaCityGate,
+                ManttoVessel: listaManttoVessel,
+                TkCleanLube: listaTkClean,
+                EnergiaProducida: ListaEnergia,
+                datosGraficoION: datosGraficoION
+            }
+
+            return fetch('@Url.Action("GuardarDatosReporteJson", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+        }
+
+        var inputReporteProduccionGeneral = ["TotalPlantGen", "TotalPlantExport", "TotalGasConsumption", "Efficiency-view", "bfa-TOTAL", "listaOperariosTurno"];
+
+        function obtenerDatosGeneralesProduccion() {
+
+            var dato = {};
+            inputReporteProduccionGeneral.forEach(function (campo) {
+
+                var input = document.getElementById(campo);
+                var valorInput = "";
+                var nombreTabla = input.getAttribute("class-name");
+                if (campo !== "listaOperariosTurno") {
+                    valorInput = input.value;
+                }
+                else {
+                    var celdas = input.getElementsByTagName("td");
+
+                    for (var i = 0; i < celdas.length; i++) {
+
+                        if (i !== 0 && i % 2 == 1) {
+                            valorInput += ',' + celdas[i].textContent + ' |# ';
+                        } else {
+                            valorInput += celdas[i].textContent;
+                        }
+                    }
+                }
+                dato[nombreTabla] = valorInput;
+            });
+            dato["IdReporteProduccion"] = idReporteProduccion;
+            dato["fecha"] = obtenerFecha("fechaVista");
+
+            return dato;
+        }
+        obtenerDatosGeneralesProduccion();
+
+        function GuardarReportePDF() {
+
+            // exportarpdftest();
+            const element = document.getElementById('ReporteProduccionDiaria');
+
+            element.classList.add('savePDF');
+
+            var doc = new jsPDF({
+                orientation: 'portrait', // Cambiado a orientación vertical
+                unit: 'mm',
+                format: 'letter',
+            });
+
+            html2canvas(element, {
+                scale: 1,
+                useCORS: true,
+                allowTaint: true,
+                logging: true,
+            }).then(function (canvas) {
+                var imgData = canvas.toDataURL('image/png');
+
+                // Ajusta las coordenadas x e y para agregar márgenes
+                var marginLeft = 10;
+                var marginTop = 10;
+
+                doc.addImage(imgData, 'PNG', marginLeft, marginTop, doc.internal.pageSize.getWidth() - marginLeft * 2, doc.internal.pageSize.getHeight() - marginTop * 2);
+
+                // Guardar el PDF
+                doc.save('Reporte-Produccion_' + obtenerFecha('format') + '.pdf');
+
+                Swal.fire({
+                    title: "Success!!",
+                    text: "Se guardaron los datos.",
+                    icon: "success",
+                    button: "Aww yiss!",
+                });
+            });
+        }
+
+
+        /*
+        function exportarpdftest() {
+            const documen = document.getElementById('ReporteProduccionDiaria');
+
+            documen.classList.add('savePDF');
+
+            var doc = new jsPDF({
+                orientation: 'portrait', // Cambiado a orientación vertical
+                unit: 'mm',
+                format: 'letter',
+            });
+            const margin = 10;
+        const scrollWidth = documen?.scrollWidth;
+        const scale =
+          (doc.internal.pageSize.width - margin * 2) /
+          (scrollWidth ? scrollWidth : 0);
+          doc.html(documen , {
+            x: margin,
+            y: margin,
+            html2canvas: {
+              scale: scale,
+            },
+            callback: (docfile) => {
+              docfile
+                .save('ReporteEncuesta' + this.getFechaString() + '.pdf', {
+                  returnPromise: true,
+                })
+                .then(() => {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+                });
+            },
+          });
+        }*/
+
+
+        function getFechaString() {
+            const hoy = new Date();
+            const año = hoy.getFullYear();
+            let mes = hoy.getMonth() + 1;
+
+            if (mes < 10) {
+                mes = '0' + mes;
+            }
+
+            let dia = hoy.getDate();
+            if (dia < 10) {
+                dia = '0' + dia;
+            }
+
+            return `${año}${mes}${dia}`;
+        }
+
+
+        var Today_ENG_001 = document.getElementById('TodayEng_001').querySelector('input');
+        var Today_ENG_002 = document.getElementById('TodayEng_002').querySelector('input');
+
+        var Yesterday_ENG_001 = document.getElementById('YesterdayEng_001').querySelector('input');
+        var Yesterday_ENG_002 = document.getElementById('YesterdayEng_002').querySelector('input');
+
+        var energProdInputENG1 = document.getElementById('EnergProdEng-001').querySelector('input');
+        var energProdInputENG2 = document.getElementById('EnergProdEng-002').querySelector('input');
+
+
+
+        Today_ENG_001.addEventListener('input', actualizarResultadoEG1);
+        Yesterday_ENG_001.addEventListener('input', actualizarResultadoEG1);
+
+        Today_ENG_002.addEventListener('input', actualizarResultadoEG2);
+        Yesterday_ENG_002.addEventListener('input', actualizarResultadoEG2);
+
+
+        function actualizarResultadoEG1() {
+            var todayValue = parseFloat(Today_ENG_001.value) || 0;
+            var yesterdayValue = parseFloat(Yesterday_ENG_001.value) || 0;
+
+            var result = todayValue - yesterdayValue;
+
+            var formattedResult = result.toFixed(3);
+
+            energProdInputENG1.value = formattedResult;
+
+            actualizarTotalGros();
+            calcularPromedioCapacity();
+        }
+
+        function actualizarResultadoEG2() {
+            var todayValue = parseFloat(Today_ENG_002.value) || 0;
+            var yesterdayValue = parseFloat(Yesterday_ENG_002.value) || 0;
+
+            var result = todayValue - yesterdayValue;
+
+            var formattedResult = result.toFixed(2);
+
+            energProdInputENG2.value = formattedResult;
+
+            actualizarTotalGros();
+            calcularPromedioCapacity();
+        }
+
+        var totalPlantGen = document.getElementById("TotalPlantGen");
+        var TotalGros = document.getElementById('GrosEnergProd').querySelector('input');
+        var energProdENG1 = document.getElementById('EnergProdEng-001').querySelector('input');
+        var energProdENG2 = document.getElementById('EnergProdEng-002').querySelector('input');
+        energProdENG1.addEventListener('input', actualizarTotalGros);
+        energProdENG2.addEventListener('input', actualizarTotalGros);
+
+        function actualizarTotalGros() {
+
+
+            var value1 = parseFloat(energProdENG1.value) || 0;
+            var value2 = parseFloat(energProdENG2.value) || 0;
+            var total = value1 + value2;
+
+
+            var formato = total.toFixed(2);
+            TotalGros.value = formato;
+            totalPlantGen.value = formato;
+        }
+
+        //SUMA DE PROMEDIO
+
+        // Selecciona los elementos de entrada de Availability Factor
+        var factorENG1 = document.getElementById('FactorENG1').querySelector('input');
+        var factorENG2 = document.getElementById('FactorENG2').querySelector('input');
+        var factorAvg = document.querySelector('tr[data-id="AvailabFactor"] td:last-child input');
+
+        factorENG1.addEventListener('input', calcularPromedioFactor);
+        factorENG2.addEventListener('input', calcularPromedioFactor);
+
+        function calcularPromedioFactor() {
+            var value1 = parseFloat(factorENG1.value) || 0;
+            var value2 = parseFloat(factorENG2.value) || 0;
+            var promedio = (value1 + value2) / 2;
+            factorAvg.value = promedio.toFixed(1);
+        }
+
+        // Para Efficiency
+        var eficENG1 = document.getElementById('EficENG1').querySelector('input');
+        var eficENG2 = document.getElementById('EficENG2').querySelector('input');
+        var eficAvg = document.querySelector('tr[data-id="Efficiency"] td:last-child input');
+
+        var efficiencyView = document.getElementById('Efficiency-view');
+
+        eficENG1.addEventListener('input', calcularPromedioEfic);
+        eficENG2.addEventListener('input', calcularPromedioEfic);
+
+        function calcularPromedioEfic() {
+            var value1 = parseFloat(eficENG1.value) || 0;
+            var value2 = parseFloat(eficENG2.value) || 0;
+            var promedio = (value1 + value2) / 2;
+            eficAvg.value = promedio.toFixed(2);
+            efficiencyView.value = promedio.toFixed(2);
+        }
+        // Para UTILIZATION FACTOR
+
+        var UtilENG1 = document.getElementById('UtilENG1').querySelector('input');
+        var UtilENG2 = document.getElementById('UtilENG2').querySelector('input');
+        var UtilAvg = document.querySelector('tr[data-id="UtilizatFactor"] td:last-child input');
+
+        UtilENG1.addEventListener('input', calcularPromedioUtil);
+        UtilENG2.addEventListener('input', calcularPromedioUtil);
+
+        function calcularPromedioUtil() {
+
+            var value1 = parseFloat(UtilENG1.value) || 0;
+            var value2 = parseFloat(UtilENG2.value) || 0;
+            var promedio = (value1 + value2) / 2;
+            UtilAvg.value = promedio.toFixed(2);
+        }
+
+        // Para CAPACITY FACTOR
+
+        var CapacityENG1 = document.getElementById('CapacityENG1').querySelector('input');
+        var CapacityENG2 = document.getElementById('CapacityENG2').querySelector('input');
+        var CapacityAvg = document.querySelector('tr[data-id="CapacityFactor"] td:last-child input');
+
+        CapacityENG1.addEventListener('input', calcularPromedioCapacity);
+        CapacityENG2.addEventListener('input', calcularPromedioCapacity);
+
+        function calcularPromedioCapacity() {
+            CapacityENG1.value = (parseFloat(energProdInputENG1.value / (9.341 * 24)) * 100).toFixed(2);
+            CapacityENG2.value = (parseFloat(energProdInputENG2.value / (9.341 * 24)) * 100).toFixed(2);
+
+            var value1 = parseFloat(CapacityENG1.value) || 0;
+            var value2 = parseFloat(CapacityENG2.value) || 0;
+            var promedio = (value1 + value2) / 2;
+            CapacityAvg.value = promedio.toFixed(1);
+        }
+
+        // Para LOAD FACTOR
+
+        var LoadENG1 = document.getElementById('LoadENG1').querySelector('input');
+        var LoadENG2 = document.getElementById('LoadENG2').querySelector('input');
+        var LoadAvg = document.querySelector('tr[data-id="LoadFactor"] td:last-child input');
+
+        LoadENG1.addEventListener('input', calcularPromedioLoad);
+        LoadENG2.addEventListener('input', calcularPromedioLoad);
+
+        function calcularPromedioLoad() {
+
+            //LOAD:
+
+            var loadTotal1 = (parseFloat(energProdENG1.value) / parseFloat(9.341 * horasGe1.value)) * 100;
+            var loadTotal2 = (parseFloat(energProdENG2.value) / parseFloat(9.341 * horasGe2.value)) * 100;
+
+            LoadENG1.value = loadTotal1.toFixed(2);
+            LoadENG2.value = loadTotal2.toFixed(2);
+
+            LoadAvg.value = (loadTotal1 + loadTotal2).toFixed(2);
+        }
+
+        // Para LEVEL OIL CARTEL
+
+        var YesterdayG1 = document.getElementById('TotalYesterday').querySelector('input');
+        var TodayG2 = document.getElementById('TotalToday').querySelector('input');
+        var TotalCarterAvg = document.querySelector('tr[data-id="CarterAdded"] td:last-child input');
+
+        YesterdayG1.addEventListener('input', calcularPromedioCarterLevel);
+        TodayG2.addEventListener('input', calcularPromedioCarterLevel);
+
+        function calcularPromedioCarterLevel() {
+            var value1 = parseFloat(YesterdayG1.value) || 0;
+            var value2 = parseFloat(TodayG2.value) || 0;
+            var promedio = value1 + value2;
+            TotalCarterAvg.value = promedio.toFixed(2);
+        }
+
+        // Para REFRESCAMIENTO SE EXTRAE
+
+        var SeExtraeG1 = document.getElementById('SeExtraeG1').querySelector('input');
+        var SeExtraeG2 = document.getElementById('SeExtraeG2').querySelector('input');
+        var TotalRefrescAvg = document.querySelector('tr[data-id="SeExtrae"] td:last-child input');
+
+        SeExtraeG1.addEventListener('input', calcularPromedioRefresc);
+        SeExtraeG2.addEventListener('input', calcularPromedioRefresc);
+
+        function calcularPromedioRefresc() {
+            var value1 = parseFloat(SeExtraeG1.value) || 0;
+            var value2 = parseFloat(SeExtraeG2.value) || 0;
+            var promedio = value1 + value2;
+            TotalRefrescAvg.value = promedio.toFixed(2);
+        }
+
+        // Para REFRESCAMIENTO SE RELLENA
+        var SeRellenaG1 = document.getElementById('SeRellenaG1').querySelector('input');
+        var SeRellenaG2 = document.getElementById('SeRellenaG2').querySelector('input');
+        var TotalRellenaAvg = document.querySelector('tr[data-id="SeRellena"] td:last-child input');
+
+        SeRellenaG1.addEventListener('input', calcularPromedioRellena);
+        SeRellenaG2.addEventListener('input', calcularPromedioRellena);
+
+        function calcularPromedioRellena() {
+            var value1 = parseFloat(SeRellenaG1.value) || 0;
+            var value2 = parseFloat(SeRellenaG2.value) || 0;
+            var promedio = value1 + value2;
+            TotalRellenaAvg.value = promedio.toFixed(2);
+        }
+
+        // Para PLANT
+        var GasENG1 = document.getElementById('GasENG1').querySelector('input');
+        var GasENG2 = document.getElementById('GasENG2').querySelector('input');
+        var PlantAvg = document.querySelector('tr[data-id="Plant"] td:last-child input');
+
+        GasENG1.addEventListener('input', calcularPromedioPlanta);
+        GasENG2.addEventListener('input', calcularPromedioPlanta);
+
+        function calcularPromedioPlanta() {
+            var value1 = parseFloat(GasENG1.value) || 0;
+            var value2 = parseFloat(GasENG2.value) || 0;
+            var promedio = value1 + value2;
+            PlantAvg.value = promedio.toFixed(2);
+        }
+
+        // Para HEAT RATE
+        var HeatENG1 = document.getElementById('HeatENG1').querySelector('input');
+        var HeatENG2 = document.getElementById('HeatENG2').querySelector('input');
+        var HeatAvg = document.querySelector('tr[data-id="HeatRate"] td:last-child input');
+
+        HeatENG1.addEventListener('input', calcularPromedioHeat);
+        HeatENG2.addEventListener('input', calcularPromedioHeat);
+
+        function calcularPromedioHeat() {
+            var value1 = parseFloat(HeatENG1.value) || 0;
+            var value2 = parseFloat(HeatENG2.value) || 0;
+            var promedio = (value1 + value2) / 2;
+            HeatAvg.value = promedio.toFixed(2);
+        }
+
+        //DIFERENCIA DE CITY GATE FLOW
+        // Selecciona los elementos de entrada de Availability Factor
+        var CityTodayG1 = document.getElementById('CityTodayG1').querySelector('input');
+        var CityYesterdayG1 = document.getElementById('CityYesterdayG1').querySelector('input');
+        var ConsG1Avg = document.querySelector('tr[data-id="TotalCityG1"] td:nth-child(2) input');
+
+        CityTodayG1.addEventListener('input', calcularDiferenciaCity);
+        CityYesterdayG1.addEventListener('input', calcularDiferenciaCity);
+
+        function calcularDiferenciaCity() {
+            var value1 = parseFloat(CityTodayG1.value) || 0;
+            var value2 = parseFloat(CityYesterdayG1.value) || 0;
+            var promedio = value1 - value2;
+            ConsG1Avg.value = promedio.toFixed(2);
+            actualizarConsumoIon();
+        }
+        // Selecciona los elementos de entrada de Availability Factor
+        var CityTodayG2 = document.getElementById('CityTodayG2').querySelector('input');
+        var CityYesterdayG2 = document.getElementById('CityYesterdayG2').querySelector('input');
+        var ConsG2Avg = document.querySelector('tr[data-id="TotalCityG1"] td:nth-child(3) input');
+
+        CityTodayG2.addEventListener('input', calcularDiferenciaCity2);
+        CityYesterdayG2.addEventListener('input', calcularDiferenciaCity2);
+
+        function calcularDiferenciaCity2() {
+            var value1 = parseFloat(CityTodayG2.value) || 0;
+            var value2 = parseFloat(CityYesterdayG2.value) || 0;
+            var promedio = value1 - value2;
+            ConsG2Avg.value = promedio.toFixed(2);
+            actualizarConsumoIon();
+        }
+
+        var ListaEnergia = [];
+        function insertarDatosEnergia(IdEnergiaProducida, TipoEnergiaProducida, Fecha, Valor1, Valor2, GrosEnergiaProd) {
+
+            var datos = {
+                IdEnergyProduce: IdEnergiaProducida,
+                TipoEnergia: TipoEnergiaProducida,
+                Fecha: Fecha,
+                PmuEng_01: Valor1,
+                PmuEng_02: Valor2,
+                GrosEnergy: GrosEnergiaProd
+            };
+            ListaEnergia.push(datos);
+
+
+            return fetch('@Url.Action("GuardarDatosEnergiaProducida", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+        }
+
+        var ListaOilCarter = [];
+        function insertarDatosOilCarter(IdLevelOilCarter, TipoCarter, Fecha, Valor1, Valor2, TotalAdded) {
+
+            var datos = {
+                IdLevelOilCarter: IdLevelOilCarter,
+                Fecha: Fecha,
+                TipoCarter: TipoCarter,
+                Generador1: Valor1,
+                Generador2: Valor2,
+                TotalAdded: TotalAdded
+            };
+            ListaOilCarter.push(datos);
+
+            return fetch('@Url.Action("GuardarDatosLevelOilCarter", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+        }
+
+        var ListaRefrescamiento = [];
+        function insertarDatosRefrescamiento(IdRefrescamiento, TipoRefrescamiento, Fecha, Valor1, Valor2, TotalRefrescamiento) {
+
+
+            var datos = {
+                IdRefrescamientoCarter: IdRefrescamiento,
+                Fecha: Fecha,
+                TipoRefrescamiento: TipoRefrescamiento,
+                Generador1: Valor1,
+                Generador2: Valor2,
+                TotalRefrescamiento: TotalRefrescamiento
+            };
+            ListaRefrescamiento.push(datos);
+
+            return fetch('@Url.Action("GuardarDatosRefCarter", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+        }
+
+        var ListaCityGate = [];
+        function insertarCityGate(IdCityGate, Tipo, Fecha, Valor1, Valor2) {
+
+            var datos = {
+                IdCityGate: IdCityGate,
+                Fecha: Fecha,
+                Tipo: Tipo,
+                KgEng1: Valor1,
+                KgEng2: Valor2
+            };
+            ListaCityGate.push(datos);
+
+            return fetch('@Url.Action("GuardarDatosCityGate", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+        }
+
+
+
+
+        async function insertarTkManttoYTkVessel() {
+
+            // Capturar los valores de la fila "TkMantto"
+            var $filaTkMantto = $(".tabla-detalle-titulo5 tbody tr[data-id='TkMantto']");
+            var inputsTkMantto = $filaTkMantto.find("td input");
+            var valoresTkMantto = inputsTkMantto.map(function () {
+                return $(this).val();
+            }).get();
+
+            if (valoresTkMantto != null) {
+                var IdTkManttoVessel = datosOperario.IdSitio + '-TkMantto-' + obtenerFecha("format");
+                var TipoTk = "TK MANTTO";
+                var Fecha = obtenerFecha("fechaVista");
+                var Eg1_Yesterday = parseFloat(valoresTkMantto[0]);
+                var Eg1_Today = parseFloat(valoresTkMantto[1]);
+                var Eg2_Yesterday = parseFloat(valoresTkMantto[2]);
+                var Eg2_Today = parseFloat(valoresTkMantto[3]);
+
+                var datos = {
+                    IdTkManttoVessel: IdTkManttoVessel,
+                    Fecha: Fecha,
+                    TipoTk: TipoTk,
+                    Eg1_Yesterday: Eg1_Yesterday,
+                    Eg1_Today: Eg1_Today,
+                    Eg2_Yesterday: Eg2_Yesterday,
+                    Eg2_Today: Eg2_Today
+                };
+            }
+
+            // Capturar los valores de la fila "TkVessel"
+            var $filaTkVessel = $(".tabla-detalle-titulo5 tbody tr[data-id='TkVessel']");
+            var inputsTkVessel = $filaTkVessel.find("td input");
+            var valoresTkVessel = inputsTkVessel.map(function () {
+                return $(this).val();
+            }).get();
+
+            if (valoresTkVessel != null) {
+                var IdTkVessel = datosOperario.IdSitio + '-TkVessel-' + obtenerFecha("format");
+                var TipoTk = "TK VESSEL";
+                var Eg1_Yesterday = parseFloat(valoresTkVessel[0]);
+                var Eg1_Today = parseFloat(valoresTkVessel[1]);
+                var Eg2_Yesterday = parseFloat(valoresTkVessel[2]);
+                var Eg2_Today = parseFloat(valoresTkVessel[3]);
+
+                var datos = {
+                    IdTkManttoVessel: IdTkVessel,
+                    Fecha: Fecha,
+                    TipoTk: TipoTk,
+                    Eg1_Yesterday: Eg1_Yesterday,
+                    Eg1_Today: Eg1_Today,
+                    Eg2_Yesterday: Eg2_Yesterday,
+                    Eg2_Today: Eg2_Today
+                };
+            }
+                await insertarRegistro(datos);
+        }
+
+        var listaManttoVessel = [];
+        // Función para insertar registros en el servidor
+        async function insertarRegistro(datos) {
+
+            listaManttoVessel.push(datos);
+            try {
+                const response = await fetch('@Url.Action("GuardarDatosManttoVessel", "ReporteProduccion")', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                if (response.ok) {
+                    GuardarDatosJson();
+
+                } else {
+                    console.error('Error al insertar datos.');
+                }
+            } catch (error) {
+                console.error('Error en la solicitud:', error);
+            }
+        }
+        var listaTkClean = [];
+        function insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2) {
+
+            var datos = {
+                IdTkCleanLube: IdTkCleanLube,
+                Fecha: Fecha,
+                Tipo: Tipo,
+                TkLevel: Valor1,
+                TkRead: Valor2,
+            };
+            listaTkClean.push(datos);
+
+            return fetch('@Url.Action("GuardarDatosTkCleanLube", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datos)
+            });
+        }
+
+        function GuardarOtrosDatos() {
+            var firstRowSkipped = false; // Variable para rastrear si se ha saltado la primera fila
+
+            var promises = [];
+
+            $(".tabla-detalle-titulo-10 tbody tr").each(function () {
+
+                if (!firstRowSkipped) {
+                    firstRowSkipped = true;
+                    return; // Salta la primera fila (encabezados) en el primer recorrido
+                }
+
+                var IdEnergiaProducida = datosOperario.IdSitio + "-" + $(this).attr("data-id") + '-' + obtenerFecha("format"); // Define el atributo data-id en tus filas HTML
+                var TipoEnergiaProducida = $(this).find("th:first").text(); // Obtiene el texto del primer <th>
+                var Fecha = obtenerFecha("fechaVista");
+                var Valor1 = parseFloat($(this).find("td:eq(1) input").val()); // Obtiene el valor de la tercera celda
+                var Valor2 = parseFloat($(this).find("td:eq(2) input").val()); // Obtiene el valor de la cuarta celda
+                var GrosEnergiaProd = parseFloat($(this).find("td:eq(3) input").val());
+
+                if (isNaN(GrosEnergiaProd)) {
+                    GrosEnergiaProd = 0.0;
+                }
+
+                promises.push(insertarDatosEnergia(IdEnergiaProducida, TipoEnergiaProducida, Fecha, Valor1, Valor2, GrosEnergiaProd));
+            });
+            $(".tabla-detalle-titulo2 tbody tr").each(function () {
+                var IdLevelOilCarter = datosOperario.IdSitio + "-" + $(this).attr("data-id") + '-' + obtenerFecha("format"); // Define el atributo data-id en tus filas HTML
+
+
+                var TipoCarter = $(this).find("th:first").text(); // Obtiene el texto del primer <th>
+
+
+                var Fecha = obtenerFecha("fechaVista");
+                var Valor1 = parseFloat($(this).find("td:eq(1) input").val()); // Obtiene el valor de la tercera celda
+                var Valor2 = parseFloat($(this).find("td:eq(2) input").val()); // Obtiene el valor de la cuarta celda
+                var TotalAdded = parseFloat($(this).find("td:eq(3) input").val());
+
+
+                if (isNaN(TotalAdded)) {
+                    TotalAdded = 0.0;
+                }
+
+                promises.push(insertarDatosOilCarter(IdLevelOilCarter, TipoCarter, Fecha, Valor1, Valor2, TotalAdded));
+            });
+
+            $(".tabla-detalle-titulo3 tbody tr").each(function () {
+                var IdRefrescamiento = datosOperario.IdSitio + "-" + $(this).attr("data-id") + '-' + obtenerFecha("format"); // Define el atributo data-id en tus filas HTML
+                var TipoRefrescamiento = $(this).find("th:first").text(); // Obtiene el texto del primer <th>
+                var Fecha = obtenerFecha("fechaVista");
+                var Valor1 = parseFloat($(this).find("td:eq(1) input").val()); // Obtiene el valor de la tercera celda
+                var Valor2 = parseFloat($(this).find("td:eq(2) input").val()); // Obtiene el valor de la cuarta celda
+                var TotalRefrescamiento = parseFloat($(this).find("td:eq(3) input").val());
+
+                if (isNaN(TotalRefrescamiento)) {
+                    TotalRefrescamiento = 0.0;
+                }
+
+                promises.push(insertarDatosRefrescamiento(IdRefrescamiento, TipoRefrescamiento, Fecha, Valor1, Valor2, TotalRefrescamiento));
+            });
+
+            $(".tabla-detalle-titulo4 tbody tr").each(function () {
+                var IdCityGate = datosOperario.IdSitio + "-" + $(this).attr("data-id") + '-' + obtenerFecha("format"); // Define el atributo data-id en tus filas HTML
+                var Tipo = $(this).find("th:first").text(); // Obtiene el texto del primer <th>
+                var Fecha = obtenerFecha("fechaVista");
+                var Valor1 = parseFloat($(this).find("td:eq(0) input").val()) || 0; // Obtiene el valor de la tercera celda
+                var Valor2 = parseFloat($(this).find("td:eq(1) input").val()) || 0; // Obtiene el valor de la cuarta celda
+
+                promises.push(insertarCityGate(IdCityGate, Tipo, Fecha, Valor1, Valor2));
+            });
+
+            insertarTkManttoYTkVessel();
+
+            $(".tabla-detalle-titulo6 tbody tr").each(function () {
+
+                if (!firstRowSkipped) {
+                    firstRowSkipped = true;
+                    return; // Salta la primera fila (encabezados) en el primer recorrido
+                }
+
+                var IdTkCleanLube = datosOperario.IdSitio + "-" + $(this).attr("data-id") + '-' + obtenerFecha("format"); // Define el atributo data-id en tus filas HTML
+                var Tipo = $(this).find("th:first").text(); // Obtiene el texto del primer <th>
+                var Fecha = obtenerFecha("fechaVista");
+                var Valor1 = parseFloat($(this).find("td:eq(0) input").val()); // Obtiene el valor de la tercera celda
+                var Valor2 = parseFloat($(this).find("td:eq(1) input").val()); // Obtiene el valor de la cuarta celda
+                promises.push(insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2));
+            });
+
+            // Realiza todas las inserciones en paralelo
+            Promise.all(promises)
+                .then(function () {
+                    loader.style.display = 'none';
+                })
+                .catch(function (error) {
+                    loader.style.display = 'none';
+                    console.error("Error:", error);
+                });
+
+        };
+
+        var tituloReporteProduccion = document.getElementById("TiotuloReporteCentralProduccion");
+        tituloReporteProduccion.innerText = "CENTRAL TERMICA " + datosOperario.IdSitio;
+
+
+
+        // Obtener referencias a los elementos del DOM
+        const levelYesterday = document.getElementById('LevelYesterday').querySelector('input');
+        const levelToday = document.getElementById('LevelToday').querySelector('input');
+        const levelDiference = document.getElementById('LevelDiference').querySelector('input');
+
+        const readYesterday = document.getElementById('ReadYesterday').querySelector('input');
+        const readToday = document.getElementById('ReadToday').querySelector('input');
+        const readDiference = document.getElementById('ReadDiference').querySelector('input');
+
+        // Función para calcular y actualizar la diferencia cuando cambia LevelToday
+        function updateLevelDiference() {
+            const levelYesterdayValue = parseFloat(levelYesterday.value) || 0;
+            const levelTodayValue = parseFloat(levelToday.value) || 0;
+
+            // Calcular la diferencia y actualizar LevelDiference
+            const diference = levelYesterdayValue - levelTodayValue;
+            levelDiference.value = diference.toFixed(2);
+
+            readToday.value = ((levelTodayValue / 100) * 1849).toFixed(1);
+            //  readYesterday.value = ((levelYesterday / 100) * 1849).toFixed(1);
+            readDiference.value = ((diference / 100) * 1849).toFixed(1);
+        }
+        levelToday.addEventListener('input', updateLevelDiference);
+
+        // Obtener referencias a los elementos del DOM
+        const levelContYesterday = document.getElementById('LevelContYesterday').querySelector('input');
+        const levelContToday = document.getElementById('LevelContToday').querySelector('input');
+        const levelAdicion = document.getElementById('LevelAdicion').querySelector('input');
+        const levelContAdicion = document.getElementById('ReadContToday').querySelector('input');
+
+        // Función para calcular y actualizar la diferencia cuando cambia LevelContToday
+        function updateContDifference() {
+            const levelContYesterdayValue = parseFloat(levelContYesterday.value) || 0;
+            const levelContTodayValue = parseFloat(levelContToday.value) || 0;
+
+            // Calcular la diferencia y actualizar LevelAdicion
+            const contDifference = levelContTodayValue - levelContYesterdayValue;
+            levelAdicion.value = contDifference.toFixed(2);
+
+            levelContAdicion.value = (contDifference / 3.78).toFixed(1);
+
+        }
+        levelContToday.addEventListener('input', updateContDifference);
+    });
+</script>
+
+

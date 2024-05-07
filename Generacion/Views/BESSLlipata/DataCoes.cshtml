@@ -1,0 +1,83 @@
+﻿@using Generacion.Models.DataCoes;
+@using Newtonsoft.Json;
+@{
+
+    Dictionary<string, List<Demanda>> datosCoes = ViewData["datosCoes"] as Dictionary<string, List<Demanda>>;
+
+}
+
+<style>
+
+    table thead tr th {
+        color: white;
+        background: deepskyblue;
+        text-align: center;
+    }
+
+    .table td {
+        padding: 0;
+        text-align: center;
+    }
+
+    .cabecera-tabla-5 {
+        border: solid 1px;
+        width: 5vh;
+    }
+</style>
+
+<div>
+    <div>
+        <h4>DATA COES</h4>
+    </div>
+    <div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th class="cabecera-tabla-5">NRO</th>
+                    <th>FECHA</th>
+                    <th>EJECUTADO</>
+                    <th>PROG. DIARIA</th>
+                    <th>PROG. SEMANAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int index = 1;
+                    foreach (var lista in datosCoes.Values)
+                    {
+                        foreach (var datos in lista)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@datos.Fecha</td>
+                                <td>@datos.Ejecutado</td>
+                                <td>@datos.ProgramacionDiaria</td>
+                                <td>@datos.ProgramacionSemanal</td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+
+    var respuestaInformacion = @Html.Raw(JsonConvert.SerializeObject(ViewData["requiereArchivos"]));
+
+
+    var botonArchivos = document.getElementById("btn-subir-archivos");
+    botonArchivos.style.display = "initial";
+
+    $(document).ready(function () {
+
+
+
+        //
+        if (!respuestaInformacion) {
+            alert("No existe datos, Subir la información correspondiente.");
+        }
+
+    });
+</script>

@@ -1,0 +1,3 @@
+2024-03-31 12:31:34.695 -05:00 [INF] Executed action Generacion.Controllers.ReporteProduccionController.GuardarDatosReporteJson (Generacion) in 126954715.3789ms
+2024-03-31 12:31:34.705 -05:00 [INF] Executed endpoint 'Generacion.Controllers.ReporteProduccionController.GuardarDatosReporteJson (Generacion)'
+2024-03-31 12:31:34.707 -05:00 [INF] Request finished HTTP/2 POST https://localhost:7100/ReporteProduccion/GuardarDatosReporteJson application/json 5369 - 0 - - 126954733.4050ms

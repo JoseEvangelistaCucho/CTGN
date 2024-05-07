@@ -1,0 +1,128 @@
+﻿@using Generacion.Models.Almacen;
+
+@model List<TipoComponente>;
+@{
+
+}
+
+<style>
+
+    .contenidoRegistro {
+        width: 40%;
+    }
+
+    .contenidoDetalles {
+        width: 40%;
+    }
+
+    .inputsDetalles {
+        width: 60%;
+    }
+
+    .contenidoElementos {
+        display: flex;
+        padding: 10px;
+    }
+</style>
+
+
+<div>
+    <div>
+        <div><h1>REGISTRO COMPONENTES</h1></div>
+    </div>
+    <form id="miFormulario">
+        <div class="contenidoRegistro">
+            <div class="display: flex;">
+                <div class="contenidoDetalles">Categoria : </div>
+                <select name="TipoComponenteID" class="form-select form-select-lg mb-3 form-control inputsDetalles" aria-label="Default select example">
+                    <option selected>-- Seleccione --</option>
+                    @foreach (var item in Model)
+                    {
+                        <option value="@item.TipoComponenteID">@item.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <div class="contenidoElementos">
+                    <div class="contenidoDetalles">Nombre Componente : </div>
+                    <input type="text" name="NombreComponente" class="form-control inputsDetalles" />
+
+                </div>
+                <div class="contenidoElementos">
+                    <div class="contenidoDetalles">Cantidad : </div>
+                    <input name="Cantidad" class="form-control inputsDetalles" type="number" />
+                </div>
+                <div class="contenidoElementos">
+                    <div class="contenidoDetalles">Numero Lote :</div>
+                    <input name="NumeroLote" class="form-control inputsDetalles" type="number" />
+                </div>
+            </div>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+
+        var componenteID = obtenerFecha("fechaID");
+
+        $("#miFormulario").submit(function (event) {
+            event.preventDefault();
+
+            // Agregar ComponenteID a los datos que envías
+            var formData = $(this).serializeArray();
+            formData.push({ name: "ComponenteID", value: componenteID });
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GuardarComponentes", "RegistroComponentes")',
+                data: formData,
+                success: function (data) {
+
+                    if (data.respuesta === 0) {
+                        LimpiearInputs();
+                        Swal.fire({
+                            title: "Success!!",
+                            text: "Se guardaron los datos.",
+                            icon: "success",
+                            button: "Aww yiss!",
+                        });
+                    };
+                },
+                error: function (error) {
+                    console.error("Error al enviar datos al servidor: ", error);
+                }
+            });
+        });
+    });
+
+
+
+    function LimpiearInputs() {
+        var inputs = document.querySelectorAll('input');
+
+        inputs.forEach(function (input) {
+            var tipoInput = input.getAttribute('type');
+            if (tipoInput != 'file' ) {
+                if (input.type === 'number' && input.value.trim() !== '') {
+                    input.value = 0;
+                }
+                if (input.type === 'text' && input.value.trim() !== '') {
+                    input.value = '';
+                }
+            }
+
+        });
+
+        var select = document.getElementsByName('TipoComponenteID')[0];
+        // Establecer la primera opción como seleccionada
+        select.selectedIndex = 0;
+    }
+</script>
+
+
+

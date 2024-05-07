@@ -1,0 +1,488 @@
+﻿@using Generacion.Models.ReporteModulacion;
+
+
+
+<style>
+
+    .resaltarBoton {
+        border: 2px solid black; /* Comienza con un borde de 0 */
+    }
+
+    #titulo-validacion {
+        font-weight: bold;
+        font-size: 8vh;
+        border-bottom: solid 4px black;
+        width: 130vh;
+        margin: 0 0 5vh 0;
+    }
+
+    .header-detail-report div, p {
+        border: none;
+    }
+
+    .sin-borde {
+        border: none !important;
+    }
+
+    #contendor-pem {
+        width: 18%;
+    }
+
+        #contendor-pem div p {
+            margin: 0 !important;
+            width: 20%;
+        }
+
+
+        #contendor-pem div {
+            display: flex;
+            border: solid 1px black;
+            margin: 0 0 1vh 0;
+        }
+
+
+
+    .table-bordered td, .table-bordered th {
+        border: 1px solid black;
+        color: black;
+    }
+
+    .table thead th {
+        border-bottom: 2px solid black;
+    }
+
+    .title-table {
+        text-align-last: center;
+        font-weight: bold;
+        font-size: 20px;
+        background: #d02139;
+        color: white !important;
+        box-shadow: inset 2px 2px 4px 1px rgb(138, 18, 35);
+    }
+
+    .table td, .table th {
+        padding: 0;
+    }
+
+    .table {
+        margin: 5vh 0 0 0;
+        width: 60% !important;
+    }
+
+    /* .table tbody tr td input {
+                        border: none;
+                        width: 100% !important;
+                        text-align: center;
+                    }*/
+
+    .contendor-validacion-modulacion input {
+        border: none;
+        width: 100% !important;
+        text-align: center;
+    }
+
+    .alinear-componentes {
+        display: flex;
+    }
+
+    #tabla-resultado-diferente {
+    }
+
+    .titulo-modulacion-hw{
+        width: 25vh;
+    }
+    .titulo-modulacion-corto{
+        width: 10vh;
+    }
+    .tabla-resultado-comparacion{
+        width:100% !important;
+        text-align: center;
+    }
+    .titulo-principal-comparacion{
+        background: darkseagreen;
+    }
+    .fondo-titulo-rojo{
+        background: #E8BDBD;
+    }
+    .texto-rojo{
+        color:darkred !important;
+    }
+</style>
+
+<div class="contendor-validacion-modulacion">
+    <div>
+    </div>
+    <div>
+        <div id="titulo-validacion">VALIDACIÓN DE FACTURACIÓN</div>
+        <div id="contendor-pem">
+            <div>
+                <p>PEMP</p>
+                <input id-tipo-referencia="numero" id="precioPEMP" />
+            </div>
+            <div>
+                <p>PEMF</p>
+                <input id-tipo-referencia="numero" id="precioPEMF" />
+            </div>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th class="sin-borde"></th>
+                    <th class="title-table">POTENCIA</th>
+                    <th class="title-table">ENERGIA</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Sistema MAT</th>
+                    <td><input id-tipo-referencia="numero" id="MAT-P" value="1.0013" /></td>
+                    <td><input id-tipo-referencia="numero" id="MAT-E" value="1.0007" /></td>
+                </tr>
+                <tr>
+                    <th>Sistema MAT/AT</th>
+                    <td><input id-tipo-referencia="numero" id="MAT-AT-P" value="1.0030" /></td>
+                    <td><input id-tipo-referencia="numero" id="MAT-AT-E" value="1.0033" /></td>
+                </tr>
+                <tr>
+                    <th>Sistema AT</th>
+                    <td><input id-tipo-referencia="numero" id="AT-P" value="1.0233" /></td>
+                    <td><input id-tipo-referencia="numero" id="AT-E" value="1.0159" /></td>
+                </tr>
+                <tr>
+                    <th>Sistema MT</th>
+                    <td><input id-tipo-referencia="numero" id="MT-P" value="1.0040" /></td>
+                    <td><input id-tipo-referencia="numero" id="MT-E" value="1.0041" /></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div>
+            <div class="alinear-componentes">
+                <div>TC (S/.)</div>
+                <div><input id-tipo-referencia="numero" id="TC" /></div>
+            </div>
+        </div>
+        <div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th class="sin-borde" colspan="2"></th>
+                        <th class="title-table">PEMP</th>
+                        <th class="title-table">PEMF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="sin-borde">
+                            1 al 3
+                        </td>
+                        <th>PEMF Independencia (S/. KWh)</th>
+                        <td><input id-tipo-referencia="numero" id="PEMP-Antetior" /></td>
+                        <td><input id-tipo-referencia="numero" id="PEMF-Antetior" /></td>
+                    </tr>
+                    <tr>
+                        <td class="sin-borde">
+                            4 al 31
+                        </td>
+                        <th>PEMF Independencia (S/. KWh)</th>
+                        <td><input id-tipo-referencia="numero" id="PEMP-Actual" /></td>
+                        <td><input id-tipo-referencia="numero" id="PEMF-Actual" /></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="tabla-resultado-diferente">
+        <table class="table table-bordered tabla-resultado-comparacion">
+            <thead>
+                <tr>
+                    <th rowspan="2">Fecha</th>
+                    <th class="titulo-modulacion-hw titulo-principal-comparacion" colspan="2">
+                        CT Luren 10 kV
+                    </th>
+                    <th class="titulo-modulacion-hw titulo-principal-comparacion" colspan="2">
+                        CT Pedregal 10 kV
+                    </th>
+                    <th class="titulo-principal-comparacion" colspan="5">
+                        CT Luren
+                    </th>
+                    <th class="titulo-principal-comparacion" colspan="5">
+                        CT Pedregal
+                    </th>
+                </tr>
+                <tr>
+                    <th>MWh</th>
+                    <th>MW</th>
+                    <th>MWh</th>
+                    <th>MW</th>
+                    <th class="titulo-modulacion-corto">
+                        VBEM
+                    </th>
+                    <th>
+                        Tarifa en barra ($/MWh) Independencia
+                    </th>
+                    <th>
+                        CMg ($/MWh)
+                    </th>
+                    <th class="titulo-modulacion-corto">
+                        TM
+                    </th>
+                    <th>
+                        Pago por Modulación
+                    </th>
+                    <th class="titulo-modulacion-corto">
+                        VBEM
+                    </th>
+                    <th>
+                        Tarifa en barra ($/MWh) Independencia
+                    </th>
+                    <th>
+                        CMg ($/MWh)
+                    </th>
+                    <th class="titulo-modulacion-corto">
+                        TM
+                    </th>
+                    <th>
+                        Pago por Modulación
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body"></tbody>
+        </table>
+    </div>
+
+
+    <div>
+        <button class="btn btn-primary" id="compararCostos">Comparar</button>
+    </div>
+
+
+
+
+
+
+</div>
+
+
+<script>
+    $(document).ready(function () {
+
+        var precioBarraPEMP = document.getElementById('precioPEMP');
+        var precioBarraPEMF = document.getElementById('precioPEMF');
+
+
+        var matp = document.getElementById('MAT-P');
+        var matatp = document.getElementById('MAT-AT-P');
+        var atp = document.getElementById('AT-P');
+        var mtp = document.getElementById('MT-P');
+
+        var mate = document.getElementById('MAT-E');
+        var matate = document.getElementById('MAT-AT-E');
+        var ate = document.getElementById('AT-E');
+        var mte = document.getElementById('MT-E');
+
+
+        var precioHoraPuntaSoles = document.getElementById('PEMP-Actual');
+        var precioFueraHoraSoles = document.getElementById('PEMF-Actual');
+
+        matp.addEventListener('input', calcularPrecioSoles);
+        matatp.addEventListener('input', calcularPrecioSoles);
+        mate.addEventListener('input', calcularPrecioSoles);
+        matate.addEventListener('input', calcularPrecioSoles);
+        precioBarraPEMP.addEventListener('input', calcularPrecioSoles);
+        precioBarraPEMF.addEventListener('input', calcularPrecioSoles);
+
+        function calcularPrecioSoles() {
+
+            matp.value = matp.value || 0;
+            matatp.value = matatp.value || 0;
+
+            mate.value = mate.value || 0;
+            matate.value = matate.value || 0;
+
+            var datosPEMP = parseFloat(precioBarraPEMP.value) * parseFloat(matp.value) * parseFloat(matatp.value);
+            var datosPEMF = parseFloat(precioBarraPEMF.value) * parseFloat(mate.value) * parseFloat(matate.value);
+
+            precioHoraPuntaSoles.value = datosPEMP;
+            precioFueraHoraSoles.value = datosPEMF;
+
+        }
+
+
+        document.getElementById('compararCostos').addEventListener('click', function () {
+
+            if (validarInputs()) {
+                if (valoresNecesarios) {
+
+                    var tipoCambio = document.getElementById('TC');
+
+                    var potencia = {
+                        sistemaMAT: parseFloat(matp.value || 0),
+                        sistemaMATAT: parseFloat(matatp.value || 0),
+                        sistemaAT: parseFloat(atp.value || 0),
+                        sistemaMT: parseFloat(mtp.value || 0)
+                    };
+                    var energia = {
+                        sistemaMAT: parseFloat(mate.value || 0),
+                        sistemaMATAT: parseFloat(matate.value || 0),
+                        sistemaAT: parseFloat(ate.value || 0),
+                        sistemaMT: parseFloat(mte.value || 0)
+                    };
+
+                    var valoresPEMActuales = {
+                        pEMP: parseFloat(precioHoraPuntaSoles.value || 0),
+                        pEMF: parseFloat(precioFueraHoraSoles.value || 0)
+                    };
+
+                    var pempAnterior = document.getElementById("PEMP-Antetior");
+                    var pemfAnterior = document.getElementById("PEMF-Antetior");
+
+                    var valoresPEMAnteriores = {
+                        pEMP: parseFloat(pempAnterior.value || 0),
+                        pEMF: parseFloat(pemfAnterior.value || 0)
+                    };
+
+                    var datos = {
+                        tc: parseFloat(tipoCambio.value),
+                        potencia: potencia,
+                        energia: energia,
+                        valoresPEMActuales: valoresPEMActuales,
+                        valoresPEMAnteriores: valoresPEMAnteriores
+                    };
+
+                    console.log("datos :", datos);
+
+                    fetch('@Url.Action("CompararReporte", "ReporteModulacion")', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(datos)
+                    })
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            console.log("data.respuesta : ", data.respuesta);
+                            if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                                Swal.fire({
+                                    title: "Success!!",
+                                    text: "Se guardaron los datos.",
+                                    icon: "success",
+                                    button: "Aww yiss!",
+                                    willClose: () => {
+                                        mostrarResultadoConsulta(data.respuesta.detalle);
+                                        // descargarTextoConSaltoDeLinea(JSON.stringify(data.respuesta.detalle, null, 2));
+                                    }
+                                });
+
+                            } else {
+                                Swal.fire({
+                                    title: "Error",
+                                    text: data.respuesta.mensaje,
+                                    icon: "error",
+                                    button: "OK",
+                                });
+                            }
+                        })
+                        .catch(function (error) {
+                            console.error("Error:", error);
+                        });
+                } else {
+                    var subirCSV = document.getElementById("updateCSV");
+
+                    var botonSubirArchivos = document.getElementById("btn-subir-archivos");
+
+                    vibrarYDesactivar(false);
+
+                    botonSubirArchivos.addEventListener("click", function () {
+                        vibrarYDesactivar(true);
+                    });
+
+                    alert("Agrege un archivo.");
+                }
+            }
+
+        });
+
+        function vibrarYDesactivar(stop) {
+            var botonSubirArchivos = document.getElementById("btn-subir-archivos");
+
+            if (stop) {
+                botonSubirArchivos.classList.remove("resaltarBoton");
+
+                clearInterval(intervalID);
+                return;
+            }
+
+            intervalID = setInterval(function () {
+                if (botonSubirArchivos.classList.contains("resaltarBoton")) {
+                    botonSubirArchivos.classList.remove("resaltarBoton");
+                } else {
+                    botonSubirArchivos.classList.add("resaltarBoton");
+                }
+            }, 1000);
+
+            setTimeout(function () {
+                clearInterval(intervalID);
+            }, 59000);
+        }
+
+
+        function mostrarResultadoConsulta(datos) {
+            var contendor = document.getElementById("tabla-resultado-diferente");
+            const tablaBody = document.getElementById('tabla-body');
+            if (datos != null && datos.length > 0) {
+                contendor.style.display = "initial";
+
+                datos.forEach(dato => {
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                                      <td>${dato.fecha}</td>
+                                          <td class="fondo-titulo-rojo" >${dato.ctLuren.mwh}</td>
+                                          <td class="titulo-principal-comparacion">${dato.ctLuren.mw}</td>
+                                          <td class="fondo-titulo-rojo" >${dato.ctPedregal.mwh}</td>
+                                          <td class="titulo-principal-comparacion">${dato.ctPedregal.mw}</td>
+                                      <td>${dato.ctLurenTarifas.vbem}</td>
+                                      <td>${dato.ctLurenTarifas.tarifaEnBarra}</td>
+                                              <td class="titulo-principal-comparacion texto-rojo">${dato.ctLurenTarifas.costoMarginal}</td>
+                                      <td>${dato.ctLurenTarifas.tm}</td>
+                                      <td>${dato.ctLurenTarifas.pagoPorModulacion}</td>
+                                      <td>${dato.ctPedregalTarifas.vbem}</td>
+                                      <td>${dato.ctPedregalTarifas.tarifaEnBarra}</td>
+                                              <td class="titulo-principal-comparacion texto-rojo">${dato.ctPedregalTarifas.costoMarginal}</td>
+                                      <td>${dato.ctPedregalTarifas.tm}</td>
+                                      <td>${dato.ctPedregalTarifas.pagoPorModulacion}</
+                                         `;
+                    tablaBody.appendChild(fila);
+                });
+            } else {
+                tablaBody.innerHTML = ``;
+            }
+        }
+
+
+
+
+        function descargarTextoConSaltoDeLinea(cadena) {
+            var blob = new Blob([cadena], { type: 'text/plain' });
+
+            var url = window.URL.createObjectURL(blob);
+
+            var link = document.createElement('a');
+
+            link.href = url;
+            link.download = 'archivo_con_salto.txt';
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            window.URL.revokeObjectURL(url);
+        }
+
+    });
+
+</script>

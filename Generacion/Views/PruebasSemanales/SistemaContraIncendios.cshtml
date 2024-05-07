@@ -1,0 +1,761 @@
+﻿@using Generacion.Models.DatosConsola;
+@using Generacion.Models.PruebasSemanales.BlackStart;
+@using Newtonsoft.Json;
+@{
+    Dictionary<string, CabecerasTabla> datosCabcera = ViewData["datosCabecera"] as Dictionary<string, CabecerasTabla>;//
+
+
+    var fechaActual = DateTime.Now;
+
+    Dictionary<string, Dictionary<string, DetallePruebaSemanal>> detalle = (Dictionary<string, Dictionary<string, DetallePruebaSemanal>>)ViewData["DetalleSistemaIncendios"];
+    PruebaSemanal SistemaContraIncendios = (PruebaSemanal)ViewData["SistemaIncendios"];
+
+}
+
+<style>
+    .input-fecha {
+        width: 90px;
+        text-align: center;
+    }
+
+        .input-fecha input {
+            width: 90px;
+            text-align: center;
+            height: 3vh;
+        }
+
+    .table td, .table th {
+        color: black;
+        padding: 0;
+    }
+
+    .table {
+        width: 80%;
+    }
+
+    .cabecera-descripcion {
+        width: 80vh;
+    }
+
+
+
+    input {
+        border: none;
+    }
+
+    .contendor-semanal {
+        color: black;
+    }
+
+    .table-bordered td, .table-bordered th {
+        border: 1px solid black;
+        height: 3.4vh;
+    }
+
+    .table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid black;
+    }
+
+    .table-bordered thead td, .table-bordered thead th {
+        border-bottom-width: thin;
+    }
+
+    .table tbody {
+        display: flex;
+    }
+
+        .table tbody tr {
+            display: flex;
+            flex-direction: column;
+        }
+
+    .input-descripcion {
+        width: 45vh;
+    }
+
+    .input-observacion {
+        width: 34vh;
+    }
+
+        .input-observacion input {
+            width: 33.5vh;
+        }
+
+    .delineado-oscuro {
+        background-color: darkblue;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+        .delineado-oscuro th {
+            border-left: none !important;
+            border-right: none !important;
+        }
+
+    .texto-observaciones {
+        font-size: 22px;
+        padding: 15px 0 0 0 !important;
+        text-align-last: center;
+        background-color: RGB(255,204,0);
+        border-top: none !important;
+    }
+
+    .texto-relativo {
+        position: relative;
+        border-bottom: none !important;
+    }
+
+    .color-fecha {
+        background-color: RGB(255,204,0);
+    }
+
+        .color-fecha input {
+            background-color: transparent !important;
+        }
+
+    .color-titulo-unit {
+        background-color: RGB(0,176,240);
+    }
+
+    .color-titulo-descripcion {
+        background-color: RGB(155,194,230);
+    }
+
+    .contenedor-Sistema-contraIncendios {
+        overflow-y: scroll;
+    }
+
+    .titulo-principal {
+        font-weight: bold;
+        font-size: 5vh;
+        border: solid;
+        text-align: center;
+    }
+
+    .sinborde {
+        border: none;
+    }
+</style>
+<div class="contenedor-Sistema-contraIncendios">
+    <div style="padding: 0 0 10px 0;">
+        <h4 class="titulo-principal" id="titulo-SistemaIncendios">
+            PRUEBA SEMANAL SISTEMA CONTRA INCENDIO - CT
+        </h4>
+    </div>
+    <div>
+        <table id="tabla-Sistema-contra-incendios" class="table table-bordered">
+            <tbody>
+                @{
+                    Dictionary<string, DetallePruebaSemanal> observaciones = new Dictionary<string, DetallePruebaSemanal>();
+                    if (detalle != null)
+                    {
+                        observaciones = detalle.Values.LastOrDefault();
+                    }
+                    DateTime ultimaFecha = detalle != null && detalle.Count > 0 ? DateTime.Parse(detalle.Keys.LastOrDefault()) : DateTime.Now;
+
+                    <tr>
+                        <td class="input-descripcion sinborde">&nbsp;</td>
+                        <td class="input-descripcion sinborde">&nbsp;</td>
+                        <th class="input-descripcion color-titulo-descripcion">
+                            Bomba Eléctrica
+                        </th>
+                        <td class="input-descripcion">@datosCabcera["PreAgSCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["PreAgBSCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["TL1SCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["TL2SCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["TL3SCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["CrrL1SCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["CrrL2SCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["CrrL3SCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["BEHrInSCIBE"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["BEHrFnSCIBE"].Detalle</td>
+                        <th class="input-descripcion color-titulo-descripcion">
+                            Bomba Diesel
+                        </th>
+                        <td class="input-descripcion">@datosCabcera["NvlAceSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["NvlComSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["VolBat1SCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["VolBat2SCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["PreMoSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["VelMoSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["PreAceSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["TempSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["RefrigSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["BomDIniSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["BomDieFnSCIBD"].Detalle</td>
+                        <th class="input-descripcion color-titulo-descripcion">
+                            bomba Jockey
+                        </th>
+                        <td class="input-descripcion">@datosCabcera["PreBombSCIBD"].Detalle</td>
+                        <td class="input-descripcion">@datosCabcera["PreFugSCIBD"].Detalle</td>
+                        <th class="input-descripcion color-titulo-descripcion">
+                            Nivel del tanque contra incendio
+                        </th>
+                        <td class="input-descripcion">@datosCabcera["NivelSCIBD"].Detalle</td>
+                    </tr>
+                    <tr>
+                        <td class="input-fecha sinborde">&nbsp;</td>
+                        <td class="input-fecha sinborde">&nbsp;</td>
+                        <th class="input-fecha color-titulo-unit">Unidades</th>
+                        <td class="input-fecha">@datosCabcera["PreAgSCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["PreAgBSCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["TL1SCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["TL2SCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["TL3SCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["CrrL1SCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["CrrL2SCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["CrrL3SCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["BEHrInSCIBE"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["BEHrFnSCIBE"].Descripcion</td>
+                        <th class="input-fecha color-titulo-unit">Unidades</th>
+                        <td class="input-fecha">@datosCabcera["NvlAceSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["NvlComSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["VolBat1SCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["VolBat2SCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["PreMoSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["VelMoSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["PreAceSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["TempSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["RefrigSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["BomDIniSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["BomDieFnSCIBD"].Descripcion</td>
+                        <th class="input-fecha color-titulo-unit">Unidades</th>
+                        <td class="input-fecha">@datosCabcera["PreBombSCIBD"].Descripcion</td>
+                        <td class="input-fecha">@datosCabcera["PreFugSCIBD"].Descripcion</td>
+                        <th class="input-fecha color-titulo-unit">Unidades</th>
+                        <td class="input-fecha">@datosCabcera["NivelSCIBD"].Descripcion</td>
+
+                    </tr>
+                    if (detalle != null && ultimaFecha.ToString("dd/MM/yyyy").Equals(DateTime.Now.ToString("dd/MM/yyyy")))
+                    {
+                        <tr>
+                             <th class="input-fecha sinborde">&nbsp;</th>
+                            <th class="input-fecha sinborde">&nbsp;</th>
+                            <th class="input-fecha color-titulo-unit">Valor ref</th>
+                            <td class-table='@(datosCabcera["PreAgSCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("PreAgSCIBE") ? observaciones["PreAgSCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreAgBSCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("PreAgBSCIBE") ? observaciones["PreAgBSCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TL1SCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("TL1SCIBE") ? observaciones["TL1SCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TL2SCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("TL2SCIBE") ? observaciones["TL2SCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TL3SCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("TL3SCIBE") ? observaciones["TL3SCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["CrrL1SCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("CrrL1SCIBE") ? observaciones["CrrL1SCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["CrrL2SCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("CrrL2SCIBE") ? observaciones["CrrL2SCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["CrrL3SCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("CrrL3SCIBE") ? observaciones["CrrL3SCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BEHrInSCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("BEHrInSCIBE") ? observaciones["BEHrInSCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BEHrFnSCIBE"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("BEHrFnSCIBE") ? observaciones["BEHrFnSCIBE"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NvlAceSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("NvlAceSCIBD") ? observaciones["NvlAceSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["NvlComSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("NvlComSCIBD") ? observaciones["NvlComSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["VolBat1SCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("VolBat1SCIBD") ? observaciones["VolBat1SCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["VolBat2SCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("VolBat2SCIBD") ? observaciones["VolBat2SCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreMoSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("PreMoSCIBD") ? observaciones["PreMoSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["VelMoSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("VelMoSCIBD") ? observaciones["VelMoSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreAceSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("PreAceSCIBD") ? observaciones["PreAceSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TempSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("TempSCIBD") ? observaciones["TempSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["RefrigSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("RefrigSCIBD") ? observaciones["RefrigSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BomDIniSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("BomDIniSCIBD") ? observaciones["BomDIniSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BomDieFnSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("BomDieFnSCIBD") ? observaciones["BomDieFnSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreBombSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("PreBombSCIBD") ? observaciones["PreBombSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreFugSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("PreFugSCIBD") ? observaciones["PreFugSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NivelSCIBD"].IdTipoEngine)' class="input-fecha">
+                                <input type="text" value="@(observaciones.ContainsKey("NivelSCIBD") ? observaciones["NivelSCIBD"].ValorReferencia : string.Empty)" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <th class="input-fecha sinborde">&nbsp;</th>
+                            <th class="input-fecha sinborde">&nbsp;</th>
+                            <th class="input-fecha color-titulo-unit">Valor ref</th>
+                            <td class-table='@(datosCabcera["PreAgSCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreAgBSCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TL1SCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TL2SCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TL3SCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["CrrL1SCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["CrrL2SCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["CrrL3SCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BEHrInSCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BEHrFnSCIBE"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <th class="input-fecha color-titulo-unit">Valor ref</th>
+                            <td class-table='@(datosCabcera["NvlAceSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["NvlComSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["VolBat1SCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["VolBat2SCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreMoSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["VelMoSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreAceSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TempSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["RefrigSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BomDIniSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BomDieFnSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <th class="input-fecha color-titulo-unit">Valor ref</th>
+                            <td class-table='@(datosCabcera["PreBombSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreFugSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                            <th class="input-fecha color-titulo-unit">Valor ref</th>
+                            <td class-table='@(datosCabcera["NivelSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" value=" " /></td>
+                        </tr>
+
+                    }
+
+                    int index = 1;
+                    if (detalle != null)
+                    {
+
+                        foreach (var item in detalle)
+                        {
+                            <tr>
+                                <th class="input-fecha color-fecha">Fecha</th>
+                                <th class="input-fecha color-fecha"><input class-table="valorReferencia" class="fecha-input" value="@(item.Key)" /></th>
+                                <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                                <td class-table='@(datosCabcera["PreAgSCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("PreAgSCIBE") ? item.Value["PreAgSCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["PreAgBSCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("PreAgBSCIBE") ? item.Value["PreAgBSCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["TL1SCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("TL1SCIBE") ? item.Value["TL1SCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["TL2SCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("TL2SCIBE") ? item.Value["TL2SCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["TL3SCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("TL3SCIBE") ? item.Value["TL3SCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["CrrL1SCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("CrrL1SCIBE") ? item.Value["CrrL1SCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["CrrL2SCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("CrrL2SCIBE") ? item.Value["CrrL2SCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["CrrL3SCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("CrrL3SCIBE") ? item.Value["CrrL3SCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["BEHrInSCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("BEHrInSCIBE") ? item.Value["BEHrInSCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["BEHrFnSCIBE"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("BEHrFnSCIBE") ? item.Value["BEHrFnSCIBE"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                                <td class-table='@(datosCabcera["NvlAceSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("NvlAceSCIBD") ? item.Value["NvlAceSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["NvlComSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("NvlComSCIBD") ? item.Value["NvlComSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["VolBat1SCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("VolBat1SCIBD") ? item.Value["VolBat1SCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["VolBat2SCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("VolBat2SCIBD") ? item.Value["VolBat2SCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["PreMoSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("PreMoSCIBD") ? item.Value["PreMoSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["VelMoSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("VelMoSCIBD") ? item.Value["VelMoSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["PreAceSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("PreAceSCIBD") ? item.Value["PreAceSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["TempSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("TempSCIBD") ? item.Value["TempSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["RefrigSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("RefrigSCIBD") ? item.Value["RefrigSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["BomDIniSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("BomDIniSCIBD") ? item.Value["BomDIniSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <td class-table='@(datosCabcera["BomDieFnSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("BomDieFnSCIBD") ? item.Value["BomDieFnSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                                <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                                <td class-table='@(datosCabcera["PreBombSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("PreBombSCIBD") ? item.Value["PreBombSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+
+                                <td class-table='@(datosCabcera["PreFugSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="text" value="@(observaciones.ContainsKey("PreFugSCIBD") ? observaciones["PreFugSCIBD"].DetalleCadena : string.Empty)" />
+                                </td>
+                                <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                                <td class-table='@(datosCabcera["NivelSCIBD"].IdTipoEngine)' class="input-fecha">
+                                    <input type="number" value="@(item.Value.ContainsKey("NivelSCIBD") ? item.Value["NivelSCIBD"].DetalleNumerico : string.Empty)" />
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+
+                    for (int i = index; i <= 6; i++)
+                    {
+                        var fechaNueva = i.Equals(1) ? fechaActual.ToString("dd/MM/yyyy") : ultimaFecha.AddDays(7 * (i - 1)).ToString("dd/MM/yyyy");
+
+                        <tr>
+                            <th class="input-fecha color-fecha">Fecha</th>
+                            <th class="input-fecha color-fecha"><input class-table="valorReferencia" class="fecha-input" value="@(fechaNueva)" /></th>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreAgSCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["PreAgBSCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["TL1SCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["TL2SCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["TL3SCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["CrrL1SCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["CrrL2SCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["CrrL3SCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["BEHrInSCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["BEHrFnSCIBE"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NvlAceSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["NvlComSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["VolBat1SCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["VolBat2SCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["PreMoSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["VelMoSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["PreAceSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["TempSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["RefrigSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["BomDIniSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["BomDieFnSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreBombSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                            <td class-table='@(datosCabcera["PreFugSCIBD"].IdTipoEngine)' class="input-fecha"><input type="text" /></td>
+                            <th class="input-fecha delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NivelSCIBD"].IdTipoEngine)' class="input-fecha"><input type="number" /></td>
+                        </tr>
+                    }
+
+                    if (detalle != null && ultimaFecha.ToString("dd/MM/yyyy").Equals(DateTime.Now.ToString("dd/MM/yyyy")))
+                    {
+
+                        <tr>
+                            <th class="input-observacion texto-observaciones texto-relativo">Observaciones</th>
+                            <th class="input-observacion texto-observaciones">&nbsp;</th>
+                            <th class="input-observacion delineado-oscuro ">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreAgSCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("PreAgSCIBE") ? observaciones["PreAgSCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreAgBSCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("PreAgBSCIBE") ? observaciones["PreAgBSCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TL1SCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("TL1SCIBE") ? observaciones["TL1SCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TL2SCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("TL2SCIBE") ? observaciones["TL2SCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TL3SCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("TL3SCIBE") ? observaciones["TL3SCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["CrrL1SCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("CrrL1SCIBE") ? observaciones["CrrL1SCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["CrrL2SCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("CrrL2SCIBE") ? observaciones["CrrL2SCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["CrrL3SCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("CrrL3SCIBE") ? observaciones["CrrL3SCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BEHrInSCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("BEHrInSCIBE") ? observaciones["BEHrInSCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BEHrFnSCIBE"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("BEHrFnSCIBE") ? observaciones["BEHrFnSCIBE"].Observaciones : string.Empty)" />
+                            </td>
+                            <th class="input-observacion delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NvlAceSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("NvlAceSCIBD") ? observaciones["NvlAceSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["NvlComSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("NvlComSCIBD") ? observaciones["NvlComSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["VolBat1SCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("VolBat1SCIBD") ? observaciones["VolBat1SCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["VolBat2SCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("VolBat2SCIBD") ? observaciones["VolBat2SCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreMoSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("PreMoSCIBD") ? observaciones["PreMoSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["VelMoSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("VelMoSCIBD") ? observaciones["VelMoSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreAceSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("PreAceSCIBD") ? observaciones["PreAceSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["TempSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("TempSCIBD") ? observaciones["TempSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["RefrigSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("RefrigSCIBD") ? observaciones["RefrigSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BomDIniSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("BomDIniSCIBD") ? observaciones["BomDIniSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["BomDieFnSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("BomDieFnSCIBD") ? observaciones["BomDieFnSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <th class="input-observacion delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreBombSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("PreBombSCIBD") ? observaciones["PreBombSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <td class-table='@(datosCabcera["PreFugSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("PreFugSCIBD") ? observaciones["PreFugSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                            <th class="input-observacion delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NivelSCIBD"].IdTipoEngine)' class="input-observacion">
+                                <input type="text" value="@(observaciones.ContainsKey("NivelSCIBD") ? observaciones["NivelSCIBD"].Observaciones : string.Empty)" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <th class="input-observacion texto-observaciones texto-relativo">Observaciones</th>
+                            <th class="input-observacion texto-observaciones">&nbsp;</th>
+                            <th class="input-observacion delineado-oscuro ">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreAgSCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreAgBSCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TL1SCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TL2SCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TL3SCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["CrrL1SCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["CrrL2SCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["CrrL3SCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BEHrInSCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BEHrFnSCIBE"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <th class="input-observacion delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NvlAceSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["NvlComSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["VolBat1SCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["VolBat2SCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreMoSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["VelMoSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreAceSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["TempSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["RefrigSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BomDIniSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["BomDieFnSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <th class="input-observacion delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["PreBombSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <td class-table='@(datosCabcera["PreFugSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                            <th class="input-observacion delineado-oscuro">&nbsp;</th>
+                            <td class-table='@(datosCabcera["NivelSCIBD"].IdTipoEngine)' class="input-observacion"><input type="text" value=" " /></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<button class="btn btn-primary" onclick="GuardarDatos()">Guardar Datos</button>
+
+
+<script src="~/js/moment.js"></script>
+<script>
+    $(document).ready(function () {
+        var titulo = document.getElementById("titulo-SistemaIncendios");
+        titulo.innerText = titulo.innerText + ' ' + datosOperario.IdSitio;
+    });
+
+    function GuardarDatos() {
+        console.log("Ingreso ");
+        var detalle = obtenerDatosTabla();
+        var datos = @Html.Raw(JsonConvert.SerializeObject(SistemaContraIncendios));
+
+        var datosSemanales = {
+            "detallePruebaSemanal": detalle,
+            "pruebaSemanal": datos,
+            "tipo": "SISTEMAINCENDIOS"
+        };
+        console.log("datosSemanales :", datosSemanales);
+
+
+
+
+        fetch('@Url.Action("GuardarDetalleBlackStart", "PruebasSemanales")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datosSemanales)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                console.log("data : ", data);
+                if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                        willClose: () => {
+                            var link = document.createElement("a");
+                            link.href = '@Url.Action("DescargarArchivo", "ReportesGenerales")' + "?name=Sistemas-Incendios-" + obtenerFecha("format") + ".pdf&reporte=Sistemas-Incendios";
+                            link.click();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    }
+
+
+    function obtenerDatosTabla() {
+        console.log("obtenerDatosTabla : ");
+        var datos = [];
+
+        var tabla = document.getElementById("tabla-Sistema-contra-incendios");
+        var columnas = tabla.querySelectorAll('tr');
+
+        for (var i = 3; i < 9; i++) {  // Comienza en 1 para omitir la primera columna (índice 0)
+            var columna = columnas[i];
+            var dato = {};
+        console.log("columna : ",columna);
+
+            var filas = columna.querySelectorAll('td');
+            var horaColumna = columna.querySelector('th input').value;
+
+            var fechaTablaActual = moment(horaColumna, 'D-MMM-YY').format('DD/MM/YYYY');
+
+            if (fechaTablaActual === fechaActualSinFormato()) {
+                filas.forEach(function (fila) {
+                    console.log("fila :", fila);
+                    var input = fila.querySelector('input');
+
+                    if (input !== null && input.value !== "") {
+                        var tipoInput = input.getAttribute('type');
+                        var claseTable = fila.getAttribute('class-table');
+
+                        var tdElement = columnas[2].querySelector('td[class-table="' + claseTable + '"]');
+                        var inputElement = tdElement.querySelector('input');
+
+                        var tdElement = columnas[9].querySelector('td[class-table="' + claseTable + '"]');
+                        var observaciones = tdElement.querySelector('input');
+
+                        var detalleNumerico = 0;
+                        var detalleCadena = "";
+                        if (tipoInput === 'number') {
+                            detalleNumerico = parseFloat(input.value);
+                        } else {
+                            detalleCadena = input.value;
+                        }
+
+
+                        dato = {
+                            idDetallePruebaSemanal: datosOperario.IdSitio + '_DET_SISTEMAINCEN_' + claseTable + '-' + fechaTablaActual.replaceAll('/', '_'),
+                            idPruebaSemanal: datosOperario.IdSitio + '_SISTEMAINCENDIOS-' + fechaTablaActual.replaceAll('/', '_'),
+                            // sitio: datosOperario.IdSitio,
+                            observaciones: observaciones.value,
+                            valorReferencia: inputElement.value,
+                            fecha: fechaTablaActual,
+                            idSubtitulo: claseTable,
+                            detalleNumerico: detalleNumerico,
+                            detalleCadena: detalleCadena
+                        };
+                        console.log("dato : ", dato);
+                        datos.push(dato);
+                    }
+                });
+            }
+        }
+
+        return datos;
+    }
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var fechaInputs = document.querySelectorAll('.fecha-input');
+        moment.locale('es');
+        function cambiarFormatoFecha(input) {
+            if (input.value !== 'Invalid date') {
+                input.value = moment(input.value, 'DD/MM/YYYY').format('D-MMM-YY');
+            }
+        }
+
+        function restaurarFormatoFecha(input) {
+            input.value = moment(input.value, 'D-MMM-YY').format('DD/MM/YYYY');
+        }
+
+        fechaInputs.forEach(function (input) {
+            cambiarFormatoFecha(input);
+
+            input.addEventListener("click", function () {
+                restaurarFormatoFecha(input);
+            });
+
+            /* input.addEventListener("change", function () {
+                console.log("click cambiarFormatoFecha");
+                 cambiarFormatoFecha(input);
+             });*/
+
+            input.addEventListener("focusout", function () {
+                cambiarFormatoFecha(input);
+            });
+        });
+    });
+</script>

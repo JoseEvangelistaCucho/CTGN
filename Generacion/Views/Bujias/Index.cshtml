@@ -1,0 +1,497 @@
+﻿@using Generacion.Models.Almacen.Bujias;
+@using Generacion.Models.Almacen;
+@using Generacion.Models.Usuario;
+
+@model List<ComponenteBujias>
+
+
+@{
+    List<PrestamoComponente> componentesPrestados = ViewData["DetalleBujiasPrestadas"] as List<PrestamoComponente>;
+    Dictionary<int, int> totalBujiasUtilizadas = ViewData["TotalBujias"] as Dictionary<int, int>;
+
+    DetalleOperario datosOperario = ViewData["DatosOperario"] as DetalleOperario;
+
+}
+
+<style>
+    .contendor-componentes {
+        /*display: flex;*/
+    }
+
+    .contendor-detalles {
+        display: flex;
+        padding: 0 0 3% 0;
+    }
+
+    .contenido-detalle {
+        width: 40%;
+        text-align-last: center;
+        border: 1px solid #e3e6f0 !important;
+    }
+
+    .contenido-tiempo {
+        width: 40%;
+        text-align-last: center;
+        border: 1px solid #e3e6f0;
+    }
+
+    .col-md-6 {
+        height: initial;
+    }
+
+    .table-responsive {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: none;
+    }
+
+    .separar-botones-seleccion {
+        padding: 0 0 5px 0;
+    }
+
+    #tablaBujias_wrapper {
+        padding: 40px;
+    }
+
+    #tablaBujias thead {
+        background: rgba(0, 57, 76, 1);
+        font-weight: bold;
+        font-size: 15px;
+        color: white;
+    }
+
+    #tablaPrestamo thead {
+        background: rgba(0, 57, 76, 1);
+        font-weight: bold;
+        font-size: 15px;
+        color: white;
+    }
+
+    .page-item.active .page-link{
+        background: rgba(0, 57, 76, 1);
+        border-color: rgb(11, 109, 142);
+    }
+    .btn-primary{
+       /* box-shadow: inset 2px 2px 4px 1px rgb(171, 90, 24);*/
+        background-color: #F37021;
+    }
+    .btn-primary:hover{
+            background-color: rgb(171, 90, 24);
+    }
+    p1{
+        font-weight: bold;
+        
+    }
+</style>
+
+
+<div class="contendor-componentes">
+    <div style="display:flex;">
+        <div>
+            <div class="separar-botones-seleccion">
+                <a id="btnDetalleLoteBujias" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
+                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z" />
+                        <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8m0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0" />
+                    </svg>
+                    Ver lotes bujias
+                </a>
+            </div>
+            <div class="separar-botones-seleccion">
+                <a id="btnDetalleBujias" style="background:rgb(171, 90, 24);" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
+                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z" />
+                        <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8m0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0" />
+                    </svg>
+                    Ver Detalle General
+                </a>
+            </div>
+            <div class="separar-botones-seleccion">
+                <a id="btnPrestamosBujias"  class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
+                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z" />
+                        <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8m0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0" />
+                    </svg>
+                    Ver Prestamos
+                </a>
+            </div>
+
+        </div>
+        <div id="tblGeneralBujias" style="padding: 0 0 0 2%;width: 730px;display: flex;">
+            <div>
+                <div class="contendor-detalles">
+                    <div class="contenido-detalle"><p1>Stock General</p1></div>
+                    @{
+                        int stock = 0;
+                        foreach (var item in Model)
+                        {
+                            stock = stock + int.Parse(item.Cantidad);
+                        }
+
+                        int totalBujiasActual = stock; //- (totalBujiasUtilizadas[1] + totalBujiasUtilizadas[2]);
+                        <div class="contenido-detalle">@totalBujiasActual</div>
+                    }
+                </div>
+                <hr class="sidebar-divider">
+                <div>
+                    <div class="contendor-detalles">
+                        <div class="contenido-detalle"><p1>Uso en unidad EG-01</p1></div>
+                        <input class="contenido-detalle" type="number" value="@(totalBujiasUtilizadas[1])" disabled>
+                    </div>
+                    <div class="contendor-detalles">
+                        <div class="contenido-detalle"><p1>Uso en unidad EG-02</p1></div>
+                        <input class="contenido-detalle" type="number" value="@(totalBujiasUtilizadas[2])" disabled>
+                    </div>
+                </div>
+                <hr class="sidebar-divider">
+             
+            </div>
+
+            <hr class="sidebar-divider">
+            <div>
+                <div class="contendor-detalles">
+                    <div class="contenido-detalle"><p1>Tiempo max de uso</p1></div>
+                    <div style="padding: 0 0 0 5%;">1700,00 hrs</div>
+                </div>
+                <div class="contendor-detalles">
+                    <div class="contenido-detalle"><p1>Tiempo min de uso</p1></div>
+                    <div style="padding: 0 0 0 5%;">1200,00 hrs</div>
+                </div>
+                <div class="contendor-detalles">
+                    <div class="contenido-detalle"><p1>Horas promedio operación x día</p1></div>
+                    <div style="padding: 0 0 0 5%;">18,00 hrs</div>
+                </div>
+                <div class="contendor-detalles">
+                    <div class="contenido-detalle"><p1>Tiempo promedio hasta la fecha</p1></div>
+                    <div style="padding: 0 0 0 5%;">16222,83 hrs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @* <div style="padding: 0 0 0 5%;">
+    <table id="historialComponentes" class="table table-bordered">
+    <tr>
+    <td>item</td>
+    <td>fecha de llegada de bujías</td>
+    <td>cantidad</td>
+    <td>descripcion, tipo, marca, etc</td>
+    </tr>
+    @{
+    int index = 0;
+    foreach (var item in Model)
+    {
+    index++;
+    <tr conponenteId=@item.ComponenteID>
+    <td>@index</td>
+    <td>stock en planta  @item.Fecha.ToString("dd-MM-yyyy")</td>
+    <td>@item.Cantidad</td>
+    <td>@item.NombreComponente</td>
+    </tr>
+    }
+    }
+    </table>
+    </div>*@
+    <div class="card-body" id="tblPrestamoBujias" style="display:none;">
+        <div class="table-responsive">
+            <div class="dataTables_wrapper dt-bootstrap4">
+                <div class="row">
+                    <div>                     
+                        <div>
+                            <button id="generararInputPrestamo">Generar Entrada de Préstamo</button>
+                            <select id="SitioPrestamoID" class="form-select form-select-lg mb-3 form-control inputsDetalles" aria-label="Default select example">
+                                <option selected>-- Seleccione --</option>
+                                @{
+                                    if (datosOperario.IdSitio.Equals("LUREN"))
+                                    {
+                                        <option value="PEDREGAL">PEDREGAL</option>
+
+                                    }
+                                    else
+                                    {
+                                        <option value="LUREN">LUREN</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div id="contenedorPrestamo">
+                        </div>
+                    </div>
+                    <div id="btnEnviarDatos" class="separar-botones-seleccion" style="display:none;">
+                        <a onclick="enviarDatos()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i>Guardar Datos</a>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <table class="table table-bordered dataTable" id="tablaPrestamo" width="100%" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <td>Fecha</td>
+                                    <td>Prestamo a </td>
+                                    <td>CANTIDAD</td>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyContent">
+                                @{
+                                    foreach (var item in componentesPrestados)
+                                    {
+                                        <tr>
+                                            <td>@item.FechaPrestamos</td>
+                                            <td>@item.PrestamoHacia</td>
+                                            <td>@item.CantidadPrestamo</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card-body" id="tblDetalleLoteBujias" style="display:none;">
+        <div class="table-responsive">
+            <div class="dataTables_wrapper dt-bootstrap4">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table class="table table-bordered dataTable" id="tablaBujias" width="100%" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <td>ITEM</td>
+                                    <td>FECHA DE LLEGADA DE BUJÍAS</td>
+                                    <td>CANTIDAD</td>
+                                    <td>DESCRIPCION, TIPO, MARCA, ETC</td>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyContent">
+                                @{
+                                    int index = 0;
+                                    foreach (var item in Model)
+                                    {
+                                        index++;
+                                        <tr conponenteId=@item.ComponenteID>
+                                            <td>@index</td>
+                                            <td>stock en planta  @item.Fecha.ToString("dd-MM-yyyy")</td>
+                                            <td>@item.Cantidad</td>
+                                            <td>@item.NombreComponente</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<script>
+
+    const divElements = document.querySelectorAll('.contendor-detalles');
+
+    divElements.forEach(div => {
+        div.addEventListener('mouseover', function () {
+            const info = this.getAttribute('data-info');
+            if (info != "" && info != null) {
+                this.title = info;
+            }
+        });
+    });
+
+
+   
+</script>
+
+<script>
+    $(document).ready(function () {
+        $("#generararInputPrestamo").click(function () {
+            agregarEntradaPrestamo();
+        });
+
+        function agregarEntradaPrestamo() {
+            var selectElement = document.getElementById("SitioPrestamoID");
+            var valorSeleccionado = selectElement.value;
+
+            if (valorSeleccionado !== "-- Seleccione --") {
+                var fechaActual = obtenerFecha("fechaVista");
+                var entradaExistente = false;
+
+                // Verificar si ya existe una entrada con la misma fecha
+                $(".contendor-detalles").each(function () {
+                    var fechaExistente = $(this).attr("dataID");
+                    if (fechaExistente === fechaActual && fechaExistente !== undefined) {
+                        entradaExistente = true;
+                        return false;  // Salir del bucle si se encuentra una entrada con la misma fecha
+                    }
+                });
+
+                if (!entradaExistente) {
+                    var nuevaEntrada = $('<div class="contendor-detalles" dataID="' + fechaActual + '" > ' +
+                        '<div class="contenido-detalle" sitioPrestamo="' + valorSeleccionado + '"><p1>Préstamo a ' + valorSeleccionado + '</p1></div>' +
+                        '<input class="contenido-detalle" type="number">' +
+                        '</div>');
+
+                    $("#contenedorPrestamo").append(nuevaEntrada);
+
+                    var btnguardar = document.getElementById('btnEnviarDatos');
+                    btnguardar.style.display = 'initial';
+
+                } else {
+                    alert("Ya existe una entrada para esta fecha");
+                }
+            } else {
+                alert("Seleccione un lugar");
+            }
+        }
+    });
+
+
+    async function enviarDatos() {
+        const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+
+        
+        // Obtener todos los elementos con la clase "contendor-detalles"
+        var contenedores = document.querySelectorAll(".contendor-detalles");
+        var selectElement = document.getElementById("SitioPrestamoID");
+        var valorSeleccionado = selectElement.value;
+
+        //var miTabla = document.getElementById("historialComponentes");
+        var miTabla = document.getElementById("tblDetalleLoteBujias");
+        console.log("miTabla : ", miTabla);
+        var filas = miTabla.querySelectorAll("tbody tr");
+        console.log("filas : ", miTabla);
+        var ultimoFila = filas[filas.length - 1];
+        var ultimoComponenteId = ultimoFila.getAttribute("conponenteid");
+        console.log("componenteid del último tr:", ultimoComponenteId);
+
+        var dato = {};
+        // Iterar a través de los contenedores
+        contenedores.forEach(function (contenedor) {
+            // Obtener el valor del atributo "dataid" de cada contenedor
+            var dataId = contenedor.getAttribute("dataid");
+
+
+            // Verificar si el "dataid" coincide con la fecha de hoy
+            if (dataId === obtenerFecha("fechaVista")) {
+                var input = contenedor.querySelector("input");
+
+                dato = {
+                    componentePrestadoID: datosOperario.IdSitio + 'Bujias' + obtenerFecha("fechaID"),
+                    //componenteID: ultimoComponenteId,
+                    componenteID: '',
+                    prestamoDesde: datosOperario.IdSitio,
+                    prestamoHacia: valorSeleccionado,
+                    cantidadPrestamo: parseInt(input.value)
+                }
+                console.log("dato", dato);
+            }
+        });
+
+
+        return fetch('@Url.Action("GuardarDatosPrestamo", "Bujias")', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dato)
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.respuesta.idRespuesta === 0) {
+                    Swal.fire({
+                        title: "Success!!",
+                        text: "Se guardaron los datos.",
+                        icon: "success",
+                        button: "Aww yiss!",
+                    });
+
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.respuesta.mensaje,
+                        icon: "error",
+                        button: "OK",
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    };
+
+</script>
+<script>
+  
+    $(document).ready(function () {
+        $('#tablaBujias').DataTable({
+            "lengthMenu": [10, 20, 50],
+            "pageLength": 10
+        });
+    });
+
+    $(document).ready(function () {
+        $('#tablaPrestamo').DataTable({
+            "lengthMenu": [10, 20, 50],
+            "pageLength": 10
+        });
+    });
+
+
+    
+    document.getElementById('btnPrestamosBujias').addEventListener('click', function () {
+
+        var tblDetalleLoteBujias = document.getElementById('tblDetalleLoteBujias');
+        var tblGeneralBujias = document.getElementById('tblGeneralBujias');
+        var tblPrestamoBujias = document.getElementById('tblPrestamoBujias');
+        var btnDetalleLoteBujias = document.getElementById('btnDetalleLoteBujias');
+        var btnDetalleBujias = document.getElementById('btnDetalleBujias');
+        
+        btnDetalleBujias.style.background = '#F37021';
+        btnDetalleLoteBujias.style.background = '#F37021';
+        this.style.background = 'rgb(171, 90, 24)';
+        tblDetalleLoteBujias.style.display = 'none';
+        tblGeneralBujias.style.display = 'none';
+        tblPrestamoBujias.style.display = 'initial';
+
+
+    });
+
+    document.getElementById('btnDetalleBujias').addEventListener('click', function () {
+
+        var tblDetalleLoteBujias = document.getElementById('tblDetalleLoteBujias');
+        var tblGeneralBujias = document.getElementById('tblGeneralBujias');
+        var btnDetalleLoteBujias = document.getElementById('btnDetalleLoteBujias');
+        var btnPrestamosBujias = document.getElementById('btnPrestamosBujias');
+        var tblPrestamoBujias = document.getElementById('tblPrestamoBujias');
+
+        tblPrestamoBujias.style.display = 'none';
+        btnPrestamosBujias.style.background = '#F37021';
+        tblDetalleLoteBujias.style.display = 'none';
+        tblGeneralBujias.style.display = 'flex';
+        this.style.background = 'rgb(171, 90, 24)';
+        btnDetalleLoteBujias.style.background = '#F37021';
+    });
+
+    document.getElementById('btnDetalleLoteBujias').addEventListener('click', function () {
+
+        var tblDetalleLoteBujias = document.getElementById('tblDetalleLoteBujias');
+        var tblGeneralBujias = document.getElementById('tblGeneralBujias');
+        var btnDetalleBujias = document.getElementById('btnDetalleBujias');
+        var btnPrestamosBujias = document.getElementById('btnPrestamosBujias');
+        var tblPrestamoBujias = document.getElementById('tblPrestamoBujias');
+
+        tblPrestamoBujias.style.display = 'none';
+        btnPrestamosBujias.style.background = '#F37021';
+        tblDetalleLoteBujias.style.display = 'initial';
+        tblGeneralBujias.style.display = 'none';
+        this.style.background = 'rgb(171, 90, 24)';
+        btnDetalleBujias.style.background = '#F37021';
+    });
+
+</script>
+

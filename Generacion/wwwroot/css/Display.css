@@ -1,0 +1,20 @@
+
+
+@media(max-width: 768px) {
+        .container-login {
+        padding: 100px;
+    }
+        .container {
+        margin: initial;
+        width: initial;
+    }
+        .container-form {
+        width: 109%;
+    }
+}
+
+@media (min-width: 768px) {
+    .display-survey {
+        width: 50%;
+    }
+}
