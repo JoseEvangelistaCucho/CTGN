@@ -1,4 +1,5 @@
 ﻿using Generacion.Application.DataBase;
+using Generacion.Application.Funciones;
 using Generacion.Models;
 using Generacion.Models.Almacen.Bujias;
 using Oracle.ManagedDataAccess.Client;
@@ -10,9 +11,11 @@ namespace Generacion.Application.Bujias.Command
     public class RegistoBujias : IBujias
     {
         private readonly IConexionBD _conexion;
-        public RegistoBujias(IConexionBD conexion)
+        private readonly Logger _logger;
+        public RegistoBujias(IConexionBD conexion, Logger logger)
         {
             _conexion = conexion;
+            _logger = logger;
         }
 
         public async Task<Respuesta<string>> GuardarOActualizarRegisto(List<RegistroBujias> datos)
@@ -71,6 +74,7 @@ namespace Generacion.Application.Bujias.Command
                 {
                     respuesta.IdRespuesta = 99;
                     respuesta.Mensaje = "";
+                _logger.LogError("Error GuardarOActualizarRegisto : " + ex.Message.ToString());
                 }
             }
             return respuesta;
@@ -109,8 +113,9 @@ namespace Generacion.Application.Bujias.Command
                     }
                 }
             }
-            catch (Exception ex) { 
-            
+            catch (Exception ex)
+            { 
+                _logger.LogError("Error GuardarOActualizarControlCambio : " + ex.Message.ToString());
             }
             return respuesta;
         }

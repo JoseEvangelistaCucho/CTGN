@@ -28,7 +28,7 @@ namespace Generacion.Application.ION.Query
             try
             {
                 var datosOperario = await _function.ObtenerDatosOperario();
-                string codigoION = datosOperario.IdSitio.Equals(Constante.codigoCentralLuren) ? Constante.codigoIONPedregal : Constante.codigoIONLuren;
+                string codigoION = datosOperario.IdSitio.Equals(Constante.codigoCentralLuren) ? Constante.codigoIONLuren : Constante.codigoIONPedregal;
 
                 TimeSpan horaEspecifica = new TimeSpan(5, 0, 0);
                 respuesta = await _consultarION.ObtenerDatosIONSQL(codigoION, Constante.codigosION, request.Fecha+ horaEspecifica);

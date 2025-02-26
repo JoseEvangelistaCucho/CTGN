@@ -1,0 +1,128 @@
+﻿.row {
+    margin: 0;
+}
+
+.detail-report-title {
+    margin: 20px;
+    padding: 20px 0 0 0;
+}
+
+.detail-report {
+    padding: 20px 0 0 20px;
+}
+
+.detail-hours {
+    width: 6%;
+}
+
+.content-report-motors input {
+    border: none;
+    padding: 5px 0 0 0;
+    width: 90%;
+}
+
+.serv input {
+    border: none;
+    padding: 5px 0 0 0;
+    width: 93%;
+}
+
+.imput-hours {
+    width: 50px !important;
+    position: absolute;
+}
+
+input::placeholder {
+    color: #999;
+}
+
+input[type="file"] {
+    display: block;
+}
+
+.img-carter {
+    width: 305px;
+    height: 230px;
+    border: solid black 0.5px;
+}
+
+h3 {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+h2 {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.viñeta-format div {
+    border: none;
+    display: flex;
+}
+
+.viñeta-format input {
+    border: none;
+    padding: 5px 0 0 0;
+    width: 93%;
+}
+
+input {
+    border: none;
+}
+
+.content-table {
+    width: 110px;
+    text-align-last: center;
+}
+
+th, td {
+    border: solid black 1.5px;
+    text-align: center;
+}
+
+.content-table-content {
+    background: #71B5E0;
+}
+
+.content-table-line {
+    text-align: -webkit-center;
+    padding: 10px 0 10px 0;
+}
+
+.boton-eliminar {
+    border: groove;
+    color: black;
+    font-weight: bold;
+    border-radius: 5px;
+    background: red;
+    position: absolute;
+}
+
+    .boton-eliminar:hover {
+        background: #F95757;
+        cursor: pointer;
+    }
+
+.div-viñeta {
+    display: inline-block;
+    width: 20px;
+}
+
+.form-control {
+    display: revert;
+    color: black;
+    border: none;
+    padding: 5px 0 0 60px;
+    width: 100%;
+    overflow-y: hidden;
+}
+
+textarea {
+    resize: none;
+}
+
+.image-logo {
+    height: 158px;
+    width: 310px;
+}

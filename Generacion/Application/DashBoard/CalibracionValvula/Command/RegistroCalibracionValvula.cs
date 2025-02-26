@@ -12,9 +12,10 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Command
 {
     public class RegistroCalibracionValvula : IRegistroCalibracionValvula
     {
+        private readonly Logger _logger;
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public RegistroCalibracionValvula(IConexionBD conexionBD, Function function)
+        public RegistroCalibracionValvula(IConexionBD conexionBD, Function function, Logger logger)
         {
             _conexion = conexionBD;
             _function = function;
@@ -71,6 +72,7 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = "Error al Procesar solicitud.";
+                _logger.LogError("Error GuardarDatosCalibracionValvula : " + ex.Message.ToString());
             }
 
             return respuesta;

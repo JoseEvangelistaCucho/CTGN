@@ -31,16 +31,20 @@ namespace Generacion.Controllers
         public async Task<IActionResult> Index([FromQuery] string fecha)
         {
             DateTime fechaActual = string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
-            DateTime fechaMedianoche = DateTime.Now;
+            DateTime fechaMedianoche = string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
 
-            if (int.Parse(fechaActual.ToString("HH")) >= 0 && int.Parse(fechaActual.ToString("HH")) < 2)
+            if (string.IsNullOrEmpty(fecha))
             {
-                fechaActual = fechaActual.AddDays(-1);
+                if (int.Parse(fechaActual.ToString("HH")) >= 0 && int.Parse(fechaActual.ToString("HH")) < 2)
+                {
+                    fechaActual = fechaActual.AddDays(-1);
+                }
+                else
+                {
+                    fechaMedianoche = fechaMedianoche.AddDays(+1);
+                }
             }
-            else
-            {
-                fechaMedianoche = fechaMedianoche.AddDays(+1);
-            }
+            
 
             DetalleOperario user = await _function.ObtenerDatosOperario();
             Dictionary<string, CabecerasTabla> datoscabecera = await _function.ObtenerDatosCabecera();
@@ -68,6 +72,8 @@ namespace Generacion.Controllers
                                                                                     outerGroup => outerGroup.ToList());
 
             ViewBag.FechaSeleccionado = fecha;
+            ViewBag.Perfil = user.IdCargo;
+
             ViewData["horarioOperarios"] = horarioOperarios;
 
             ViewData["datoFormato"] = datoFormato.Detalle;

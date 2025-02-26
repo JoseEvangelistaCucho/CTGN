@@ -4,6 +4,7 @@ using Generacion.Application.DataBase;
 using System.Data;
 using Oracle.ManagedDataAccess.Types;
 using Generacion.Application.Funciones;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Generacion.Application.ReporteProduccion.Query
 {
@@ -220,17 +221,20 @@ namespace Generacion.Application.ReporteProduccion.Query
             Respuesta<List<TkCleanLube>> respuesta = new Respuesta<List<TkCleanLube>>();
             try
             {
+                var datosOperario = await _function.ObtenerDatosOperario();
+
                 using (OracleConnection connection = _conexion.ObtenerConexion())
                 {
                     connection.Open();
 
-                    string sqlQuery = @"SELECT * FROM tbl_TkCleanLubeOil WHERE Fecha = :fechaActual";
+                    string sqlQuery = @"SELECT * FROM tbl_TkCleanLubeOil WHERE Fecha = :fechaActual AND sitio = :sitio";
 
 
                     using (OracleCommand command = new OracleCommand(sqlQuery, connection))
                     {
 
                         command.Parameters.Add(":fechaActual", OracleDbType.Varchar2).Value = fechaActual;
+                        command.Parameters.Add(":sitio", OracleDbType.Varchar2).Value = datosOperario.IdSitio;
 
                         using (OracleDataReader reader = command.ExecuteReader())
                         {
@@ -285,18 +289,24 @@ namespace Generacion.Application.ReporteProduccion.Query
         }
 
 
-        public async Task<Respuesta<Dictionary<string, TkCleanLube>>> ObtenerRegistroTkCleanPorTipo()
+        public async Task<Respuesta<Dictionary<string, Dictionary<string, TkCleanLube>>>> ObtenerRegistroTkCleanPorTipo(string fecha)
         {
-            Respuesta<Dictionary<string, TkCleanLube>> respuesta = new Respuesta<Dictionary<string, TkCleanLube>>();
+            Respuesta<Dictionary<string, Dictionary<string, TkCleanLube>>> respuesta = new Respuesta<Dictionary<string, Dictionary<string, TkCleanLube>>>();
             try
             {
-                var datosTkClean = await ObtenerRegistroTkClean(DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy"));
+                //var datosTkClean = await ObtenerRegistroTkClean(DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy"));
+                var datosTkClean = await ObtenerRegistroTkClean(fecha);
 
+                Dictionary<string, TkCleanLube> diccionarioUse = datosTkClean.Detalle.Where(x => x.IdTkCleanLube.ToLower().Contains("use") ).ToDictionary(x => x.Tipo);
+                Dictionary<string, TkCleanLube> diccionarioClean = datosTkClean.Detalle.Where(x => x.IdTkCleanLube.ToLower().Contains("clean") ).ToDictionary(x => x.Tipo);
 
-                Dictionary<string, TkCleanLube> diccionario = datosTkClean.Detalle.ToDictionary(x => x.Tipo);
+                var diccionario = new Dictionary<string, Dictionary<string, TkCleanLube>>()
+                {
+                    {"use", diccionarioUse},
+                    {"clean", diccionarioClean}
+                };
 
-                respuesta.Detalle = new Dictionary<string, TkCleanLube>();
-
+                respuesta.Detalle = new Dictionary<string, Dictionary<string, TkCleanLube>>();
                 respuesta.Detalle = diccionario;
 
             }
@@ -569,6 +579,7 @@ namespace Generacion.Application.ReporteProduccion.Query
                             TotalGasConsumption = decimal.Parse(reader["TotalGasConsumption"].ToString()),
                             Efficiency = decimal.Parse(reader["Efficiency"].ToString()),
                             ConsumoServiciosAuxiliares = decimal.Parse(reader["ConsumoServiciosAuxiliares"].ToString()),
+                            FuelLevelBlackStart = decimal.Parse(reader["FuelLevelBlackStart"].ToString()),
                             Fecha = reader["fecha"].ToString()
 
                         };

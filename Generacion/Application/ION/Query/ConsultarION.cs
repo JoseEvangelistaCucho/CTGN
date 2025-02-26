@@ -108,7 +108,7 @@ namespace Generacion.Application.ION.Query
                                 data = new DataPoint()
                                 {
                                     SourceID = reader.GetInt32(0),
-                                    QuantityID = reader.GetInt16(1),
+                                    QuantityID = reader.GetInt32(1),
                                     TimestampUTC = reader.GetDateTime(2).AddHours(-5),
                                     Value = Math.Round(reader.GetDouble(3),3)
                                  };

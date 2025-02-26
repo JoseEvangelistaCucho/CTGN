@@ -14,11 +14,13 @@ using Generacion.Application.LecturaCampo.Query;
 using Generacion.Models.LecturasCampo;
 using Generacion.Infraestructura;
 using Generacion.Application.Funciones;
-using Generacion.Application.Common;
 using Generacion.Application.Usuario.Query;
 using Generacion.Models.Session;
 using Stimulsoft.Report;
 using System.Data;
+using Generacion.Application.PruebasSemanales.BackStart.Command;
+using Generacion.Application.PruebasSemanales.BackStart.Query;
+using Generacion.Models.PruebasSemanales.BlackStart;
 
 namespace Generacion.Controllers
 {
@@ -35,6 +37,9 @@ namespace Generacion.Controllers
         private readonly FotoServidor _fotoServidor;
         private readonly Function _function;
         private readonly IConfiguration _configuration;
+        private readonly ObtenerRegistrosPruebaSemanal _registrosPruebaSemanal;
+
+        private DateTime _fechaActual = new DateTime(2025, 2, 2, 0, 30, 0); //  DateTime.Now;  //
         public ReporteProduccionController(ConsultarION consultarION,
             IConfiguration configuration,
             Function function,
@@ -42,8 +47,10 @@ namespace Generacion.Controllers
             IReporteProduccion datoEnergiaProducida, DatosConsola datosConsola,
             ConsultarProduccion consultarProduccion, LecturaCampo lecturaCampo,
             ILogger<ReporteProduccionController> logger,
-            FotoServidor fotoServidor, ConsultarUsuario consultarUsuario)
+            FotoServidor fotoServidor, ConsultarUsuario consultarUsuario,
+            ObtenerRegistrosPruebaSemanal registrosPruebaSemanal)
         {
+            _registrosPruebaSemanal = registrosPruebaSemanal;
             _function = function;
             _configuration = configuration;
             _fotoServidor = fotoServidor;
@@ -62,10 +69,10 @@ namespace Generacion.Controllers
             {
                 string usuarioDetail = HttpContext.Session.GetString("usuarioDetail");
                 DetalleOperario user = JsonConvert.DeserializeObject<DetalleOperario>(usuarioDetail);
-               
-                DateTime fechaActual = DateTime.Now;//string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
 
-                Respuesta<List<SessionOperario>> datosSessionOperarios = await _consultarUsuario.ObtenerSessionOperarios(fechaActual.ToString("dd/MM/yyyy"));
+                DateTime fechaActual = _fechaActual;//  DateTime.Now; // string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
+
+                Respuesta <List<SessionOperario>> datosSessionOperarios = await _consultarUsuario.ObtenerSessionOperarios(fechaActual.ToString("dd/MM/yyyy"));
 
 
                 Dictionary<string, List<SessionOperario>> horarioOperarios = datosSessionOperarios.Detalle
@@ -81,29 +88,39 @@ namespace Generacion.Controllers
                 {
                     fechaActual = fechaActual.AddDays(-1);
                 }
+                ViewBag.Fecha = fechaActual;
 
                 string datoscabeceraJson = HttpContext.Session.GetString("datoscabecera");
 
                 Respuesta<List<decimal>> datosRegistro = await _datosConsola.ObtenerDatosDetConsola(fechaActual.AddDays(-1).ToString("dd/MM/yyyy"), fechaActual.ToString("dd/MM/yyyy"), $"{user.IdSitio}-BFA901%", 8);
-                string fechaFrontend = "09/09/2023";
              
                 Respuesta<List<DatosFormatoMGD>> respuesta = await Mediator.Send(new ObtenerDatosIONQuery()
                 {
-                    Fecha = fechaActual//DateTime.Parse(fechaFrontend)
+                    Fecha = fechaActual
                 });
+
+                /***********************************************/
 
                 Respuesta<Dictionary<int, Dictionary<string, DetalleFecha>>> detalleCampoOperacionHoy = await _lecturaCampo.ObtenerDetalleCampoPorFecha("HrsOperacion,Operacion_ci,NivelCarter", 24, fechaActual.ToString("dd/MM/yy"));
                 Respuesta<Dictionary<int, Dictionary<string, DetalleFecha>>> detalleCampoOperacionAyer = await _lecturaCampo.ObtenerDetalleCampoPorFecha("HrsOperacion,Operacion_ci,NivelCarter", 24, fechaActual.AddDays(-1).ToString("dd/MM/yy"));
                 Respuesta<Dictionary<string, List<RegistrosDatosEngine>>> datosEngine = await _datosConsola.ObtenerDatosEngine(fechaActual.ToString("dd/MM/yyyy"), fechaMedianoche.ToString("dd/MM/yyyy"), user.IdSitio);
 
-
                 Respuesta<List<EnergiaProducida>> datosProduccion = await _consultarProduccion.ObtenerRegistroProduccion(fechaActual.AddDays(-1).ToString("dd/MM/yyyy"),"READING TODAY","dia");
                 Respuesta<List<LevelLubeOilCartel>> datosProduccionCarter = await _consultarProduccion.ObtenerRegistroLevelCartel(fechaActual.AddDays(-1).ToString("dd_MM_yyyy"),"dia","TODAY");
                 Respuesta<List<CityGateFlow>> datosProduccionCity = await _consultarProduccion.ObtenerRegistroCityGate(fechaActual.AddDays(-1).ToString("dd_MM_yyyy"),"dia", "READING TODAY");
-                Respuesta<Dictionary<string, TkCleanLube>> datosProduccionTkClean = await _consultarProduccion.ObtenerRegistroTkCleanPorTipo();
+                Respuesta<Dictionary<string, Dictionary<string, TkCleanLube>>>  datosProduccionTkClean = await _consultarProduccion.ObtenerRegistroTkCleanPorTipo(fechaActual.AddDays(-1).ToString("dd_MM_yyyy"));
                 Respuesta<Dictionary<string, ManttoVessel>> datosMantoVessel = await _consultarProduccion.ObtenerMantoTKVessel(fechaActual.ToString("dd_MM_yyyy"));
                 Dictionary<string, CabecerasTabla> datoscabecera = JsonConvert.DeserializeObject<Dictionary<string, CabecerasTabla>>(datoscabeceraJson);
 
+                Respuesta<List<ReporteProducion>> datosProduccionAnt = await _consultarProduccion.ObtenerDatosProduccion(fechaActual.AddDays(-1).ToString("dd/MM/yy"), "dia");
+
+                string idPruebaSemanal = user.IdSitio+"_SISTEMAINCENDIOS-"+ fechaActual.AddDays(-1).ToString("dd_MM_yyyy");
+                Respuesta<List<DetallePruebaSemanal>> detallePruebaSemanal = await _registrosPruebaSemanal.ObtenerDetallePruebaSemanal(idPruebaSemanal);
+
+                ViewBag.FechaSeleccionado = fechaActual.ToString("dd/MM/yyyy");
+
+                ViewData["detallePruebaSemanal"] = detallePruebaSemanal.Detalle.Where(x => x.IdSubtitulo.Equals("NivelSCIBD")).Select(x => x.DetalleNumerico).FirstOrDefault(); //ReporteProducion
+                ViewData["datosProduccionAnt"] = datosProduccionAnt.Detalle.FirstOrDefault(); //ReporteProducion
                 ViewData["DatoscabeceraCampo"] = datoscabecera;
                 ViewData["Produccion"] = datosProduccion.Detalle;
                 ViewData["ProduccionCarter"] = datosProduccionCarter.Detalle;
@@ -125,7 +142,7 @@ namespace Generacion.Controllers
                 {
                     Fecha = fechaActual
                 });
-                ViewData["DatosSincro"] = datosGeneralesProduccion.Detalle["DatosSincro"];
+                ViewData["DatosSincro"] = datosGeneralesProduccion.Detalle["DatosSincro"]; //este valor a veces trae problemas
                 ViewData["datosLecturas"] = datosGeneralesProduccion.Detalle["datosLecturas"];
 
             }
@@ -195,13 +212,25 @@ namespace Generacion.Controllers
         [HttpPost]
         public async Task<JsonResult> GuardarDatosTkCleanLube([FromBody] TkCleanLube datos)
         {
-            Respuesta<string> respuesta = await _datosEnergiaProducida.GuardarDatosTkCleanLube(datos);
+            Respuesta<string> respuesta = new Respuesta<string>();
+            if (datos != null)
+            {
+                respuesta = await _datosEnergiaProducida.GuardarDatosTkCleanLube(datos);
+            }
             return Json(new { respuesta = respuesta });
         }
+        //[HttpPost]
+        //public async Task<JsonResult> GuardarReporteProduccion([FromBody] ReporteProducion datos)
+        //{
+        //    Respuesta<string> respuesta = await _datosEnergiaProducida.GuardarDatosReporteProduccion(datos);
+        //    return Json(new { respuesta = respuesta });
+        //}
+
         [HttpPost]
-        public async Task<JsonResult> GuardarReporteProduccion([FromBody] ReporteProducion datos)
+        public async Task<JsonResult> GuardarDetalleSemanal([FromBody] GuardarDatosPruebaSemanal datos)
         {
-            Respuesta<string> respuesta = await _datosEnergiaProducida.GuardarDatosReporteProduccion(datos);
+            var respuesta = await Mediator.Send(datos);
+
             return Json(new { respuesta = respuesta });
         }
 
@@ -240,7 +269,13 @@ namespace Generacion.Controllers
         }
         private async Task<DataSet> CrearDataSet(DatosReporteProduccion datos)
         {
+            DateTime fechaActual = _fechaActual; //  DateTime.Now; // string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
             var datosOperario = await _function.ObtenerDatosOperario();
+
+            Respuesta<List<decimal>> datosRegistro = await _datosConsola.ObtenerDatosDetConsola(fechaActual.AddDays(-1).ToString("dd/MM/yyyy"), fechaActual.ToString("dd/MM/yyyy"), $"{datosOperario.IdSitio}-BFA901%", 8);
+            Respuesta<Dictionary<int, Dictionary<string, DetalleFecha>>> detalleCampoOperacionHoy = await _lecturaCampo.ObtenerDetalleCampoPorFecha("HrsOperacion,Operacion_ci,NivelCarter", 24, fechaActual.ToString("dd/MM/yy"));
+            Respuesta<Dictionary<int, Dictionary<string, DetalleFecha>>> detalleCampoOperacionAyer = await _lecturaCampo.ObtenerDetalleCampoPorFecha("HrsOperacion,Operacion_ci,NivelCarter", 24, fechaActual.AddDays(-1).ToString("dd/MM/yy"));
+
 
             DataSet dataSet = new DataSet("ReporteProduccion2");
             
@@ -250,40 +285,369 @@ namespace Generacion.Controllers
                 await CrearStatus(datos),
                 await CrearTotals(datos),
                 await CrearEnergyProduce(datos),
-                await ObtenerNumeroDeArranque()
+                await ObtenerNumeroDeArranque(datos),
+                await ObtenerNumeroSincronizaciones(datos),
+                await ObtenerOilCarter(datos),
+                await ObtenerInternalService(datosRegistro.Detalle),
+                await ObtenerRefrescamientoCarter(datos),
+                await ObtenerGateFlow(datos),
+                await ObtenerTkCleanLubeOil(datos),
+                await ObtenerCompresors(detalleCampoOperacionHoy.Detalle,detalleCampoOperacionAyer.Detalle),
+                await ObtenerTkOilUsed(datos),
+                await ObtenerFuelLevelBlack()
             }; 
             dataSet.Tables.AddRange(dataTable);
 
             return dataSet;
         }
-        private async Task<DataTable> ObtenerNumeroSincronizaciones()
-        {
-            DataTable dataTable = new DataTable("NumeroSincronizaciones");
 
-            dataTable.Columns.Add("diario", typeof(string));
-            dataTable.Columns.Add("mensual", typeof(string));
+
+        private async Task<DataTable> ObtenerFuelLevelBlack()
+        {
+            DataTable dataTable = new DataTable("FuelLevelBlackStart");
+
+            dataTable.Columns.Add("Yesterday", typeof(string));
+            dataTable.Columns.Add("Today", typeof(string));
+
+
 
             // Agregar una fila al DataTable con los datos correspondientes
             DataRow fila = dataTable.NewRow();
-            fila["diario"] = "";
-            fila["mensual"] = "";
+            fila["Yesterday"] = "";
+            fila["Today"] = "";
+
+
 
             dataTable.Rows.Add(fila);
 
             // Devolver el DataSet creado
             return dataTable;
         }
-        private async Task<DataTable> ObtenerNumeroDeArranque()
-        {
-            DataTable dataTable = new DataTable("NumeroArranques");
 
-            dataTable.Columns.Add("diario", typeof(string));
-            dataTable.Columns.Add("mensual", typeof(string));
+
+        private async Task<DataTable> ObtenerTkCleanLubeOil(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("TkCleanLubeOil");
+
+            Dictionary<string, TkCleanLube> lube = datos.TkCleanLubeOil.ToDictionary(x => x.Tipo);
+
+            //dataTable.Columns.Add("TKCLEANLUBEOIL", typeof(string));
+            dataTable.Columns.Add("Yesterday", typeof(string));
+            dataTable.Columns.Add("Today", typeof(string));
+            dataTable.Columns.Add("Diference", typeof(string));
+            dataTable.Columns.Add("Received", typeof(string));
+            dataTable.Columns.Add("ContadorToday", typeof(string));
+            dataTable.Columns.Add("ContadorYesterday", typeof(string));
+            dataTable.Columns.Add("AdicionOil", typeof(string));
+
+            dataTable.Columns.Add("Yesterday2", typeof(string));
+            dataTable.Columns.Add("Today2", typeof(string));
+            dataTable.Columns.Add("Diference2", typeof(string));
+            dataTable.Columns.Add("Received2", typeof(string));
+
+            DataRow fila = dataTable.NewRow();
+
+            //fila["TKCLEANLUBEOIL"] = "";
+            fila["Yesterday"] = lube["YESTERDAY"].TkLevel; 
+            fila["Today"] = lube["TODAY"].TkLevel;
+            fila["DIFERENCE"] = lube["DIFERENCE"].TkLevel;
+            fila["Received"] = lube["RECEIVED"].TkLevel;
+            fila["ContadorToday"] = lube["CONTADOR TODAY"].TkLevel;
+            fila["ContadorYesterday"] = lube["CONTADOR YESTERDAY"].TkLevel;
+            fila["AdicionOil"] = lube["ADICION OIL"].TkLevel;
+
+            fila["Yesterday2"] = lube["YESTERDAY"].TkRead;
+            fila["Today2"] = lube["TODAY"].TkRead;
+            fila["Diference2"] = lube["DIFERENCE"].TkRead;
+            fila["Received2"] = lube["RECEIVED"].TkRead;
+
+            dataTable.Rows.Add(fila);
+
+            return dataTable;
+        }
+
+        private async Task<DetalleFecha>  ValidarcionValorDecimal(Dictionary<int, Dictionary<string , DetalleFecha>> valor, int key, string busqueda)
+        {
+            DetalleFecha respuesta = new DetalleFecha();
+            if (valor.ContainsKey(key))
+            {
+                respuesta = valor[key][busqueda];
+            }
+            return respuesta;
+        }
+
+        private async Task<DataTable> ObtenerCompresors(Dictionary<int, Dictionary<string, DetalleFecha>> hoy , Dictionary<int, Dictionary<string, DetalleFecha>> ayer)
+        {
+            var hoyHrsOpe1 = await ValidarcionValorDecimal(hoy, 1, "HrsOperacion");
+            var hoyHrsOpe2 = await ValidarcionValorDecimal(hoy, 2, "HrsOperacion");
+            var hoyOpe1 = await ValidarcionValorDecimal(hoy, 1, "Operacion_ci");
+            var hoyOpe2 = await ValidarcionValorDecimal(hoy, 2, "Operacion_ci");
+
+            var ayerHrsOpe1 = await ValidarcionValorDecimal(ayer, 1, "HrsOperacion");
+            var ayerHrsOpe2 = await ValidarcionValorDecimal(ayer, 2, "HrsOperacion");
+            var ayerOpe1 = await ValidarcionValorDecimal(ayer, 1, "Operacion_ci");
+            var ayerOpe2 = await ValidarcionValorDecimal(ayer, 2, "Operacion_ci");
+
+
+            DataTable dataTable = new DataTable("Compresors");
+
+            dataTable.Columns.Add("HrsToday", typeof(string));
+            dataTable.Columns.Add("HrsToday2", typeof(string));
+            dataTable.Columns.Add("HrsToday3", typeof(string));
+            dataTable.Columns.Add("HrsToday4", typeof(string));
+
+            dataTable.Columns.Add("HrsYester", typeof(string));
+            dataTable.Columns.Add("HrsYester2", typeof(string));
+            dataTable.Columns.Add("HrsYester3", typeof(string));
+            dataTable.Columns.Add("HrsYester4", typeof(string));
+
+            dataTable.Columns.Add("Diference", typeof(string));
+            dataTable.Columns.Add("Diference2", typeof(string));
+            dataTable.Columns.Add("Diference3", typeof(string));
+            dataTable.Columns.Add("Diference4", typeof(string));
+
 
             // Agregar una fila al DataTable con los datos correspondientes
             DataRow fila = dataTable.NewRow();
-            fila["diario"] = "";
-            fila["mensual"] = "";
+            fila["HrsToday"] = hoyHrsOpe1.detalle;
+            fila["HrsToday2"] = hoyHrsOpe2.detalle;
+            fila["HrsToday3"] = hoyOpe1.detalle;
+            fila["HrsToday4"] = hoyOpe2.detalle;
+
+            fila["HrsYester"] = ayerHrsOpe1.detalle;
+            fila["HrsYester2"] = ayerHrsOpe2.detalle;
+            fila["HrsYester3"] = ayerOpe1.detalle;
+            fila["HrsYester4"] = ayerOpe2.detalle;
+
+            fila["Diference"] = hoyHrsOpe1.detalle- ayerHrsOpe1.detalle;
+            fila["Diference2"] = hoyHrsOpe2.detalle - ayerHrsOpe2.detalle;
+            fila["Diference3"] = hoyOpe1.detalle - ayerOpe1.detalle;
+            fila["Diference4"] = hoyOpe2.detalle - ayerOpe2.detalle;
+
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+
+        private async Task<DataTable> ObtenerTkOilUsed(DatosReporteProduccion datos)
+        {
+            Dictionary<string, TkCleanLube> lube = datos.TkCleanLubeUsed.ToDictionary(x => x.Tipo);
+
+            DataTable dataTable = new DataTable("TkLubeOilUsed");
+
+            dataTable.Columns.Add("Yesterday", typeof(string));
+            dataTable.Columns.Add("Today", typeof(string));
+            dataTable.Columns.Add("Consumed", typeof(string));
+            dataTable.Columns.Add("Received", typeof(string));
+
+            dataTable.Columns.Add("Yesterday2", typeof(string));
+            dataTable.Columns.Add("Today2", typeof(string));
+            dataTable.Columns.Add("Consumed2", typeof(string));
+            dataTable.Columns.Add("Received2", typeof(string));
+
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+
+            fila["Yesterday"] = lube["YESTERDAY"].TkLevel;
+            fila["Today"] = lube["TODAY"].TkLevel;
+            fila["Consumed"] = lube["CONSUMED"].TkLevel;
+            fila["Received"] = lube["RECEIVED"].TkLevel;
+
+            fila["Yesterday2"] = lube["YESTERDAY"].TkRead;
+            fila["Today2"] = lube["TODAY"].TkRead;
+            fila["Consumed2"] = lube["CONSUMED"].TkRead;
+            fila["Received2"] = lube["RECEIVED"].TkRead;
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+
+
+        private async Task<DataTable> ObtenerInternalService(List<decimal> datos)
+        {
+            DataTable dataTable = new DataTable("InternalService");
+
+
+
+            dataTable.Columns.Add("yesterday", typeof(string));
+            dataTable.Columns.Add("today", typeof(string));
+            dataTable.Columns.Add("total", typeof(string));
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+            fila["yesterday"] = datos[0];
+            fila["today"] = datos[1];
+            fila["total"] = datos[1] - datos[0];
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+
+        private async Task<DataTable> ObtenerRefrescamientoCarter(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("RefrescamientoDelCarter");
+
+            Dictionary<string, RefrescamientoCartel> refrescamiento = datos.RefrescamientoCartel.ToDictionary(x => x.TipoRefrescamiento);
+
+
+            dataTable.Columns.Add("extraer", typeof(string));
+            dataTable.Columns.Add("rellenar", typeof(string));
+            dataTable.Columns.Add("extraer2", typeof(string));
+            dataTable.Columns.Add("rellenar2", typeof(string));
+            dataTable.Columns.Add("extraer3", typeof(string));
+            dataTable.Columns.Add("rellenar3", typeof(string));
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+            fila["extraer"] = refrescamiento["SE RELLENA"].Generador1; 
+            fila["rellenar"] = refrescamiento["SE EXTRAE"].Generador1;
+            fila["extraer2"] = refrescamiento["SE EXTRAE"].Generador2;
+            fila["rellenar2"] = refrescamiento["SE RELLENA"].Generador2;
+            fila["extraer3"] = refrescamiento["SE EXTRAE"].TotalRefrescamiento;
+            fila["rellenar3"] = refrescamiento["SE RELLENA"].TotalRefrescamiento;
+
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+
+
+        private async Task<DataTable> ObtenerGateFlow(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("GateFlowMeter");
+
+            Dictionary<string, CityGateFlow> valores = datos.CityGateFlow.ToDictionary(x => x.Tipo);
+
+            dataTable.Columns.Add("ReadingToday", typeof(string));
+            dataTable.Columns.Add("ReadingYesterday", typeof(string));
+            dataTable.Columns.Add("Consumption", typeof(string));
+
+            dataTable.Columns.Add("ReadingToday2", typeof(string));
+            dataTable.Columns.Add("ReadingYesterday2", typeof(string));
+            dataTable.Columns.Add("Consumption2", typeof(string));
+            //dataTable.Columns.Add("TKMantto(cms)", typeof(string));
+            //dataTable.Columns.Add("TKVessel(cms)", typeof(string));
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+            fila["ReadingToday"] = valores["READING TODAY"].KgEng1; 
+            fila["ReadingYesterday"] = valores["READING YESTERDAY"].KgEng1;
+            fila["Consumption"] = valores["CONSUMPTION"].KgEng1;
+
+            fila["ReadingToday2"] = valores["READING TODAY"].KgEng2;
+            fila["ReadingYesterday2"] = valores["READING YESTERDAY"].KgEng2;
+            fila["Consumption2"] = valores["CONSUMPTION"].KgEng2;
+            //fila["TKMantto(cms)"] = "";
+            //fila["TKVessel(cms)"] = "";
+
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+
+        private async Task<DataTable> ObtenerOilCarter(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("LevelLubeOilCarter");
+
+            Dictionary<string, LevelLubeOilCartel> lube = datos.LevelLubeOilCartel.ToDictionary(x => x.TipoCarter);
+
+            dataTable.Columns.Add("yesterday", typeof(string));
+            dataTable.Columns.Add("today", typeof(string));
+            dataTable.Columns.Add("added", typeof(string));
+            dataTable.Columns.Add("yesterday2", typeof(string));
+            dataTable.Columns.Add("today2", typeof(string));
+            dataTable.Columns.Add("added2", typeof(string));
+            dataTable.Columns.Add("total", typeof(string));
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+            fila["yesterday"] = lube["YESTERDAY"].Generador1;
+            fila["today"] = lube["TODAY"].Generador1;
+            fila["added"] = lube["ADDED"].Generador1;
+            fila["yesterday2"] = lube["YESTERDAY"].Generador2;
+            fila["today2"] = lube["TODAY"].Generador2;
+            fila["added2"] = lube["ADDED"].Generador2;
+            fila["total"] = lube["ADDED"].TotalAdded;
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+        private async Task<DataTable> ObtenerNumeroSincronizaciones(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("NumeroSincronizaciones");
+
+            Dictionary<string, Dictionary<int, ArranqueSincronizacion>> sincro = datos.Produccion.ArranqueSincronizacion
+               .GroupBy(x => x.Tipo)
+               .ToDictionary(
+                   g => g.Key,
+                   g => g.ToDictionary(a => a.NumeroGenerador, a => a)
+               );
+
+            dataTable.Columns.Add("diario", typeof(string));
+            dataTable.Columns.Add("mensual", typeof(string));
+            dataTable.Columns.Add("anual", typeof(string));
+            dataTable.Columns.Add("diario2", typeof(string));
+            dataTable.Columns.Add("mensual2", typeof(string));
+            dataTable.Columns.Add("anual2", typeof(string));
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+            fila["diario"] = sincro["sincronizacion"][1].Diario;
+            fila["mensual"] = sincro["sincronizacion"][1].Mensual;
+            fila["anual"] = sincro["sincronizacion"][1].Anual;
+
+
+            fila["diario2"] = sincro["sincronizacion"][2].Diario;
+            fila["mensual2"] = sincro["sincronizacion"][2].Mensual;
+            fila["anual2"] = sincro["sincronizacion"][2].Anual;
+
+            dataTable.Rows.Add(fila);
+
+            // Devolver el DataSet creado
+            return dataTable;
+        }
+        private async Task<DataTable> ObtenerNumeroDeArranque(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("Arranques");
+
+            Dictionary<string, Dictionary<int, ArranqueSincronizacion>> arranque = datos.Produccion.ArranqueSincronizacion
+                .GroupBy(x => x.Tipo) 
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToDictionary(a => a.NumeroGenerador, a => a) 
+                );
+
+
+            dataTable.Columns.Add("diario", typeof(string));
+            dataTable.Columns.Add("mensual", typeof(string));
+            dataTable.Columns.Add("anual", typeof(string));
+            dataTable.Columns.Add("diario2", typeof(string));
+            dataTable.Columns.Add("mensual2", typeof(string));
+            dataTable.Columns.Add("anual2", typeof(string));
+
+            // Agregar una fila al DataTable con los datos correspondientes
+            DataRow fila = dataTable.NewRow();
+            fila["diario"] = arranque["sincronizacion"][1].Diario;
+            fila["mensual"] = arranque["sincronizacion"][1].Mensual;
+            fila["anual"] = arranque["sincronizacion"][1].Anual;
+
+
+            fila["diario2"] = arranque["sincronizacion"][2].Diario;
+            fila["mensual2"] = arranque["sincronizacion"][2].Mensual;
+            fila["anual2"] = arranque["sincronizacion"][2].Anual;
 
             dataTable.Rows.Add(fila);
 
@@ -481,6 +845,21 @@ namespace Generacion.Controllers
 
             return dataTable;
         }
+
+        private async Task<DataTable> LevelLubeOilCarter(DatosReporteProduccion datos)
+        {
+            DataTable dataTable = new DataTable("OIL");
+
+            dataTable.Columns.Add("ServiceAcumulate1", typeof(string));
+            dataTable.Columns.Add("ServiceAcumulate2", typeof(string));
+
+
+            DataRow fila = dataTable.NewRow();
+            fila["ServiceAcumulate1"] = "";
+            dataTable.Rows.Add(fila);
+
+            return dataTable;
+        }
     }
 
     public class DatosReporteProduccion
@@ -490,7 +869,8 @@ namespace Generacion.Controllers
         public List<RefrescamientoCartel>? RefrescamientoCartel { get; set; }
         public List<CityGateFlow>? CityGateFlow { get; set; }
         public List<ManttoVessel>? ManttoVessel { get; set; }
-         public List<TkCleanLube>? TkCleanLube { get; set; }
+        public List<TkCleanLube>? TkCleanLubeOil { get; set; }
+        public List<TkCleanLube>? TkCleanLubeUsed { get; set; }
         public List<EnergiaProducida>? EnergiaProducida { get; set; }
         public datosGraficoION? datosGraficoION { get; set; }
     }

@@ -33,7 +33,8 @@ namespace Generacion.Controllers
         public async Task<IActionResult> Index([FromQuery] string fecha)
         {
             DateTime fechaActual = string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
-            DateTime fechaMedianoche = DateTime.Now;
+            DateTime fechaMedianoche = string.IsNullOrEmpty(fecha) ? DateTime.Now : DateTime.Parse(fecha);
+
 
             string usuarioDetail = HttpContext.Session.GetString("usuarioDetail");
             DetalleOperario user = JsonConvert.DeserializeObject<DetalleOperario>(usuarioDetail);
@@ -41,10 +42,17 @@ namespace Generacion.Controllers
             string datoscabeceraJson = HttpContext.Session.GetString("datoscabecera");
             Dictionary<string, CabecerasTabla> datoscabecera = JsonConvert.DeserializeObject<Dictionary<string, CabecerasTabla>>(datoscabeceraJson);
 
-            if (int.Parse(fechaActual.ToString("HH")) >= 0 && int.Parse(fechaActual.ToString("HH")) < 2)
+            if (string.IsNullOrEmpty(fecha))
             {
-                fechaActual = fechaActual.AddDays(-1);
+                if (string.IsNullOrEmpty(fecha))
+            {
+                if (int.Parse(fechaActual.ToString("HH")) >= 0 && int.Parse(fechaActual.ToString("HH")) < 2)
+                {
+                    fechaActual = fechaActual.AddDays(-1);
+                }
             }
+            }
+
 
             Respuesta<List<TiposRegistroCampo>> tipoRegistrosCampo = await _lecturaCampo.ObtenerTiposDeRegistro();
             var datosCampo = await _lecturaCampo.ObtenerDetalleCampo(fechaActual.ToString("dd/MM/yyyy"), fechaMedianoche.ToString("dd/MM/yyyy"), user.IdSitio);
@@ -52,15 +60,14 @@ namespace Generacion.Controllers
             Respuesta<string> observacion = await _lecturaCampo.ObtenerObservacionPorFecha(fechaActual.ToString("dd/MM/yy"));
 
             Respuesta<List<SessionOperario>> datosSessionOperarios = await _consultarUsuario.ObtenerSessionOperarios(fechaActual.ToString("dd/MM/yyyy"));
-
-
             Dictionary<string, List<SessionOperario>> horarioOperarios = datosSessionOperarios.Detalle
                                                                         .GroupBy(x => x.Horario)
                                                                             .ToDictionary(
                                                                                     outerGroup => outerGroup.Key,
                                                                                     outerGroup => outerGroup.ToList());
 
-            ViewBag.FechaSeleccionado = fecha ?? string.Empty;
+            ViewBag.FechaSeleccionado = fecha;
+            ViewBag.Perfil = user.IdCargo;
             ViewData["horarioOperarios"] = horarioOperarios;
 
             ViewData["TipoRegistros"] = tipoRegistrosCampo.Detalle;

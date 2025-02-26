@@ -12,10 +12,12 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Query
     {
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public DatosCalibracionValvula(IConexionBD conexion, Function function)
+        private readonly Logger _logger;
+        public DatosCalibracionValvula(IConexionBD conexion, Function function, Logger logger)
         {
             _function = function;
             _conexion = conexion;
+             _logger = logger;
         }
 
         public async Task<Respuesta<DetalleCalibracionValvula>> ObtenerDetalleCalibracionPorNumeroGE(int numeroGenerador)
@@ -58,6 +60,7 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Query
             }
             catch (Exception ex)
             {
+                _logger.LogError("Error ObtenerDetalleCalibracionPorNumeroGE : " + ex.Message.ToString());
             }
             return respuesta;
         }

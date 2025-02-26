@@ -1,4 +1,5 @@
 ﻿using Generacion.Application.DashBoard.TurboCompresor.Query;
+using Generacion.Application.Funciones;
 using Generacion.Models;
 using Generacion.Models.CalibracionValvula;
 using MediatR;
@@ -11,10 +12,12 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Query
 
     public class ObtenerDetalleCalibracionHandler : IRequestHandler<ObtenerDetalleCalibracion, Respuesta<Dictionary<int, DetalleCalibracionValvula>>>
     {
+        private readonly Logger _logger;
         private readonly DatosCalibracionValvula _datosCalibracion;
-        public ObtenerDetalleCalibracionHandler(DatosCalibracionValvula datosCalibracion)
+        public ObtenerDetalleCalibracionHandler(DatosCalibracionValvula datosCalibracion, Logger logger)
         {
             _datosCalibracion = datosCalibracion;
+            _logger = logger;
         }
         public async  Task<Respuesta<Dictionary<int, DetalleCalibracionValvula>>> Handle(ObtenerDetalleCalibracion request, CancellationToken cancellationToken)
         {
@@ -33,6 +36,7 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Query
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = "Error al procesar la solicitud.";
+                _logger.LogError("Error ObtenerDetalleCalibracionHandler : " + ex.Message.ToString());
             }
 
             return respuesta;

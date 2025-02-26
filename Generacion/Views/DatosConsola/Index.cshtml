@@ -461,24 +461,25 @@
                 <p>Versión 00 ELD-CTL-OM002</p>
             </div>
             <div>
-                <p1>Fecha</p1>
+                <p >Fecha</p>
                 @{
-                    <p>@date.ToString("dd/MM/yyyy")</p>
+                        <p  id="fechaFormulario"></p>
+                       @* <p> @date.ToString("dd/MM/yyyy") </p>*@
                 }
             </div>
             <div class="subTitulo-consola">
-                <p1 style="text-align: inherit;">Operadores</p1>
+                <p style="text-align: inherit;">Operadores</p>
             </div>
             <div>
-                <p1>Turno 1</p1>
+                <p>Turno 1</p>
                 @MostrarTurno(mañana,2)
             </div>
             <div>
-                <p1>Turno 2</p1>
+                <p>Turno 2</p>
                 @MostrarTurno(tarde,2)
             </div>
             <div>
-                <p1>Turno 3</p1>
+                <p>Turno 3</p>
                 @MostrarTurno(noche,2)
             </div>
         </div>
@@ -1719,23 +1720,29 @@
 
     $(document).ready(function () {
         
+        var fechaFormulario= document.getElementById("fechaFormulario");
+
         var fechaSeleccionado = @Html.Raw(JsonConvert.SerializeObject(ViewBag.FechaSeleccionado));
+        var perfil = @Html.Raw(JsonConvert.SerializeObject(ViewBag.Perfil));
         console.log("fechaSeleccionado : ", fechaSeleccionado);
 
-        if(fechaSeleccionado != null){
-            var contenedor = document.getElementById('contendor-datosconsola');
+
+        var contenedor = document.getElementById('contendor-datosconsola');
             var inputs = contenedor.getElementsByTagName('input');
-           
+
+        //if(fechaSeleccionado != null){
+        if (perfil == 'op-3') {
+            fechaFormulario.innerText = @Html.Raw(JsonConvert.SerializeObject(ViewBag.FechaSeleccionado));
+
+        }else if(fechaSeleccionado != null){
             for (var i = 0; i < inputs.length; i++) {
                 inputs[i].disabled = true;
             }
-
             var contenedor = document.getElementById('contenedor-botones-guardar');
             contenedor.style.display = "none";
+        
+            fechaFormulario.innerText = @Html.Raw(JsonConvert.SerializeObject(DateTime.Now.ToString("dd/MM/yyyy")));
         }
-
-
-
 
 
         $("#accordionSidebar").addClass("toggled");

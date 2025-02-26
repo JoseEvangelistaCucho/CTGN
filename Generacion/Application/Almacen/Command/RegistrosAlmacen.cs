@@ -13,8 +13,10 @@ namespace Generacion.Application.Almacen.Command
     {
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public RegistrosAlmacen(Function function, IConexionBD conexion)
+        private readonly Logger _logger;
+        public RegistrosAlmacen(Function function, IConexionBD conexion, Logger logger)
         {
+            _logger = logger;
             _function = function;
             _conexion = conexion;
         }
@@ -55,6 +57,7 @@ namespace Generacion.Application.Almacen.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = ex.Message.ToString();
+                _logger.LogError("Error GuardarDatosAlmacen : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -108,6 +111,7 @@ namespace Generacion.Application.Almacen.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = ex.Message.ToString();
+                _logger.LogError("Error GuardarDatosPrestados : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -152,6 +156,7 @@ namespace Generacion.Application.Almacen.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = ex.Message.ToString();
+                _logger.LogError("Error GuardarBujiasUtilizadas : " + ex.Message.ToString());
             }
             return respuesta;
         }

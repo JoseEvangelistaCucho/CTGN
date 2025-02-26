@@ -36,7 +36,8 @@ namespace Generacion.Controllers
 
                 ViewBag.ValidacionReporte = respuesta.Detalle.Count > 0;
             }
-                return View(respuesta.Detalle);
+
+            return View(respuesta.Detalle);
         }
     }
 }

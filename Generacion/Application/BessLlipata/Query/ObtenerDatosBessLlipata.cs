@@ -11,12 +11,14 @@ namespace Generacion.Application.BessLlipata.Query
 {
     public class ObtenerDatosBessLlipata
     {
+        private readonly Logger _logger;
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public ObtenerDatosBessLlipata(IConexionBD conexion, Function function)
+        public ObtenerDatosBessLlipata(IConexionBD conexion, Function function,Logger logger)
         {
             _function = function;
             _conexion = conexion;
+            _logger = logger;
         }
 
         public async Task<Respuesta<List<DBDataBess>>> ObtenerDatosBEES(string fecha,string tipoConsulta)
@@ -74,7 +76,7 @@ namespace Generacion.Application.BessLlipata.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosBEES : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -134,7 +136,7 @@ namespace Generacion.Application.BessLlipata.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosCOES : " + ex.Message.ToString());
             }
             return respuesta;
         }

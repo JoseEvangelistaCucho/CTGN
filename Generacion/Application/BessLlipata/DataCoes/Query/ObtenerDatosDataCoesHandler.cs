@@ -15,11 +15,13 @@ namespace Generacion.Application.BessLlipata.DataCoes.Query
     }
     public class ObtenerDatosDataCoesHandler : IRequestHandler<ObtenerDatosDataCoes, Respuesta<Dictionary<string, object>>>
     {
+        private readonly Logger _logger;
         private readonly ObtenerDatosBessLlipata _obtenerDatosBessLlipata;
         private readonly Function _function;
         private Dictionary<string, List<Demanda>> _diccionarioOrdenado;
-        public ObtenerDatosDataCoesHandler(ObtenerDatosBessLlipata obtenerDatosBessLlipata, Function function)
+        public ObtenerDatosDataCoesHandler(ObtenerDatosBessLlipata obtenerDatosBessLlipata, Function function, Logger logger)
         {
+            _logger = logger;
             _function = function;
             _obtenerDatosBessLlipata = obtenerDatosBessLlipata;
         }
@@ -41,7 +43,7 @@ namespace Generacion.Application.BessLlipata.DataCoes.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosDataCoesHandler : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -62,9 +64,7 @@ namespace Generacion.Application.BessLlipata.DataCoes.Query
             }
             catch (Exception ex)
             {
-
-
-
+                _logger.LogError("Error ObtenerDatosPorFechaSeleccionada : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -109,7 +109,7 @@ namespace Generacion.Application.BessLlipata.DataCoes.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error CalcularValorexMaximoPorDia : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -144,7 +144,7 @@ namespace Generacion.Application.BessLlipata.DataCoes.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error CalcularDiaCoincidente : " + ex.Message.ToString());
             }
             return respueta;
         }
@@ -169,7 +169,7 @@ namespace Generacion.Application.BessLlipata.DataCoes.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosPorFecha : " + ex.Message.ToString());
             }
             return respueta;
         }

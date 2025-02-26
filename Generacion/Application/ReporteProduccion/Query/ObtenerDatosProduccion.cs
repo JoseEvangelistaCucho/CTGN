@@ -123,8 +123,11 @@ namespace Generacion.Application.ReporteProduccion.Query
 
             var datosOperario = await _function.ObtenerDatosOperario();
 
-            string idReporteHoy = $"{datosOperario.IdSitio}-ELD-CTL-OM002_{DateTime.Now.ToString("yyyy-MM-dd")}";
-            string idReporteAyer = $"{datosOperario.IdSitio}-ELD-CTL-OM002_{DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")}";
+            /* string idReporteHoy = $"{datosOperario.IdSitio}-ELD-CTL-OM002_{DateTime.Now.ToString("yyyy-MM-dd")}";
+             string idReporteAyer = $"{datosOperario.IdSitio}-ELD-CTL-OM002_{DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")}";
+             */
+            string idReporteHoy = $"{datosOperario.IdSitio}-ELD-CTL-OM002_{obtenerDatos.Fecha.ToString("yyyy-MM-dd")}";
+            string idReporteAyer = $"{datosOperario.IdSitio}-ELD-CTL-OM002_{obtenerDatos.Fecha.AddDays(-1).ToString("yyyy-MM-dd")}";
 
             var datosLecturasHoy = await _datosConsola.ObtenerLecturaMediaNoche(idReporteHoy, obtenerDatos.Fecha.ToString());//$"{datosOperario.IdSitio}-ELD-CTL-OM002_{DateTime.Now.ToString("yyyy-MM-dd")}", fecha);
             Dictionary<int, LecturasMedianoche> lecturasHoy = datosLecturasHoy.ToDictionary(x => x.NumeroEG);

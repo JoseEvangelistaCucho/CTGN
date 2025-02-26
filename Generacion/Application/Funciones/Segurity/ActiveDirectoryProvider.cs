@@ -1,6 +1,6 @@
-﻿using Generacion.Models.Session;
+﻿using Generacion.Application.Common;
+using Generacion.Models.Session;
 using System.DirectoryServices.AccountManagement;
-using WebApi.Application.Common.Interfaces;
 
 namespace WebApi.Application.ValidatePassword.Queries
 {

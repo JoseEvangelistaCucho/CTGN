@@ -1,5 +1,6 @@
 ﻿using Generacion.Application.Almacen;
 using Generacion.Application.Almacen.Command;
+using Generacion.Application.Funciones;
 using Generacion.Models;
 using MediatR;
 
@@ -12,9 +13,11 @@ namespace Generacion.Application.Bujias.Command
     public class GuardarBujiasUtilizadasHandler : IRequestHandler<GuardarBujiasUtilizadas, Respuesta<string>>
     {
         private readonly IAlmacen _almacen;
-        public GuardarBujiasUtilizadasHandler(IAlmacen almacen)
+        private readonly Logger _logger;
+        public GuardarBujiasUtilizadasHandler(IAlmacen almacen, Logger logger)
         {
             _almacen = almacen;
+            _logger = logger;
         }
         public async Task<Respuesta<string>> Handle(GuardarBujiasUtilizadas request, CancellationToken cancellationToken)
         {
@@ -27,7 +30,7 @@ namespace Generacion.Application.Bujias.Command
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosBESSQueryHandler : " + ex.Message.ToString());
             }
 
             return respuesta;

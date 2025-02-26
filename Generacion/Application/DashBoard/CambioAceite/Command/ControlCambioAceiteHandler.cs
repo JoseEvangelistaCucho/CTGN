@@ -1,4 +1,5 @@
 ﻿using Generacion.Application.Common;
+using Generacion.Application.Funciones;
 using Generacion.Models;
 using Generacion.Models.Aceite;
 using MediatR;
@@ -13,13 +14,17 @@ namespace Generacion.Application.DashBoard.CambioAceite.Command
 
     public class ControlCambioAceiteHandler : IRequestHandler<ListaControlCambioAceite, Respuesta<string>>
     {
+        private readonly Logger _logger;
         private readonly ProcessExecutionContextExtensions _executionContextExtensions;
         public readonly IRegistroControlAceite _registroControlAceite;
         public ControlCambioAceiteHandler(IRegistroControlAceite registroControlAceite,
-            ProcessExecutionContextExtensions processExecutionContextExtensions)
+            ProcessExecutionContextExtensions processExecutionContextExtensions,
+            Logger logger
+            )
         {
             _executionContextExtensions = processExecutionContextExtensions;
             _registroControlAceite = registroControlAceite;
+            _logger = logger;
         }
         public async Task<Respuesta<string>> Handle(ListaControlCambioAceite request, CancellationToken cancellationToken)
         {
@@ -56,6 +61,7 @@ namespace Generacion.Application.DashBoard.CambioAceite.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = "Error al procesar la solicitud.";
+                _logger.LogError("Error ControlCambioAceiteHandler : " + ex.Message.ToString());
             }
             return respuesta;
         }

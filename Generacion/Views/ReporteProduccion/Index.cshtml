@@ -2,6 +2,7 @@
 @using Generacion.Models.ION;
 @using Generacion.Models.LecturasCampo;
 @using Generacion.Models.Mantenimiento;
+@using Generacion.Models.PruebasSemanales.BlackStart
 @using Generacion.Models.ReporteProduccion;
 @using Generacion.Models.Session;
 @using Microsoft.AspNetCore.Html;
@@ -9,10 +10,10 @@
 @using System.Text;
 
 @{
-    DateTime fecha = DateTime.Now;
+    DateTime fecha = ViewBag.Fecha;//DateTime.Now;
 
     Dictionary<string, List<SessionOperario>> datoHorario = ViewData["horarioOperarios"] as Dictionary<string, List<SessionOperario>>;
-        List<SessionOperario> mañana = datoHorario.ContainsKey("mañana") ? datoHorario["mañana"] : new List<SessionOperario>();
+    List<SessionOperario> mañana = datoHorario.ContainsKey("mañana") ? datoHorario["mañana"] : new List<SessionOperario>();
     List<SessionOperario> tarde = datoHorario.ContainsKey("tarde") ? datoHorario["tarde"] : new List<SessionOperario>();
     List<SessionOperario> noche = datoHorario.ContainsKey("noche") ? datoHorario["noche"] : new List<SessionOperario>();
 
@@ -40,7 +41,7 @@
     List<LevelLubeOilCartel> produccionCarter = ViewData["ProduccionCarter"] as List<LevelLubeOilCartel>;
     List<CityGateFlow> produccionCity = ViewData["ProduccionCity"] as List<CityGateFlow>;
     // List<TkCleanLube> produccionTkClean = ViewData["ProduccionTkClean"] as List<TkCleanLube>;
-    Dictionary<string, TkCleanLube> produccionTkClean = ViewData["ProduccionTkClean"] as Dictionary<string, TkCleanLube>;
+    Dictionary<string, Dictionary<string, TkCleanLube>> produccionTkClean = ViewData["ProduccionTkClean"] as Dictionary<string, Dictionary<string, TkCleanLube>>;
 
 
     Dictionary<int, Dictionary<string, DetalleFecha>> detalleOperacionCampoHoy = ViewData["DetalleOperacionCampoHoy"] as Dictionary<int, Dictionary<string, DetalleFecha>>;
@@ -50,16 +51,20 @@
     Dictionary<string, ManttoVessel> datosMantoVessel = ViewData["datosMantoVessel"] as Dictionary<string, ManttoVessel>;
 
 
-
     Dictionary<string, Dictionary<int, LecturasMedianoche>> energiaProducida = ViewData["datosLecturas"] as Dictionary<string, Dictionary<int, LecturasMedianoche>>;
 
 
+    ReporteProducion datosProduccionAnt = ViewData["datosProduccionAnt"] as ReporteProducion;
+
+    /********************* SISTEMAS CONTRA INCEDIOS ********************************/
+    decimal detalleSistemaIncendios = (decimal)ViewData["detallePruebaSemanal"];
+
     /***************CALCULO PARA LA ENEGERGIA PRODUCIDA***********/
 
-    decimal energiaproducidaHoy1 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][1].GasEnergiaEG : 0;
-    decimal energiaproducidaAyer1 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][1].GasEnergiaEG : 0;
-    decimal energiaproducidaHoy2 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][2].GasEnergiaEG : 0;
-    decimal energiaproducidaAyer2 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][2].GasEnergiaEG : 0;
+    decimal energiaproducidaHoy1 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][1].ReadingToday : 0;
+    decimal energiaproducidaAyer1 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][1].ReadingToday : 0;
+    decimal energiaproducidaHoy2 = energiaProducida["hoy"].Count > 0 ? energiaProducida["hoy"][2].ReadingToday : 0;
+    decimal energiaproducidaAyer2 = energiaProducida["ayer"].Count > 0 ? energiaProducida["ayer"][2].ReadingToday : 0;
 
     /*************CALCULO PARA LA CANTIDAD DE GAS CONSUMIDO************/
 
@@ -621,8 +626,8 @@
                         <th>CAPACITY FACTOR</th>
                         <td>%</td>
                         @{
-                            decimal capacityFactor1 = Math.Round(((energiaproducidaHoy1 - energiaproducidaAyer1) / decimal.Parse("9.341") * 24) * 100, 2);
-                            decimal capacityFactor2 = Math.Round(((energiaproducidaHoy2 - energiaproducidaAyer2) / decimal.Parse("9.341") * 24) * 100, 2);
+                            decimal capacityFactor1 = Math.Round(((energiaproducidaHoy1 - energiaproducidaAyer1) / (decimal.Parse("9.341") * 24)) * 100, 2);
+                            decimal capacityFactor2 = Math.Round(((energiaproducidaHoy2 - energiaproducidaAyer2) / (decimal.Parse("9.341") * 24)) * 100, 2);
                         }
                         <td id="CapacityENG1"><input style="width: 60% !important;text-align: right;" type="number" value="@(capacityFactor1)">%</td>
                         <td id="CapacityENG2"><input style="width: 60% !important;text-align: right;" type="number" value="@(capacityFactor2)">%</td>
@@ -641,7 +646,7 @@
                         <td>KJ/KWh</td>
                         <td id="HeatENG1"><input type="number" value="@(Math.Round(heatRate1, 2))"></td>
                         <td id="HeatENG2"><input type="number" value="@(Math.Round(heatRate2, 2))"></td>
-                        <td><input type="number" value="@(Math.Round(heatRate1+heatRate2, 2))"></td>
+                        <td><input type="number" value="@(Math.Round(heatRate1+heatRate2, 2)/2)"></td>
                     </tr>
                     <tr data-id="GasConsumed">
                         <th>GAS  CONSUMED</th>
@@ -1019,7 +1024,7 @@
             <table style="font-size: 10px;" class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo5">
                 <tbody class="table">
                     @{
-                        if (datosMantoVessel.Count > 0 && datosMantoVessel.ContainsKey("TK VESSEL") && datosMantoVessel.ContainsKey("TK MANTTO"))
+                        if (datosMantoVessel != null && datosMantoVessel.Count > 0 && datosMantoVessel.ContainsKey("TK VESSEL") && datosMantoVessel.ContainsKey("TK MANTTO"))
                         {
                             <tr data-id="TkMantto">
                                 <th style="width: 18% !important;">TK Mantto (cms)</th>
@@ -1087,7 +1092,7 @@
         <div style="display: flex;">
             <div style="width: 50%;">
                 @* TABLA TK CLEAN LUBE  OIL*@
-                <table class="table table-bordered tabla-detalle-titulo-5">
+                <table class="table table-bordered tabla-detalle-titulo6">
                     <tbody class="table">
                         <tr class="subtitulo-generador">
                             <th class="title-table" style="font-size: 15px;color: black;" class="title-table">TK CLEAN LUBE OIL</th>
@@ -1098,8 +1103,8 @@
                         <tr data-id="TkCleanYesterday">
                             <th>YESTERDAY</th>
                             <th>%/gls</th>
-                            <td id="LevelYesterday"><input type="number" value="@(produccionTkClean != null && produccionTkClean.ContainsKey("TODAY") ? produccionTkClean["TODAY"].TkLevel: 0)" /></td>
-                            <td id="ReadYesterday"><input type="number" value="@(produccionTkClean != null &&  produccionTkClean.ContainsKey("TODAY") ? produccionTkClean["TODAY"].TkRead: 0)" /></td>
+                            <td id="LevelYesterday"><input type="number" value="@(produccionTkClean != null && produccionTkClean["clean"].ContainsKey("TODAY") ? produccionTkClean["clean"]["TODAY"].TkLevel: 0)" /></td>
+                            <td id="ReadYesterday"><input type="number" value="@(produccionTkClean != null &&  produccionTkClean["clean"].ContainsKey("TODAY") ? produccionTkClean["clean"]["TODAY"].TkRead: 0)" /></td>
                         </tr>
                         <tr data-id="TkCleanToday">
                             <th>TODAY</th>
@@ -1130,7 +1135,7 @@
                         <tr data-id="TkContadorYesterday">
                             <th>CONTADOR YESTERDAY</th>
                             <th>LTS</th>
-                            <td id="LevelContYesterday"><input type="number" value="@(produccionTkClean.ContainsKey("CONTADOR YESTERDAY") ? produccionTkClean["CONTADOR YESTERDAY"].TkLevel: 0)" /></td>
+                            <td id="LevelContYesterday"><input type="number" value="@(produccionTkClean["clean"].ContainsKey("CONTADOR YESTERDAY") ? produccionTkClean["clean"]["CONTADOR YESTERDAY"].TkLevel: 0)" /></td>
                         </tr>
                         <tr data-id="TkAdicion">
                             <th>ADICION OIL</th>
@@ -1142,7 +1147,7 @@
             </div>
             <div>
                 <div style="width: 627px !important;">
-                    <table class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo6">
+                    <table class="table table-bordered tabla-detalle-titulo tabla-detalle-titulo7">
                         <thead>
                             <tr>
                                 <th class="title-table" style="font-size: 15px;color: black;">TK LUBE OIL USED</th>
@@ -1155,26 +1160,26 @@
                             <tr data-id="TkOilUsedYesterday">
                                 <th>YESTERDAY</th>
                                 <th>%/gls</th>
-                                <td><input type="number" /></td>
-                                <td><input type="number" /></td>
+                                <td id="LevelUsedYesterday"><input type="number" value="@(produccionTkClean != null && produccionTkClean["use"].ContainsKey("TODAY") ? produccionTkClean["use"]["TODAY"].TkLevel: 0)" /></td>
+                                <td id="ReadUsedYesterday"><input type="number" value="@(produccionTkClean != null &&  produccionTkClean["use"].ContainsKey("TODAY") ? produccionTkClean["use"]["TODAY"].TkRead: 0)" /></td>
                             </tr>
                             <tr data-id="TkOilUsedToday">
                                 <th>TODAY</th>
                                 <th>%/gls</th>
-                                <td><input type="number" /></td>
-                                <td><input type="number" /></td>
+                                <td id="LevelUsedToday"><input type="number" /></td>
+                                <td id="ReadUsedToday"><input type="number" /></td>
                             </tr>
                             <tr data-id="TkOilUsedConsumed">
                                 <th>CONSUMED</th>
                                 <th>%/gls</th>
-                                <td><input type="number" /></td>
-                                <td><input type="number" /></td>
+                                <td  id="LevelUsedConsumed"><input type="number" /></td>
+                                <td  id="ReadUsedConsumed"><input type="number" /></td>
                             </tr>
                             <tr data-id="TkOilUsedReceived">
                                 <th>RECEIVED</th>
                                 <th>%/gls</th>
-                                <td><input type="number" /></td>
-                                <td><input type="number" /></td>
+                                <td id="LevelUsedReceived"><input type="number" /></td>
+                                <td id="ReadUsedReceived"><input type="number" /></td>
                             </tr>
                         </tbody>
                     </table>
@@ -1187,13 +1192,25 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <th>YESTERDAY</th>
-                                <td><input type="number" /></td>
-                            </tr>
+                            @if(datosProduccionAnt!=null){
+                                <tr>
+                                    <th>YESTERDAY</th>
+                                    <td><input type="number" value="@datosProduccionAnt.FuelLevelBlackStart" /></td>
+                                </tr>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <th>YESTERDAY</th>
+                                    <td><input type="number"  /></td>
+                                </tr>
+                            }
+                            
                             <tr>
                                 <th>TODAY</th>
-                                <td style="background: #42FF48;"><input type="number" /></td>
+                                <td style="background: #42FF48;">
+                                    <input type="number" id="FuelLevelBlackStart" class-name="FuelLevelBlackStart" />
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -1218,11 +1235,13 @@
                         <tbody>
                             <tr>
                                 <th>YESTERDAY</th>
-                                <td><input type="number" /></td>
+                                <td><input type="number" value="@detalleSistemaIncendios" /></td>
                             </tr>
                             <tr>
                                 <th>TODAY</th>
-                                <td style="background: #42FF48;"><input type="number" /></td>
+                                <td style="background: #42FF48;">
+                                    <input id='nivelAguaTQ' idTable='NivelSCIBD' type="number" />
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -1942,6 +1961,7 @@
 
                     if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
                         GuardarOtrosDatos();
+                        insertarDatosAguaTQ()
                         //insertarTkManttoYTkVessel();
                         GuardarReportePDF();
 
@@ -1983,10 +2003,13 @@
                 RefrescamientoCartel: ListaRefrescamiento,
                 CityGateFlow: ListaCityGate,
                 ManttoVessel: listaManttoVessel,
-                TkCleanLube: listaTkClean,
+                TkCleanLubeUsed: listaTkCleanUsed,
+                TkCleanLubeOil: listaTkCleanOil,
                 EnergiaProducida: ListaEnergia,
                 datosGraficoION: datosGraficoION
             }
+
+            console.log("GuardarDatosJson",datos);
 
             return fetch('@Url.Action("GuardarDatosReporteJson", "ReporteProduccion")', {
                 method: "POST",
@@ -1997,7 +2020,7 @@
             });
         }
 
-        var inputReporteProduccionGeneral = ["TotalPlantGen", "TotalPlantExport", "TotalGasConsumption", "Efficiency-view", "bfa-TOTAL", "listaOperariosTurno"];
+        var inputReporteProduccionGeneral = ["TotalPlantGen", "TotalPlantExport", "TotalGasConsumption", "Efficiency-view", "bfa-TOTAL", "listaOperariosTurno", "FuelLevelBlackStart"];
 
         function obtenerDatosGeneralesProduccion() {
 
@@ -2029,7 +2052,7 @@
 
             return dato;
         }
-        obtenerDatosGeneralesProduccion();
+        //obtenerDatosGeneralesProduccion();
 
         function GuardarReportePDF() {
 
@@ -2569,18 +2592,23 @@
                 console.error('Error en la solicitud:', error);
             }
         }
-        var listaTkClean = [];
-        function insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2) {
+        var listaTkCleanUsed = [];
+        var listaTkCleanOil = [];
+        function insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2, number) {
 
             var datos = {
                 IdTkCleanLube: IdTkCleanLube,
                 Fecha: Fecha,
                 Tipo: Tipo,
-                TkLevel: Valor1,
-                TkRead: Valor2,
+                TkLevel: isNaN(Valor1) ? 0 : Valor1,
+                TkRead: isNaN(Valor2) ? 0 : Valor2
             };
-            listaTkClean.push(datos);
-
+            if(number==1){
+                listaTkCleanOil.push(datos);
+            }else{
+                listaTkCleanUsed.push(datos);
+            }
+            console.log("insertarDatosTkClean:",datos);
             return fetch('@Url.Action("GuardarDatosTkCleanLube", "ReporteProduccion")', {
                 method: "POST",
                 headers: {
@@ -2589,6 +2617,8 @@
                 body: JSON.stringify(datos)
             });
         }
+
+
 
         function GuardarOtrosDatos() {
             var firstRowSkipped = false; // Variable para rastrear si se ha saltado la primera fila
@@ -2674,7 +2704,28 @@
                 var Fecha = obtenerFecha("fechaVista");
                 var Valor1 = parseFloat($(this).find("td:eq(0) input").val()); // Obtiene el valor de la tercera celda
                 var Valor2 = parseFloat($(this).find("td:eq(1) input").val()); // Obtiene el valor de la cuarta celda
-                promises.push(insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2));
+                if(!isNaN(Valor1)){
+                     promises.push(insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2, 1));
+                }
+            });
+
+            $(".tabla-detalle-titulo7 tbody tr").each(function () {
+
+                if (!firstRowSkipped) {
+                    firstRowSkipped = true;
+                    return; // Salta la primera fila (encabezados) en el primer recorrido
+                }
+
+                var IdTkCleanLube = datosOperario.IdSitio + "-" + $(this).attr("data-id") + '-' + obtenerFecha("format"); // Define el atributo data-id en tus filas HTML
+                var Tipo = $(this).find("th:first").text(); // Obtiene el texto del primer <th>
+                var Fecha = obtenerFecha("fechaVista");
+                var Valor1 = parseFloat($(this).find("td:eq(0) input").val()); // Obtiene el valor de la tercera celda
+                var Valor2 = parseFloat($(this).find("td:eq(1) input").val()); // Obtiene el valor de la cuarta celda
+
+                if(!isNaN(Valor1)){
+                    promises.push(insertarDatosTkClean(IdTkCleanLube, Tipo, Fecha, Valor1, Valor2, 2));
+                }
+            
             });
 
             // Realiza todas las inserciones en paralelo
@@ -2691,7 +2742,30 @@
 
         var tituloReporteProduccion = document.getElementById("TiotuloReporteCentralProduccion");
         tituloReporteProduccion.innerText = "CENTRAL TERMICA " + datosOperario.IdSitio;
+        //obtener los elementos de aceite usados
+        const levelUsedYesterday = document.getElementById('LevelUsedYesterday').querySelector('input');
+        const levelUsedToday = document.getElementById('LevelUsedToday').querySelector('input');
+        const levelUsedConsumed = document.getElementById('LevelUsedConsumed').querySelector('input');
+        
+        const readUsedYesterday = document.getElementById('ReadUsedYesterday').querySelector('input');
+        const readUsedToday = document.getElementById('ReadUsedToday').querySelector('input');
+        const readUsedDiference = document.getElementById('ReadUsedConsumed').querySelector('input');
 
+        function updateLevelUsedDiference() {
+            const levelYesterdayValue = parseFloat(levelUsedYesterday.value) || 0;
+            const levelTodayValue = parseFloat(levelUsedToday.value) || 0;
+
+            // Calcular la diferencia y actualizar LevelDiference
+            const diference = levelYesterdayValue - levelTodayValue;
+            levelUsedConsumed.value = diference.toFixed(2);
+
+            readUsedToday.value = ((levelTodayValue / 100) * 1849).toFixed(1);
+            //  readYesterday.value = ((levelYesterday / 100) * 1849).toFixed(1);
+            readUsedDiference.value = ((diference / 100) * 1849).toFixed(1);
+        }
+        levelUsedToday.addEventListener('input', updateLevelUsedDiference);
+
+        //
 
 
         // Obtener referencias a los elementos del DOM
@@ -2737,6 +2811,49 @@
 
         }
         levelContToday.addEventListener('input', updateContDifference);
+
+/**************************************************************************** */
+        var niveldeAgua = document.getElementById("nivelAguaTQ");
+
+        function insertarDatosAguaTQ() {
+
+            var claseTable = niveldeAgua.getAttribute("idTable");
+
+            var detallePruebaSemanal = [];
+            
+            var dato = {
+                idDetallePruebaSemanal: datosOperario.IdSitio + '_DET_SISTEMAINCEN_' + claseTable + '-' + obtenerFecha('format'),
+                idPruebaSemanal: datosOperario.IdSitio + '_SISTEMAINCENDIOS-' + obtenerFecha('format'),
+                observaciones: "",
+                valorReferencia: niveldeAgua.value,
+                fecha: obtenerFecha('fechaVista'),
+                idSubtitulo: claseTable,
+                detalleNumerico: niveldeAgua.value,
+                detalleCadena: ""
+            };
+            detallePruebaSemanal.push(dato);
+
+            var pruebaSemanal ={
+                IdPruebaSemanal: datosOperario.IdSitio + '_SISTEMAINCENDIOS-' + obtenerFecha('format'),
+                Fecha: obtenerFecha("fechaVista"),
+                Activo :"2"
+            };
+            var datosSemanales = {
+                "detallePruebaSemanal": detallePruebaSemanal,
+                "pruebaSemanal": pruebaSemanal,
+                "tipo": "SISTEMAINCENDIOS"
+            };
+            console.log("datosSemanales :", datosSemanales);
+            
+            return fetch('@Url.Action("GuardarDetalleSemanal", "ReporteProduccion")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(datosSemanales)
+            });
+        }
+       
     });
 </script>
 

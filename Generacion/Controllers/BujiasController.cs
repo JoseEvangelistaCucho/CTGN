@@ -37,8 +37,6 @@ namespace Generacion.Controllers
             ViewData["DetalleBujiasPrestadas"] = respuesta.Detalle["bujiasEnPrestamo"];
             ViewData["TotalBujias"] = respuesta.Detalle["TotalBujias"];
 
-
-
             return View(respuesta.Detalle["bujiasEnAlmacen"]);
         }
 

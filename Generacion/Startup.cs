@@ -22,21 +22,22 @@ namespace Generacion
 
             services.Configure<KestrelServerOptions>(options =>
             {
-                options.Limits.MaxRequestBodySize = 20971520; // 20 MB en bytes
+                options.Limits.MaxRequestBodySize = 20971520; 
             });
 
             services.AddInfrastructure(Configuration);
 
-            Log.Logger = new LoggerConfiguration()
-           .WriteTo.File("Logs/mylogfile.txt", rollingInterval: RollingInterval.Day)
-           .CreateLogger();
+           // Log.Logger = new LoggerConfiguration()
+           //.WriteTo.File("Logs/mylogfile.txt", rollingInterval: RollingInterval.Day)
+           //.CreateLogger();
 
             services.AddControllersWithViews();
             services.AddHttpContextAccessor();
+            services.AddRazorPages();
 
             services.AddLogging(logging =>
             {
-                logging.AddSerilog(); // Agrega el proveedor de Serilog
+                logging.AddSerilog(); 
                 logging.AddEventLog();
             });
 
@@ -44,6 +45,7 @@ namespace Generacion
             {
                 options.AddDefaultPolicy(builder =>
                 {
+                   
                     builder.AllowAnyOrigin()
                            .AllowAnyHeader()
                            .AllowAnyMethod();

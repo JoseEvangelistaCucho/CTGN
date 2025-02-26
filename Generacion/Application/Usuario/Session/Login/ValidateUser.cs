@@ -1,14 +1,12 @@
 ﻿using Generacion.Application.DataBase;
 using Generacion.Models;
 using Generacion.Models.Session;
-using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
-using WebApi.Application.Common.Interfaces;
 using Generacion.Models.Usuario;
 using Generacion.Application.Usuario.Session;
 using Generacion.Application.Usuario;
 using Newtonsoft.Json;
 using Generacion.Application.DataBase.cache;
+using Generacion.Application.Common;
 
 namespace Generacion.Application.ValidationSession.Login
 {
@@ -31,7 +29,7 @@ namespace Generacion.Application.ValidationSession.Login
 
             try
             {
-                var respuestaClaveRed = true;//_activeDirectoryProvider.ValidateUserCredentials(usuario);
+                bool respuestaClaveRed = true;//_activeDirectoryProvider.ValidateUserCredentials(usuario);
                 if (respuestaClaveRed)
                 {
                     respuesta = await _usuario.ObtenerDatosOperario(usuario.UsuarioRed);

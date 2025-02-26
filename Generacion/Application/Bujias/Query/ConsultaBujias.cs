@@ -12,10 +12,12 @@ namespace Generacion.Application.Bujias.Query
     {
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public ConsultaBujias(IConexionBD conexion, Function function)
+        private readonly Logger _logger;
+        public ConsultaBujias(IConexionBD conexion, Function function, Logger logger)
         {
             _function = function;
             _conexion = conexion;
+            _logger = logger;
         }
 
         public async Task<Respuesta<List<RegistroBujias>>> ObtenerdetalleControlCambio(string lado, int fila, int GE, string sitio)
@@ -48,7 +50,7 @@ namespace Generacion.Application.Bujias.Query
                         registro = new RegistroBujias()
                         {
                             IdDetalleControlCambio = reader["IdDetalleControlCambio"].ToString(),
-                            Detalle = int.Parse(reader["Detalle"].ToString()),
+                            Detalle = int.Parse(reader["area_nombre"].ToString()),
                             Fecha = reader["Fecha"].ToString(),
                             Lado = reader["Lado"].ToString(),
                             IdSubtituloCampo = reader["IdSubtituloCampo"].ToString(),
@@ -67,7 +69,7 @@ namespace Generacion.Application.Bujias.Query
                 }
                 catch (Exception ex)
                 {
-
+                    _logger.LogError("Error ObtenerdetalleControlCambio : " + ex.Message.ToString());
                 }
             }
             return respuesta;
@@ -107,7 +109,7 @@ namespace Generacion.Application.Bujias.Query
                 }
                 catch (Exception ex)
                 {
-
+                    _logger.LogError("Error ObtenerControlCambio : " + ex.Message.ToString());
                 }
             }
             return respuesta;
@@ -148,7 +150,7 @@ namespace Generacion.Application.Bujias.Query
                 }
                 catch (Exception ex)
                 {
-
+                    _logger.LogError("Error ObtenerRegistrosPorGE : " + ex.Message.ToString());
                 }
             }
             return respuesta;
@@ -180,7 +182,7 @@ namespace Generacion.Application.Bujias.Query
                 }
                 catch (Exception ex)
                 {
-
+                    _logger.LogError("Error ObtenerTotalBujiaUsado : " + ex.Message.ToString());
                 }
             }
             return respuesta;

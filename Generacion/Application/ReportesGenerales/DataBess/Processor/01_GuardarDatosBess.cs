@@ -33,7 +33,6 @@ namespace Generacion.Application.ReportesGenerales.DataBess.Processor
             }
 
             Task.CompletedTask.Wait();
-
         }
     }
 }

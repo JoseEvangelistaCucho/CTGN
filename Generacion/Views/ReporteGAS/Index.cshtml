@@ -8,11 +8,8 @@
     Dictionary<string, List<DetalleReporteGas>> detalleReporte = ViewData["detalleReporte"] as Dictionary<string, List<DetalleReporteGas>>;
     MReporteGAS idReportegas = ViewData["idReporteGas"] as MReporteGAS;
 
-
-
-
-    bool displayNuevaTabla18 = detalleReporte != null && detalleReporte["18"].Count >= 1 && detalleReporte["18"].Count <= 7;
-    bool displayNuevaTabla6 = detalleReporte != null && detalleReporte["6"].Count >= 1 && detalleReporte["6"].Count <= 7;
+    bool displayNuevaTabla18 = detalleReporte != null && detalleReporte.ContainsKey("18") && detalleReporte["18"].Count <= 7;
+    bool displayNuevaTabla6 = detalleReporte != null && detalleReporte.ContainsKey("6") && detalleReporte["6"].Count <= 7;
 
     var date = DateTime.Now;
 
@@ -40,6 +37,7 @@
     .datos-table-consola input {
         height: 24px;
         text-align-last: center;
+            text-align: center;
     }
 
     .datos-anteriores input {
@@ -117,10 +115,17 @@
     .colorInputBody table td {
         background: #CAE6F5;
     }
+
+    #contendor-datos-gas .table{
+           width: 165px;
+    }
 </style>
 <div>
     <div style="text-align: right;">
-        <button class="btn btn-primary " id="GuardarDatos">Guardar Datos</button>
+        <button class="btn btn-success " id="GuardarDatos">Guardar Datos</button>
+        @if(idReportegas != null && !string.IsNullOrEmpty(idReportegas.IdReporteGas)){
+            <button class="btn btn-primary " id="NuevaHoja">Nueva hoja</button>
+        }
     </div>
 
     <!--  <div>
@@ -224,10 +229,8 @@
                 @{
                     int cantidadTablas = 1;
                     DateTime fechaObjeto = DateTime.Now;
-                    switch (displayNuevaTabla18)
+                    if (displayNuevaTabla18)
                     {
-                        case true:
-
                             foreach (var item in detalleReporte["18"])
                             {
                                 fechaObjeto = DateTime.ParseExact(item.Fecha, "d/M/yyyy HH:mm:ss", null);
@@ -328,21 +331,18 @@
                                 </table>
                                 cantidadTablas++;
                             }
-                            //if (date.ToString("dd/MM/yyyy") != fechaObjeto.ToString("dd/MM/yyyy"))
-                            if (cantidadTablas < 8)
+                    }
+
+                            for (int i = cantidadTablas; i < 7; i++)
                             {
-                                goto case false;
-                            }
-                            break;
-                        case false:
-                            <table id="tabla-contenedor@(cantidadTablas)" class="table table-bordered datos-table-consola colorInputBody colorInputBody">
+                                <table id="tabla-contenedor2@(cantidadTablas)" class="table table-bordered datos-table-consola">
                                 <tr>
                                     <th class="cabecera-fecha-tabla">
-                                        <input oninput="convertirYMostrarFecha('fechaRegistroGas@(cantidadTablas)')" style="margin: 0;" class="titulo-tabla-horas" id="fechaRegistroGas@(cantidadTablas)" versionReporte='@idReportegas.IdReporteGas'>
+                                        <input 'fechaRegistroGas2@(cantidadTablas)' class="titulo-tabla-horas" id="fechaRegistroGas2@(cantidadTablas)" versionReporte='@idReportegas.IdReporteGas'>
                                     </th>
                                 </tr>
                                 <tr>
-                                    <th id="horaReporte@(cantidadTablas)">18:00</th>
+                                    <th id="horaReporte2@(cantidadTablas)">18:00</th>
                                 </tr>
                                 <tr>
                                     <td id="vc">
@@ -425,9 +425,9 @@
                                     </td>
                                 </tr>
                             </table>
-                            break;
-                    }
+                            }
                 }
+
             </div>
         </div>
 
@@ -514,10 +514,8 @@
                 @{
                     fechaObjeto = DateTime.Now;
                     cantidadTablas = 1;
-                    switch (displayNuevaTabla6)
+                    if (displayNuevaTabla6)
                     {
-                        case true:
-
                             foreach (var item in detalleReporte["6"])
                             {
                                 fechaObjeto = DateTime.ParseExact(item.Fecha, "d/M/yyyy HH:mm:ss", null);
@@ -618,114 +616,112 @@
                                 </table>
                                 cantidadTablas++;
                             }
-                            if (date.ToString("dd/MM/yyyy") != fechaObjeto.ToString("dd/MM/yyyy"))
-                            {
-                                goto case false;
-                            }
-                            break;
-
-                        case false:
-                            <table id="tabla-contenedor2@(cantidadTablas)" class="table table-bordered datos-table-consola">
-                                <tr>
-                                    <th class="cabecera-fecha-tabla">
-                                        <input 'fechaRegistroGas2@(cantidadTablas)' class="titulo-tabla-horas" id="fechaRegistroGas2@(cantidadTablas)" versionReporte='@idReportegas.IdReporteGas'>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th id="horaReporte2@(cantidadTablas)">6:00</th>
-                                </tr>
-                                <tr>
-                                    <td id="vc">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="vn">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="pl">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="fl" class="dato-visible-sobreado">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="sv">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="tl">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="fc">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="fs">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="da">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="dp" class="dato-visible-sobreado">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="pr">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="d1">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="d2">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <input disabled />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="caudalimetro" class="dato-visible-sobreado">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td id="presionIngreso">
-                                        <input class='input-limpiar' type="number" value="0" />
-                                    </td>
-                                </tr>
-                            </table>
-                            break;
+                          
+                      }
+                    for (int i = cantidadTablas; i < 7; i++)
+                    {
+                                        <table id="tabla-contenedor2@(cantidadTablas)" class="table table-bordered datos-table-consola">
+                                        <tr>
+                                            <th class="cabecera-fecha-tabla">
+                                                <input 'fechaRegistroGas2@(cantidadTablas)' class="titulo-tabla-horas" id="fechaRegistroGas2@(cantidadTablas)" versionReporte='@idReportegas.IdReporteGas'>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th id="horaReporte2@(cantidadTablas)">6:00</th>
+                                        </tr>
+                                        <tr>
+                                            <td id="vc">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="vn">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="pl">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="fl" class="dato-visible-sobreado">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="sv">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="tl">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="fc">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="fs">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="da">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="dp" class="dato-visible-sobreado">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="pr">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="d1">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="d2">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <input disabled />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="caudalimetro" class="dato-visible-sobreado">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="presionIngreso">
+                                                <input class='input-limpiar' type="number" value="0" />
+                                            </td>
+                                        </tr>
+                                    </table>
                     }
+                        
                 }
             </div>
         </div>
     </div>
 </div>
 
+@*
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.js"></script>
-
+*@
 <script>
 
     async function ObtenerReportePDF() {
@@ -734,7 +730,6 @@
             const elementDiv = document.getElementById('contendor-datos-gas');
             const elementUltimoDiv = document.getElementById('tabla-contenedor27');
 
-            // ... tu código anterior ...
 
             var doc = new jsPDF({
                 orientation: 'landscape',
@@ -858,11 +853,48 @@
          }
      });*/
 
+    var botonHojaNueva = document.getElementById('NuevaHoja'); 
 
+    if(botonHojaNueva){
+
+    document.getElementById('NuevaHoja').addEventListener('click', async function () {
+
+        var idPredeterminado = '@(idReportegas.IdReporteGas)';
+
+        fetch('@Url.Action("NuevaHoja", "ReporteGAS")', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(idPredeterminado)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.respuesta.idRespuesta === 0 || data.respuesta.idRespuesta === 1) {
+
+                        // Recarga la página
+                        location.reload();
+
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: "Error al generar nueva hoja.",
+                            icon: "error",
+                            button: "OK",
+                        });
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+    });
+
+    }
 
     document.getElementById('GuardarDatos').addEventListener('click', async function () {
         const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
-
 
         idReporte = datosOperario.IdSitio + "-ELD.CTL-OM-003_" + obtenerFecha("format");
 
@@ -898,9 +930,14 @@
 
         var lista1 = ObtenerDatosTabla('2', tablas2.length - 1);
         var lista2 = ObtenerDatosTabla('', tablas.length - 1);
+        
+        if(lista2){
+            listDetalleReporteGas = lista1.concat(lista2);
+        }else{
+            listDetalleReporteGas = lista1;
+        }
 
-        listDetalleReporteGas = lista1.concat(lista2);
-
+        
         if (listDetalleReporteGas != null) {
             fetch('@Url.Action("GuardarDetalle", "ReporteGAS")', {
                 method: "POST",
@@ -941,6 +978,8 @@
 
 
     function ObtenerDatosTabla(idTabla, cantidadTablas) {
+        console.log("idTabla :",idTabla);
+        console.log("cantidadTablas :",cantidadTablas);
 
         var listDetalleReporteGas = [];
         var fechaRegistro;
@@ -952,12 +991,18 @@
         for (var i = 1; i <= cantidadTablas; i++) {
 
             var hora = document.getElementById("horaReporte" + idTabla + i);
+            console.log("hora :",hora);
+            
+            if(hora != null){
+
+
 
             var horaSplit = hora.textContent.split(':');
 
             fechaRegistro = document.getElementById('fechaRegistroGas' + idTabla + i);
 
-            if (fechaRegistro != null && fechaRegistro.value != '0' && fechaRegistro.value != '') {
+            if (fechaRegistro != null && fechaRegistro.value != '0' && fechaRegistro.value != '') 
+            {
                 idPredeterminado = fechaRegistro.getAttribute('versionReporte');
 
                 idReporte = idPredeterminado == "" || idPredeterminado == null ? idReporte : idPredeterminado;
@@ -1009,6 +1054,8 @@
                 };
 
                 listDetalleReporteGas.push(detalleReporteGas);
+            }
+
             }
         }
         return listDetalleReporteGas;
@@ -1062,7 +1109,6 @@
             }
         });
     });
-
 </script>
 
 

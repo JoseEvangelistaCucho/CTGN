@@ -159,7 +159,7 @@
                 </tr>
                 <tr id="@detalleCabeceras["HorasCambio"].IdTipoEngine">
                     <th>@detalleCabeceras["HorasCambio"].Detalle</th>
-                    <td> <input type="number" id="calcularHorasCambio"> </td>
+                    <td> <input type="number" id="calcularHorasCambio" value="0"> </td>
                 </tr>
                 <tr id="@detalleCabeceras["TiempoDuracion"].IdTipoEngine" class="texto">
                     <th>@detalleCabeceras["TiempoDuracion"].Detalle</th>
@@ -261,7 +261,7 @@
 
                         console.log("data.respuesta.mensaje : ", data.respuesta.mensaje);
                         console.log("data.respuesta.detalle[0].item : ", data.respuesta.detalle[0].item);
-                        
+
                         tablaAnterior.style.display = "initial";
                         ladoSelectAnterior.innerText = "lado " + data.respuesta.detalle[0].lado;
                         filaSelectAnterior.innerText = data.respuesta.detalle[0].lado + data.respuesta.detalle[0].fila;
@@ -277,7 +277,7 @@
 
                         var tbody = "";
                         if (fechaAnterior.split(' ')[0] === fechaActual.value) {
-                            validacionDeActualizacionActual=true;
+                            validacionDeActualizacionActual = true;
                             tablaAnterior.style.display = "none";
 
                             itemActual.innerText = parseInt(data.respuesta.mensaje);
@@ -426,7 +426,7 @@
 
 
         if (!validacionDeActualizacionActual) {
-        tiempoActual.value = 0;
+            tiempoActual.value = 0;
         }
 
 
@@ -475,7 +475,7 @@
         if (filaSelect.value !== "-1") {
 
             try {
-                const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
+                //const resultado = await realizarPeticion("¿Estás seguro de que deseas realizar esta acción?");
 
 
                 var datosAnterior = obtenerDatosTablaAnterior();
@@ -484,6 +484,9 @@
                     var datos = obtenerDatosTablaActual().concat(datosAnterior);
                 } else {
                     var datos = obtenerDatosTablaActual();
+                }
+                if (datos == null) {
+                    return;
                 }
 
                 console.log("datos : ", datos);
@@ -613,41 +616,47 @@
 
             fechaInputActual = cuerpoTabla.rows[0].cells[2].querySelector('input').value;
 
-                for (let i = 1; i < cuerpoTabla.rows.length; i++) {
-                    const fila = cuerpoTabla.rows[i];
+            for (let i = 1; i < cuerpoTabla.rows.length; i++) {
+                const fila = cuerpoTabla.rows[i];
 
-                    const valorItem = cuerpoTabla.rows[cuerpoTabla.rows.length - 4].querySelector('th[id="itemActual"]').textContent.trim();
+                const valorItem = cuerpoTabla.rows[cuerpoTabla.rows.length - 4].querySelector('th[id="itemActual"]').textContent.trim();
 
-                    for (let j = 0; j < fila.cells.length; j++) {
-                        const celda = fila.cells[j];
+                for (let j = 0; j < fila.cells.length; j++) {
+                    const celda = fila.cells[j];
 
-                        const idFila = fila.cells[0].id;
-                        const input = celda.querySelector('input');
+                    const idFila = fila.cells[0].id;
+                    const input = celda.querySelector('input');
 
-                        var nota = '';
-                        if (input && input.value !== "") {
-                            if (fila.id === "HorasCambio") {
-                                HorasCambioActual = parseInt(input.value)
-                                nota = document.getElementById("nota").value;
-                            }
+                    var nota = '';
+                    if (input && input.value !== "") {
 
-                            const datosFila = {
-                            idDetalleControlCambio: datosOperario.IdSitio + '-' + generatorSelect.value + '-' + ladoSelect.value + '-' + valorItem + '-' + filaSelect.value + '-' + fila.id + '-' + fechaInputActual.replace(/\//g, '_'), //obtenerFecha("format"),
-                                detalle: parseInt(input.value),
-                                fecha: fechaInputActual,
-                                lado: ladoSelect.value,
-                                idSubtituloCampo: fila.id,
-                                fila: parseInt(filaSelect.value),
-                                item: parseInt(valorItem),
-                                IdControlCambio: datosOperario.IdSitio + '-' + idControlCambio + generatorSelect.value + '-' + fechaInputActual.replace(/\//g, '_'), //,
-                                sitio: datosOperario.IdSitio,
-                                numeroGenerador: generatorSelect.value,
-                                nota: nota
-                            };
-                            datos.push(datosFila);
+                        if (input.value =="") {
+                            alert("¡Todos los campos son requeridos!");
+                            return;
                         }
+
+                        if (fila.id === "HorasCambio") {
+                            HorasCambioActual = parseInt(input.value)
+                            nota = document.getElementById("nota").value;
+                        }
+
+                        const datosFila = {
+                            idDetalleControlCambio: datosOperario.IdSitio + '-' + generatorSelect.value + '-' + ladoSelect.value + '-' + valorItem + '-' + filaSelect.value + '-' + fila.id + '-' + fechaInputActual.replace(/\//g, '_'), //obtenerFecha("format"),
+                            detalle: parseInt(input.value),
+                            fecha: fechaInputActual,
+                            lado: ladoSelect.value,
+                            idSubtituloCampo: fila.id,
+                            fila: parseInt(filaSelect.value),
+                            item: parseInt(valorItem),
+                            IdControlCambio: datosOperario.IdSitio + '-' + idControlCambio + generatorSelect.value + '-' + fechaInputActual.replace(/\//g, '_'), //,
+                            sitio: datosOperario.IdSitio,
+                            numeroGenerador: generatorSelect.value,
+                            nota: nota
+                        };
+                        datos.push(datosFila);
                     }
                 }
+            }
 
             return datos;
         } catch (error) {
@@ -663,7 +672,7 @@
             var generatorSelect = document.getElementById("EGSelect");
 
             var datos = {
-                IdControlCambio: datosOperario.IdSitio+ '-'+ idControlCambio + generatorSelect.value + '-' + fechaInputActual.replace(/\//g, '_'),
+                IdControlCambio: datosOperario.IdSitio + '-' + idControlCambio + generatorSelect.value + '-' + fechaInputActual.replace(/\//g, '_'),
                 HorasOperacion: HorasCambioActual,
                 Fecha: fechaInputActual,
                 NumeroGenerador: parseInt(generatorSelect.value),

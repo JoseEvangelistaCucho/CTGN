@@ -1,4 +1,5 @@
-﻿using Generacion.Application.ReporteProduccion;
+﻿using Generacion.Application.Funciones;
+using Generacion.Application.ReporteProduccion;
 using Generacion.Models;
 using Generacion.Models.Bess;
 using Generacion.Models.ReporteProduccion;
@@ -20,12 +21,14 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
     {
         private readonly IReporteProduccion _reporteProduccion;
         private readonly IReporteBessLlipata _reporteBessLlipata;
-        
+        private readonly Logger _logger;
 
-        public ProduccionBessLlipataHandler(IReporteProduccion reporteProduccion, IReporteBessLlipata reporteBessLlipata)
+
+        public ProduccionBessLlipataHandler(IReporteProduccion reporteProduccion, IReporteBessLlipata reporteBessLlipata, Logger logger)
         {
             _reporteProduccion = reporteProduccion;
             _reporteBessLlipata = reporteBessLlipata;
+            _logger = logger;
         }
 
         public async Task<Respuesta<string>> Handle(ProduccionBessLlipata request, CancellationToken cancellationToken)
@@ -40,7 +43,7 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ProduccionBessLlipataHandler : " + ex.Message.ToString());
             }
 
             return respuesta;
@@ -54,7 +57,7 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error GuardarDetalleReporte : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -68,7 +71,7 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error GuardarDatosEvento : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -82,7 +85,7 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error GuardarDetallesReporte : " + ex.Message.ToString());
             }
             return respuesta;
         }

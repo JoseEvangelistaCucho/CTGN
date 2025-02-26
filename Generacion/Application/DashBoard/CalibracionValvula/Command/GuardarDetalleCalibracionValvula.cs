@@ -1,4 +1,5 @@
-﻿using Generacion.Models;
+﻿using Generacion.Application.Funciones;
+using Generacion.Models;
 using Generacion.Models.CalibracionValvula;
 using MediatR;
 
@@ -11,8 +12,9 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Command
 
     public class GuardarDetalleCalibracionValvulaHandler : IRequestHandler<GuardarDetalleCalibracionValvula, Respuesta<string>>
     {
+        private readonly Logger _logger;
         private readonly IRegistroCalibracionValvula _calibracionValvula;
-        public GuardarDetalleCalibracionValvulaHandler(IRegistroCalibracionValvula calibracionValvula)
+        public GuardarDetalleCalibracionValvulaHandler(IRegistroCalibracionValvula calibracionValvula, Logger logger)
         {
             _calibracionValvula = calibracionValvula;
         }
@@ -43,6 +45,7 @@ namespace Generacion.Application.DashBoard.CalibracionValvula.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = "Error al procesar la solicitud.";
+                _logger.LogError("Error GuardarDetalleCalibracionValvulaHandler : " + ex.Message.ToString());
             }
             return respuesta;
         }

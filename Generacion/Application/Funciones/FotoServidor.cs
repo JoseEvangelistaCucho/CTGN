@@ -2,10 +2,7 @@
 using Stimulsoft.Report.Mvc;
 using Stimulsoft.Report;
 using Newtonsoft.Json;
-using static Stimulsoft.Report.Help.StiHelpProvider;
 using Generacion.Application.Common;
-using NuGet.Packaging;
-using Stimulsoft.Base;
 
 namespace Generacion.Application.Funciones
 {

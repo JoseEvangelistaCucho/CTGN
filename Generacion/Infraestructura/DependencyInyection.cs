@@ -1,5 +1,4 @@
-﻿using Generacion.Application.DataBase;
-using Generacion.Application.DataBase.cache;
+﻿using Generacion.Application.DataBase.cache;
 using Generacion.Application.DatosConsola;
 using Generacion.Application.DatosConsola.Command;
 using Generacion.Application.DatosConsola.Query;
@@ -19,7 +18,6 @@ using Generacion.Application.ReporteGAS.Command;
 using Generacion.Application.Usuario;
 using Generacion.Application.Usuario.Command;
 using Generacion.Application.Usuario.Query;
-using WebApi.Application.Common.Interfaces;
 using WebApi.Application.ValidatePassword.Queries;
 using System.DirectoryServices.AccountManagement;
 using Generacion.Application.Usuario.Session;
@@ -159,8 +157,9 @@ namespace Generacion.Infraestructura
             services.AddScoped(typeof(DatosLavadoTurbo));
             services.AddScoped(typeof(DatosCalibracionValvula));
             services.AddScoped(typeof(GuardarDatosDeSession));
+            services.AddScoped(typeof(Logger));
 
-
+            
             services.AddSingleton<IActiveDirectoryProvider, ActiveDirectoryProvider>();
             var principalContext = new PrincipalContext(ContextType.Domain);
 

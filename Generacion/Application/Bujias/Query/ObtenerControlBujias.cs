@@ -1,9 +1,6 @@
-﻿using Generacion.Application.Almacen.Query;
-using Generacion.Application.Almacen;
-using Generacion.Application.Funciones;
+﻿using Generacion.Application.Funciones;
 using Generacion.Models;
 using Generacion.Models.Almacen.Bujias;
-using Generacion.Models.DatosConsola;
 using Generacion.Models.Usuario;
 using MediatR;
 using Newtonsoft.Json;
@@ -17,12 +14,13 @@ namespace Generacion.Application.Bujias.Query
     {
         private readonly Function _function;
         private readonly ConsultaBujias _consultaBujias;
+        private readonly Logger _logger;
 
-        public ObtenerControlBujiasHandler(Function function, ConsultaBujias consultaBujias)
+        public ObtenerControlBujiasHandler(Function function, ConsultaBujias consultaBujias, Logger logger)
         {
             _consultaBujias = consultaBujias;
-
             _function = function;
+            _logger = logger;
         }
         public async Task<Respuesta<Dictionary<string, object>>> Handle(ObtenerControlBujias request, CancellationToken cancellationToken)
         {
@@ -40,6 +38,7 @@ namespace Generacion.Application.Bujias.Query
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = "Error al procesar la solicitud.";
+                _logger.LogError("Error ObtenerControlBujiasHandler : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -73,7 +72,7 @@ namespace Generacion.Application.Bujias.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDiccionarioControlPorGE : " + ex.Message.ToString());
             }
 
             return respuesta;
@@ -123,7 +122,7 @@ namespace Generacion.Application.Bujias.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerControlCambioPorLado : " + ex.Message.ToString());
             }
 
             return respuesta;

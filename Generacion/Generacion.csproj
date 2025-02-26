@@ -6,18 +6,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="wwwroot\js\site.js" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="wwwroot\css\Views\Login\Index.css" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="wwwroot\js\site.js" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <Folder Include="Application\BessLlipata\Comand\" />
     <Folder Include="Application\DashBoard\CambioAceite\Command\Processor\PostProcessor\" />
-    <Folder Include="wwwroot\js\PDF\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.24" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="EPPlus" Version="7.0.10" />
     <PackageReference Include="MediatR" Version="11.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
@@ -27,9 +27,14 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.4.4" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
+	  <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+
+	  <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
     <PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+
+	  <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.0.1" />
+	  <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.0.1" />
+
   </ItemGroup>
 
 </Project>

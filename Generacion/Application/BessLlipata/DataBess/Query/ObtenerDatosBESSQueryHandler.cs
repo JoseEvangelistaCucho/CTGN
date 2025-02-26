@@ -15,10 +15,12 @@ namespace Generacion.Application.BessLlipata.DataBess.Query
     public class ObtenerDatosBESSQueryHandler : IRequestHandler<ObtenerDatosBESSQuery, Respuesta<Dictionary<string, object>>>
     {
         //DataBess
+        private readonly Logger _logger;
         private readonly ObtenerDatosBessLlipata _obtenerDatosBessLlipata;
         private readonly Function _function;
-        public ObtenerDatosBESSQueryHandler(ObtenerDatosBessLlipata obtenerDatosBessLlipata, Function function)
+        public ObtenerDatosBESSQueryHandler(ObtenerDatosBessLlipata obtenerDatosBessLlipata, Function function, Logger logger)
         {
+            _logger = logger;
             _function = function;
             _obtenerDatosBessLlipata = obtenerDatosBessLlipata;
         }
@@ -34,7 +36,7 @@ namespace Generacion.Application.BessLlipata.DataBess.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosBESSQueryHandler : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -51,7 +53,7 @@ namespace Generacion.Application.BessLlipata.DataBess.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosBessPorFecha : " + ex.Message.ToString());
 
             }
             return respuesta;

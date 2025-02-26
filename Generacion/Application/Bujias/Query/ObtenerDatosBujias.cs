@@ -21,13 +21,15 @@ namespace Generacion.Application.Bujias.Query
 
         private readonly IBujias _bujias;
         private readonly ConsultaBujias _consultaBujias;
-        public ObtenerDatosBujiasHandler(Function function, ConsultasAlmacen consultasAlmacen, IAlmacen almacen, IBujias bujias, ConsultaBujias consultaBujias)
+        private readonly Logger _logger;
+        public ObtenerDatosBujiasHandler(Function function, ConsultasAlmacen consultasAlmacen, IAlmacen almacen, IBujias bujias, ConsultaBujias consultaBujias, Logger logger)
         {
             _function = function;
             _consultaBujias = consultaBujias;
             _bujias = bujias;
             _almacen = almacen;
             _consultasAlmacen = consultasAlmacen;
+            _logger = logger;
         }
         public async Task<Respuesta<Dictionary<string, object>>> Handle(ObtenerDatosBujias request, CancellationToken cancellationToken)
         {
@@ -45,7 +47,7 @@ namespace Generacion.Application.Bujias.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosBujiasHandler : " + ex.Message.ToString());
             }
 
             return respuesta;

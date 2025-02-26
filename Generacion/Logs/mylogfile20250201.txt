@@ -1,0 +1,227 @@
+2025-02-01 00:28:12.553 -05:00 [INF] User profile is available. Using 'C:\Users\jevangelista\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-02-01 00:28:13.646 -05:00 [INF] Now listening on: https://localhost:7100
+2025-02-01 00:28:13.648 -05:00 [INF] Now listening on: http://localhost:5035
+2025-02-01 00:28:13.767 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-02-01 00:28:13.779 -05:00 [INF] Hosting environment: Development
+2025-02-01 00:28:13.799 -05:00 [INF] Content root path: C:\Users\jevangelista\OneDrive - ELECTRO DUNAS S.A.A\Escritorio\Tareas\Generacion\Code\CTGN\Generacion
+2025-02-01 00:28:19.370 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/ - -
+2025-02-01 00:28:19.808 -05:00 [INF] Executing endpoint 'Generacion.Controllers.LoginController.Index (Generacion)'
+2025-02-01 00:28:19.848 -05:00 [INF] Route matched with {action = "Index", controller = "Login"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller Generacion.Controllers.LoginController (Generacion).
+2025-02-01 00:28:19.951 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 00:28:20.168 -05:00 [INF] Executed ViewResult - view Index executed in 213.5207ms.
+2025-02-01 00:28:20.202 -05:00 [INF] Executed action Generacion.Controllers.LoginController.Index (Generacion) in 343.1802ms
+2025-02-01 00:28:20.202 -05:00 [INF] Executed endpoint 'Generacion.Controllers.LoginController.Index (Generacion)'
+2025-02-01 00:28:20.203 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 00:28:20.204 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/css/sweetalert2.min.css - -
+2025-02-01 00:28:20.235 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/js/sweetalert2.min.js - -
+2025-02-01 00:28:20.241 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/ - - - 200 - text/html;+charset=utf-8 864.9178ms
+2025-02-01 00:28:20.241 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/css/Views/Login/Index.css?v=TT00ieUnXuUWwCYKs8wUJjhVRH1XB3gpt1GknzPQdYs - -
+2025-02-01 00:28:20.246 -05:00 [INF] The file /css/sweetalert2.min.css was not modified
+2025-02-01 00:28:20.247 -05:00 [INF] The file /js/sweetalert2.min.js was not modified
+2025-02-01 00:28:20.247 -05:00 [INF] The file /css/Views/Login/Index.css was not modified
+2025-02-01 00:28:20.247 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/vendor/bootstrap/bootstrap.min.css - -
+2025-02-01 00:28:20.250 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/css/Views/Login/Index.css?v=TT00ieUnXuUWwCYKs8wUJjhVRH1XB3gpt1GknzPQdYs - - - 304 - text/css 8.6676ms
+2025-02-01 00:28:20.250 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/js/sweetalert2.min.js - - - 304 - application/javascript 14.9657ms
+2025-02-01 00:28:20.250 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/css/sweetalert2.min.css - - - 304 - text/css 45.7509ms
+2025-02-01 00:28:20.250 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 46.3758ms
+2025-02-01 00:28:20.272 -05:00 [INF] CORS policy execution successful.
+2025-02-01 00:28:20.274 -05:00 [INF] The file /vendor/bootstrap/bootstrap.min.css was not modified
+2025-02-01 00:28:20.277 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/vendor/bootstrap/bootstrap.min.css - - - 304 - text/css 30.1260ms
+2025-02-01 00:28:20.289 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 00:28:20.318 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/portalgeneracion/img/Fondo_Generacion.png - -
+2025-02-01 00:28:20.338 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/portalgeneracion/img/Fondo_Generacion.png - - - 404 0 - 21.1193ms
+2025-02-01 00:28:20.694 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 402.5018ms
+2025-02-01 00:28:49.656 -05:00 [INF] Request starting HTTP/2 POST https://localhost:7100/Login/ValidarSession application/x-www-form-urlencoded;+charset=UTF-8 48
+2025-02-01 00:28:49.667 -05:00 [INF] CORS policy execution successful.
+2025-02-01 00:28:49.688 -05:00 [INF] Executing endpoint 'Generacion.Controllers.LoginController.ValidarSession (Generacion)'
+2025-02-01 00:28:49.736 -05:00 [INF] Route matched with {action = "ValidarSession", controller = "Login"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult] ValidarSession(Generacion.Models.Session.UsuarioSession) on controller Generacion.Controllers.LoginController (Generacion).
+2025-02-01 00:28:53.006 -05:00 [INF] Executing JsonResult, writing value of type '<>f__AnonymousType2`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-02-01 00:28:53.010 -05:00 [INF] Executed action Generacion.Controllers.LoginController.ValidarSession (Generacion) in 3272.9454ms
+2025-02-01 00:28:53.010 -05:00 [INF] Executed endpoint 'Generacion.Controllers.LoginController.ValidarSession (Generacion)'
+2025-02-01 00:28:53.018 -05:00 [INF] Session started; Key:9a92296e-9130-0535-ab44-6c231520891a, Id:5c5e67a5-5e90-b11e-8151-3872cd412e57
+2025-02-01 00:28:53.019 -05:00 [INF] Request finished HTTP/2 POST https://localhost:7100/Login/ValidarSession application/x-www-form-urlencoded;+charset=UTF-8 48 - 200 - application/json;+charset=utf-8 3363.1748ms
+2025-02-01 00:28:54.726 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/Home - -
+2025-02-01 00:28:54.733 -05:00 [INF] Executing endpoint 'Generacion.Controllers.HomeController.Index (Generacion)'
+2025-02-01 00:28:54.739 -05:00 [INF] Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Generacion.Controllers.HomeController (Generacion).
+2025-02-01 00:29:01.085 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 00:29:01.195 -05:00 [INF] Executed ViewResult - view Index executed in 110.8676ms.
+2025-02-01 00:29:01.197 -05:00 [INF] Executed action Generacion.Controllers.HomeController.Index (Generacion) in 6456.401ms
+2025-02-01 00:29:01.200 -05:00 [INF] Executed endpoint 'Generacion.Controllers.HomeController.Index (Generacion)'
+2025-02-01 00:29:01.205 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/Home - - - 200 - text/html;+charset=utf-8 6477.3307ms
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/vendor/fontawesome-free/css/all.min.css - -
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/js/PDF/html2canvas.min.js - -
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/js/PDF/papaparse.min.js - -
+2025-02-01 00:29:01.249 -05:00 [INF] The file /vendor/fontawesome-free/css/all.min.css was not modified
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/js/PDF/dom-to-image.min.js - -
+2025-02-01 00:29:01.249 -05:00 [INF] The file /js/PDF/html2canvas.min.js was not modified
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/css/Nunito.css - -
+2025-02-01 00:29:01.249 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/vendor/fontawesome-free/css/all.min.css - - - 304 - text/css 1.6620ms
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/css/sb-admin-2.min.css - -
+2025-02-01 00:29:01.249 -05:00 [INF] The file /js/PDF/dom-to-image.min.js was not modified
+2025-02-01 00:29:01.248 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/Generacion.styles.css - -
+2025-02-01 00:29:01.249 -05:00 [INF] The file /js/PDF/papaparse.min.js was not modified
+2025-02-01 00:29:01.249 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 0.7670ms
+2025-02-01 00:29:01.249 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/js/PDF/html2canvas.min.js - - - 304 - application/javascript 1.0992ms
+2025-02-01 00:29:01.249 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/js/PDF/papaparse.min.js - - - 304 - application/javascript 1.2192ms
+2025-02-01 00:29:01.249 -05:00 [INF] The file /css/Nunito.css was not modified
+2025-02-01 00:29:01.249 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/js/PDF/dom-to-image.min.js - - - 304 - application/javascript 1.0583ms
+2025-02-01 00:29:01.249 -05:00 [INF] The file /css/sb-admin-2.min.css was not modified
+2025-02-01 00:29:01.250 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/css/sb-admin-2.min.css - - - 304 - text/css 2.3215ms
+2025-02-01 00:29:01.250 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/css/Nunito.css - - - 304 - text/css 2.2075ms
+2025-02-01 00:29:01.250 -05:00 [INF] The file /Generacion.styles.css was not modified
+2025-02-01 00:29:01.251 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/Generacion.styles.css - - - 304 - text/css 2.7223ms
+2025-02-01 00:29:01.259 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/css/bootstrap-datepicker.min.css - -
+2025-02-01 00:29:01.260 -05:00 [INF] The file /css/bootstrap-datepicker.min.css was not modified
+2025-02-01 00:29:01.260 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/css/bootstrap-datepicker.min.css - - - 304 - text/css 1.2458ms
+2025-02-01 00:29:01.262 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/js/datepicker/bootstrap-datepicker.min.js - -
+2025-02-01 00:29:01.263 -05:00 [INF] The file /js/datepicker/bootstrap-datepicker.min.js was not modified
+2025-02-01 00:29:01.263 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/js/datepicker/bootstrap-datepicker.min.js - - - 304 - application/javascript 0.7413ms
+2025-02-01 00:29:01.269 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/js/datepicker/bootstrap-datepicker.es.min.js - -
+2025-02-01 00:29:01.269 -05:00 [INF] The file /js/datepicker/bootstrap-datepicker.es.min.js was not modified
+2025-02-01 00:29:01.270 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/js/datepicker/bootstrap-datepicker.es.min.js - - - 304 - application/javascript 0.5841ms
+2025-02-01 00:29:01.325 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 00:29:01.407 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 81.9615ms
+2025-02-01 00:29:01.440 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/vendor/fontawesome-free/webfonts/XRXV3I6Li01BKofINeaB.woff2 - -
+2025-02-01 00:29:01.442 -05:00 [INF] CORS policy execution successful.
+2025-02-01 00:29:01.443 -05:00 [INF] The file /vendor/fontawesome-free/webfonts/XRXV3I6Li01BKofINeaB.woff2 was not modified
+2025-02-01 00:29:01.444 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/vendor/fontawesome-free/webfonts/XRXV3I6Li01BKofINeaB.woff2 - - - 304 - font/woff2 3.9358ms
+2025-02-01 00:29:01.729 -05:00 [INF] Request starting HTTP/1.1 GET https://localhost:7100/vendor/bootstrap/js/bootstrap.bundle.min.js.map - -
+2025-02-01 00:29:01.758 -05:00 [INF] Sending file. Request path: '/vendor/bootstrap/js/bootstrap.bundle.min.js.map'. Physical path: 'C:\Users\jevangelista\OneDrive - ELECTRO DUNAS S.A.A\Escritorio\Tareas\Generacion\Code\CTGN\Generacion\wwwroot\vendor\bootstrap\js\bootstrap.bundle.min.js.map'
+2025-02-01 00:29:01.759 -05:00 [INF] Request finished HTTP/1.1 GET https://localhost:7100/vendor/bootstrap/js/bootstrap.bundle.min.js.map - - - 200 316181 text/plain 29.2125ms
+2025-02-01 00:29:09.153 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/ReporteProduccion - -
+2025-02-01 00:29:09.157 -05:00 [INF] Executing endpoint 'Generacion.Controllers.ReporteProduccionController.Index (Generacion)'
+2025-02-01 00:29:09.161 -05:00 [INF] Route matched with {action = "Index", controller = "ReporteProduccion"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Generacion.Controllers.ReporteProduccionController (Generacion).
+2025-02-01 00:29:22.680 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 00:29:22.719 -05:00 [INF] Executed ViewResult - view Index executed in 40.9182ms.
+2025-02-01 00:29:22.720 -05:00 [INF] Executed action Generacion.Controllers.ReporteProduccionController.Index (Generacion) in 13554.328ms
+2025-02-01 00:29:22.720 -05:00 [INF] Executed endpoint 'Generacion.Controllers.ReporteProduccionController.Index (Generacion)'
+2025-02-01 00:29:22.720 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/ReporteProduccion - - - 200 - text/html;+charset=utf-8 13563.0353ms
+2025-02-01 00:29:22.820 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 00:29:22.820 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 00:29:22.822 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 2.0560ms
+2025-02-01 00:29:22.839 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 18.6743ms
+2025-02-01 00:32:38.015 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/DatosConsola?fecha=29/01/2025 - -
+2025-02-01 00:32:38.101 -05:00 [INF] Executing endpoint 'Generacion.Controllers.DatosConsolaController.Index (Generacion)'
+2025-02-01 00:32:38.165 -05:00 [INF] Route matched with {action = "Index", controller = "DatosConsola"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index(System.String) on controller Generacion.Controllers.DatosConsolaController (Generacion).
+2025-02-01 00:32:47.509 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 00:32:47.650 -05:00 [INF] Executed ViewResult - view Index executed in 147.0423ms.
+2025-02-01 00:32:47.651 -05:00 [INF] Executed action Generacion.Controllers.DatosConsolaController.Index (Generacion) in 9482.9228ms
+2025-02-01 00:32:47.651 -05:00 [INF] Executed endpoint 'Generacion.Controllers.DatosConsolaController.Index (Generacion)'
+2025-02-01 00:32:47.651 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/DatosConsola?fecha=29/01/2025 - - - 200 - text/html;+charset=utf-8 9639.9008ms
+2025-02-01 00:32:47.672 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 00:32:47.672 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 00:32:47.673 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 1.6465ms
+2025-02-01 00:32:47.734 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 61.9834ms
+2025-02-01 00:32:47.854 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/vendor/fontawesome-free/webfonts/XRXX3I6Li01BKofIMNaDRs4.woff2 - -
+2025-02-01 00:32:47.857 -05:00 [INF] CORS policy execution successful.
+2025-02-01 00:32:47.874 -05:00 [INF] The file /vendor/fontawesome-free/webfonts/XRXX3I6Li01BKofIMNaDRs4.woff2 was not modified
+2025-02-01 00:32:47.876 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/vendor/fontawesome-free/webfonts/XRXX3I6Li01BKofIMNaDRs4.woff2 - - - 304 - font/woff2 21.1945ms
+2025-02-01 00:33:06.569 -05:00 [INF] Request starting HTTP/2 POST https://localhost:7100/Login/CerrarSession - 0
+2025-02-01 00:33:06.569 -05:00 [INF] CORS policy execution successful.
+2025-02-01 00:33:06.575 -05:00 [INF] Executing endpoint 'Generacion.Controllers.LoginController.CerrarSession (Generacion)'
+2025-02-01 00:33:06.584 -05:00 [INF] Route matched with {action = "CerrarSession", controller = "Login"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult] CerrarSession() on controller Generacion.Controllers.LoginController (Generacion).
+2025-02-01 00:33:06.619 -05:00 [INF] Executing JsonResult, writing value of type '<>f__AnonymousType2`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-02-01 00:33:06.626 -05:00 [INF] Executed action Generacion.Controllers.LoginController.CerrarSession (Generacion) in 42.313ms
+2025-02-01 00:33:06.626 -05:00 [INF] Executed endpoint 'Generacion.Controllers.LoginController.CerrarSession (Generacion)'
+2025-02-01 00:33:06.628 -05:00 [INF] Request finished HTTP/2 POST https://localhost:7100/Login/CerrarSession - 0 - 200 - application/json;+charset=utf-8 59.5463ms
+2025-02-01 00:33:06.657 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/ - -
+2025-02-01 00:33:06.664 -05:00 [INF] Executing endpoint 'Generacion.Controllers.LoginController.Index (Generacion)'
+2025-02-01 00:33:06.670 -05:00 [INF] Route matched with {action = "Index", controller = "Login"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller Generacion.Controllers.LoginController (Generacion).
+2025-02-01 00:33:06.673 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 00:33:06.676 -05:00 [INF] Executed ViewResult - view Index executed in 4.327ms.
+2025-02-01 00:33:06.676 -05:00 [INF] Executed action Generacion.Controllers.LoginController.Index (Generacion) in 6.1503ms
+2025-02-01 00:33:06.677 -05:00 [INF] Executed endpoint 'Generacion.Controllers.LoginController.Index (Generacion)'
+2025-02-01 00:33:06.677 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/ - - - 200 - text/html;+charset=utf-8 20.3650ms
+2025-02-01 00:33:06.732 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 00:33:06.733 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 0.4171ms
+2025-02-01 00:33:06.733 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 00:33:06.854 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 121.0621ms
+2025-02-01 08:00:57.963 -05:00 [INF] User profile is available. Using 'C:\Users\jevangelista\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-02-01 08:00:59.865 -05:00 [INF] Now listening on: https://localhost:7100
+2025-02-01 08:00:59.870 -05:00 [INF] Now listening on: http://localhost:5035
+2025-02-01 08:00:59.967 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-02-01 08:00:59.974 -05:00 [INF] Hosting environment: Development
+2025-02-01 08:00:59.987 -05:00 [INF] Content root path: C:\Users\jevangelista\OneDrive - ELECTRO DUNAS S.A.A\Escritorio\Tareas\Generacion\Code\CTGN\Generacion
+2025-02-01 08:01:04.142 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/ - -
+2025-02-01 08:01:05.136 -05:00 [INF] Executing endpoint 'Generacion.Controllers.LoginController.Index (Generacion)'
+2025-02-01 08:01:05.238 -05:00 [INF] Route matched with {action = "Index", controller = "Login"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller Generacion.Controllers.LoginController (Generacion).
+2025-02-01 08:01:05.524 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 08:01:05.936 -05:00 [INF] Executed ViewResult - view Index executed in 412.683ms.
+2025-02-01 08:01:05.954 -05:00 [INF] Executed action Generacion.Controllers.LoginController.Index (Generacion) in 713.8818ms
+2025-02-01 08:01:05.954 -05:00 [INF] Executed endpoint 'Generacion.Controllers.LoginController.Index (Generacion)'
+2025-02-01 08:01:05.998 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 08:01:06.002 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/ - - - 200 - text/html;+charset=utf-8 1898.4247ms
+2025-02-01 08:01:06.032 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 45.8132ms
+2025-02-01 08:01:06.109 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 08:01:06.122 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/portalgeneracion/img/Fondo_Generacion.png - -
+2025-02-01 08:01:06.144 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/portalgeneracion/img/Fondo_Generacion.png - - - 404 0 - 22.2011ms
+2025-02-01 08:01:06.884 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 775.1041ms
+2025-02-01 08:01:11.712 -05:00 [INF] Request starting HTTP/2 POST https://localhost:7100/Login/ValidarSession application/x-www-form-urlencoded;+charset=UTF-8 47
+2025-02-01 08:01:11.768 -05:00 [INF] CORS policy execution successful.
+2025-02-01 08:01:11.784 -05:00 [INF] Executing endpoint 'Generacion.Controllers.LoginController.ValidarSession (Generacion)'
+2025-02-01 08:01:11.833 -05:00 [INF] Route matched with {action = "ValidarSession", controller = "Login"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult] ValidarSession(Generacion.Models.Session.UsuarioSession) on controller Generacion.Controllers.LoginController (Generacion).
+2025-02-01 08:01:15.623 -05:00 [INF] Executing JsonResult, writing value of type '<>f__AnonymousType2`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-02-01 08:01:15.631 -05:00 [INF] Executed action Generacion.Controllers.LoginController.ValidarSession (Generacion) in 3797.8238ms
+2025-02-01 08:01:15.631 -05:00 [INF] Executed endpoint 'Generacion.Controllers.LoginController.ValidarSession (Generacion)'
+2025-02-01 08:01:15.645 -05:00 [INF] Session started; Key:f7229fc1-8dd0-31f4-99dc-a568436edc6a, Id:b10f8158-811e-17b6-5732-e52cf6a9a0e2
+2025-02-01 08:01:15.648 -05:00 [INF] Request finished HTTP/2 POST https://localhost:7100/Login/ValidarSession application/x-www-form-urlencoded;+charset=UTF-8 47 - 200 - application/json;+charset=utf-8 3936.1362ms
+2025-02-01 08:01:16.865 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/Home - -
+2025-02-01 08:01:16.875 -05:00 [INF] Executing endpoint 'Generacion.Controllers.HomeController.Index (Generacion)'
+2025-02-01 08:01:16.886 -05:00 [INF] Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Generacion.Controllers.HomeController (Generacion).
+2025-02-01 08:01:23.670 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 08:01:23.870 -05:00 [INF] Executed ViewResult - view Index executed in 201.1412ms.
+2025-02-01 08:01:23.873 -05:00 [INF] Executed action Generacion.Controllers.HomeController.Index (Generacion) in 6985.286ms
+2025-02-01 08:01:23.874 -05:00 [INF] Executed endpoint 'Generacion.Controllers.HomeController.Index (Generacion)'
+2025-02-01 08:01:23.879 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/Home - - - 200 - text/html;+charset=utf-8 7014.7692ms
+2025-02-01 08:01:24.019 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 08:01:24.019 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 08:01:24.020 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 0.8836ms
+2025-02-01 08:01:24.050 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 30.3313ms
+2025-02-01 08:01:24.461 -05:00 [INF] Request starting HTTP/1.1 GET https://localhost:7100/vendor/bootstrap/js/bootstrap.bundle.min.js.map - -
+2025-02-01 08:01:24.546 -05:00 [INF] Sending file. Request path: '/vendor/bootstrap/js/bootstrap.bundle.min.js.map'. Physical path: 'C:\Users\jevangelista\OneDrive - ELECTRO DUNAS S.A.A\Escritorio\Tareas\Generacion\Code\CTGN\Generacion\wwwroot\vendor\bootstrap\js\bootstrap.bundle.min.js.map'
+2025-02-01 08:01:24.547 -05:00 [INF] Request finished HTTP/1.1 GET https://localhost:7100/vendor/bootstrap/js/bootstrap.bundle.min.js.map - - - 200 316181 text/plain 85.5917ms
+2025-02-01 08:01:29.831 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/DatosConsola?fecha= - -
+2025-02-01 08:01:29.835 -05:00 [INF] Executing endpoint 'Generacion.Controllers.DatosConsolaController.Index (Generacion)'
+2025-02-01 08:01:29.842 -05:00 [INF] Route matched with {action = "Index", controller = "DatosConsola"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index(System.String) on controller Generacion.Controllers.DatosConsolaController (Generacion).
+2025-02-01 08:01:32.509 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 08:01:32.713 -05:00 [INF] Executed ViewResult - view Index executed in 205.3566ms.
+2025-02-01 08:01:32.727 -05:00 [INF] Executed action Generacion.Controllers.DatosConsolaController.Index (Generacion) in 2884.7243ms
+2025-02-01 08:01:32.727 -05:00 [INF] Executed endpoint 'Generacion.Controllers.DatosConsolaController.Index (Generacion)'
+2025-02-01 08:01:32.727 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/DatosConsola?fecha= - - - 200 - text/html;+charset=utf-8 2896.3599ms
+2025-02-01 08:01:33.091 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 08:01:33.091 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 08:01:33.092 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 0.7451ms
+2025-02-01 08:01:33.153 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 61.6518ms
+2025-02-01 08:01:38.050 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/ReporteProduccion - -
+2025-02-01 08:01:38.055 -05:00 [INF] Executing endpoint 'Generacion.Controllers.ReporteProduccionController.Index (Generacion)'
+2025-02-01 08:01:38.062 -05:00 [INF] Route matched with {action = "Index", controller = "ReporteProduccion"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Generacion.Controllers.ReporteProduccionController (Generacion).
+2025-02-01 08:01:51.590 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 08:01:51.654 -05:00 [INF] Executed ViewResult - view Index executed in 64.5256ms.
+2025-02-01 08:01:51.654 -05:00 [INF] Executed action Generacion.Controllers.ReporteProduccionController.Index (Generacion) in 13589.7803ms
+2025-02-01 08:01:51.654 -05:00 [INF] Executed endpoint 'Generacion.Controllers.ReporteProduccionController.Index (Generacion)'
+2025-02-01 08:01:51.654 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/ReporteProduccion - - - 200 - text/html;+charset=utf-8 13604.1412ms
+2025-02-01 08:01:51.668 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 08:01:51.668 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 08:01:51.669 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 0.7047ms
+2025-02-01 08:01:51.709 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 41.2049ms
+2025-02-01 08:06:43.045 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/ReporteProduccion - -
+2025-02-01 08:06:43.184 -05:00 [INF] Executing endpoint 'Generacion.Controllers.ReporteProduccionController.Index (Generacion)'
+2025-02-01 08:06:43.208 -05:00 [INF] Route matched with {action = "Index", controller = "ReporteProduccion"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Generacion.Controllers.ReporteProduccionController (Generacion).
+2025-02-01 08:06:54.542 -05:00 [INF] Executing ViewResult, running view Index.
+2025-02-01 08:06:54.564 -05:00 [INF] Executed ViewResult - view Index executed in 27.7985ms.
+2025-02-01 08:06:54.565 -05:00 [INF] Executed action Generacion.Controllers.ReporteProduccionController.Index (Generacion) in 11348.9926ms
+2025-02-01 08:06:54.565 -05:00 [INF] Executed endpoint 'Generacion.Controllers.ReporteProduccionController.Index (Generacion)'
+2025-02-01 08:06:54.566 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/ReporteProduccion - - - 200 - text/html;+charset=utf-8 11525.6843ms
+2025-02-01 08:06:54.608 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_vs/browserLink - -
+2025-02-01 08:06:54.608 -05:00 [INF] Request starting HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - -
+2025-02-01 08:06:54.610 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_framework/aspnetcore-browser-refresh.js - - - 200 12352 application/javascript;+charset=utf-8 3.2966ms
+2025-02-01 08:06:54.652 -05:00 [INF] Request finished HTTP/2 GET https://localhost:7100/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 44.4156ms
+2025-02-01 08:18:16.380 -05:00 [INF] Request starting HTTP/2 POST https://localhost:7100/ReporteProduccion/GuardarDetalleProduccion application/json 2628
+2025-02-01 08:18:16.387 -05:00 [INF] CORS policy execution successful.
+2025-02-01 08:18:16.404 -05:00 [INF] Executing endpoint 'Generacion.Controllers.ReporteProduccionController.GuardarDetalleProduccion (Generacion)'
+2025-02-01 08:18:16.503 -05:00 [INF] Route matched with {action = "GuardarDetalleProduccion", controller = "ReporteProduccion"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.JsonResult] GuardarDetalleProduccion(Generacion.Controllers.Produccion) on controller Generacion.Controllers.ReporteProduccionController (Generacion).
+2025-02-01 08:18:18.542 -05:00 [INF] Executing JsonResult, writing value of type '<>f__AnonymousType0`1[[Generacion.Models.Respuesta`1[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Generacion, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2025-02-01 08:18:18.552 -05:00 [INF] Executed action Generacion.Controllers.ReporteProduccionController.GuardarDetalleProduccion (Generacion) in 2048.3143ms
+2025-02-01 08:18:18.556 -05:00 [INF] Executed endpoint 'Generacion.Controllers.ReporteProduccionController.GuardarDetalleProduccion (Generacion)'
+2025-02-01 08:18:18.562 -05:00 [INF] Request finished HTTP/2 POST https://localhost:7100/ReporteProduccion/GuardarDetalleProduccion application/json 2628 - 200 - application/json;+charset=utf-8 2181.0535ms

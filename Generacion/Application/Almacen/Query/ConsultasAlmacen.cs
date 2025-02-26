@@ -10,10 +10,12 @@ namespace Generacion.Application.Almacen.Query
 {
     public class ConsultasAlmacen
     {
+        private readonly Logger _logger;
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public ConsultasAlmacen(Function function, IConexionBD conexion)
+        public ConsultasAlmacen(Function function, IConexionBD conexion, Logger logger)
         {
+            _logger = logger;
             _function = function;
             _conexion = conexion;
         }
@@ -60,6 +62,7 @@ namespace Generacion.Application.Almacen.Query
             catch (Exception ex)
             {
 
+                _logger.LogError("Error ObtenerTipo : " + ex.Message.ToString());
             }
 
             return respuesta;
@@ -112,6 +115,7 @@ namespace Generacion.Application.Almacen.Query
             }
             catch (Exception ex)
             {
+                _logger.LogError("Error ObtenerDatosAlmacenBujias : " + ex.Message.ToString());
 
             }
             return respuesta;
@@ -164,7 +168,7 @@ namespace Generacion.Application.Almacen.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosporLote : " + ex.Message.ToString());
             }
             return respuesta;
         }
@@ -215,7 +219,7 @@ namespace Generacion.Application.Almacen.Query
             }
             catch (Exception ex)
             {
-
+                _logger.LogError("Error ObtenerDatosPrestados : " + ex.Message.ToString());
             }
             return respuesta;
         }

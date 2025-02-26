@@ -9,18 +9,21 @@ namespace Generacion.Application.DashBoard.CambioAceite.Command.Processor.PrePro
 {
     public class _01_ValidarCambiosEnDatosControlAceite : IRequestPreProcessor<ListaControlCambioAceite>
     {
+        private readonly Logger _logger;
         private readonly CacheDatos _cacheDatos;
         private readonly Function _function;
         private readonly ProcessExecutionContextExtensions _executionContextExtensions;
         public _01_ValidarCambiosEnDatosControlAceite(
             ProcessExecutionContextExtensions executionContextExtensions,
             Function function,
-            CacheDatos cacheDatos
+            CacheDatos cacheDatos,
+            Logger logger
             )
         {
             _executionContextExtensions = executionContextExtensions;
             _function = function;
             _cacheDatos = cacheDatos;
+            _logger = logger;
         }
         public async Task Process(ListaControlCambioAceite request, CancellationToken cancellationToken)
         {
@@ -65,7 +68,9 @@ namespace Generacion.Application.DashBoard.CambioAceite.Command.Processor.PrePro
                     }
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { 
+                _logger.LogError("Error ObtenerDatosBESSQueryHandler : " + ex.Message.ToString());
+            }
         }
     }
 }

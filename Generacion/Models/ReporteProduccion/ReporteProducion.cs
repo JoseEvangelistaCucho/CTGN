@@ -11,6 +11,7 @@ namespace Generacion.Models.ReporteProduccion
         public decimal TotalGasConsumption { get; set; }
         public decimal Efficiency { get; set; }
         public decimal ConsumoServiciosAuxiliares { get; set; }
+        public decimal FuelLevelBlackStart { get; set; }
         public string Fecha { get; set; }
     }
 

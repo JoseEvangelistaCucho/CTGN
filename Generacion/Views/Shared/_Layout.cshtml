@@ -42,25 +42,32 @@
 
     <title>@ViewBag.Title</title>
 
-    <!-- Custom fonts for this template-->
-    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <!-- Custom fonts for this template
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-          rel="stylesheet">
+          rel="stylesheet">-->
+    <link href="~/css/Nunito.css" rel="stylesheet">
+
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  
 
     <!-- Mensajes de alerta-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="~/css/sweetalert2.min.css">
+    <script src="~/js/sweetalert2.min.js"></script>
+
     <!-- Custom styles for this template-->
     <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
 
     <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/js/query/jquery-3.7.0.min.js"></script>
 
-    <!-- Descarga  PDF-->
+    <!-- Descarga  PDF
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>-->
+    -->
+    <script src="~/js/PDF/html2canvas.min.js"></script>
+    <script src="~/js/PDF/dom-to-image.min.js"></script>
+
     <script src="~/js/PDF/jspdf.min.js"></script>
     <script src="~/js/site.js"></script>
 
@@ -72,6 +79,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     -->
+
+    <link rel="stylesheet" href="~/@(nameof(Generacion)).styles.css" />
+
 </head>
 <style>
     .body table {
@@ -481,6 +491,7 @@
                     <button style="display:none;" type="button" class="btn btn-outline-secondary" id="ocultarNav">Ocultar Detalles</button>
                     <!--FECHA-->
                     <input style="width: 25vh !important;" type="text" id="datepicker" class="form-control datepicker" placeholder="Selecciona una fecha">
+                    @*<input style="width: 25vh !important;" type="text" id="datepicker" class="form-control datepicker" placeholder="Selecciona una fecha">
                     <script>
                         $(document).ready(function () {
                             $('.datepicker').datepicker({
@@ -488,6 +499,30 @@
                                 language: 'es',
                                 autoclose: true
                             });
+                        });
+                    </script>
+
+                        *@
+                    <script>
+                        document.getElementById("datepicker").addEventListener("input", function (event) {
+                            let valor = event.target.value;
+
+                            // Permitir solo números y '/'
+                            valor = valor.replace(/[^0-9\/]/g, ''); 
+
+                            // Eliminar espacios en blanco
+                            valor = valor.replace(/\s/g, '');
+
+                            // Validar formato dd/MM/yyyy con regex
+                            let regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+            
+                            if (!regex.test(valor) && valor.length > 0) {
+                                event.target.style.borderColor = "red"; // Indicar error
+                            } else {
+                                event.target.style.borderColor = ""; // Resetear si es válido
+                            }
+
+                            event.target.value = valor;
                         });
                     </script>
 
@@ -691,7 +726,8 @@
 
 </html>
 <!--<script src="../FileXLSX/script.js"></script> -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="~/js/PDF/papaparse.min.js"></script>
+
 <script>
 
     var valoresNecesarios = false;
@@ -700,7 +736,6 @@
     loader.style.display = 'none';
 
     function updateFileName2() {
-        console.log("Entró a updateFileName");
         var fileInput = document.getElementById("file-Xlsx-input");
         var fileNameDisplay = document.getElementById("file-name-display2");
 
@@ -713,7 +748,6 @@
 
     var fileInput = document.getElementById("file-Xlsx-input");
     fileInput.addEventListener("change", function () {
-        console.log("Entró al evento de cambio");
         updateFileName2();
     });
 
@@ -820,7 +854,6 @@
                     return response.text();
                 })
                 .then(data => {
-                    console.log("La respuesta del servidor es:", data);
                     loader.style.display = 'none';
 
                     if (seleccion.value === "4" ||seleccion.value === "5") {
@@ -838,9 +871,20 @@
 </script>
 
 
+<!--
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.es.min.js"></script>
+-->
+
+@*
+<link rel="stylesheet" href="~/css/bootstrap-datepicker.min.css">
+
+<script src="~/js/datepicker/bootstrap-datepicker.min.js"></script>
+<script src="~/js/datepicker/bootstrap-datepicker.es.min.js"></script>
+*@
+
 
 <script>
 
@@ -1054,12 +1098,29 @@
         if (hora < 2) {
             fechaActual.setDate(fechaActual.getDate() - 1);
         }
-        const dia = fechaActual.getDate().toString().padStart(2, '0');
-
-        const mes = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
-        const año = fechaActual.getFullYear();
-
+      
         var fechaFormateada = "";
+
+        var fechaModificacion = @Html.Raw(JsonConvert.SerializeObject(ViewBag.FechaSeleccionado));
+
+        var dia = fechaActual.getDate().toString().padStart(2, '0');
+        var mes = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+        var año = fechaActual.getFullYear();
+
+        if(fechaModificacion !="" && fechaModificacion !=null){
+
+            var splitFecha =fechaModificacion.split('/')
+            
+            dia = splitFecha[0];
+            mes = splitFecha[1];
+            año = splitFecha[2];
+
+        }else{
+            dia = fechaActual.getDate().toString().padStart(2, '0');
+            mes = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+            año = fechaActual.getFullYear();
+        }
+
         if (value == "format") {
             fechaFormateada = dia + "_" + mes + "_" + año;
         }
@@ -1095,8 +1156,6 @@
             url: '@Url.Action("CerrarSession", "Login")',
             type: 'POST',
             success: function (result) {
-                console.log(result)
-                console.log("success : ", result.success)
                 if (result.success) {
                     sessionBlock = false;
                     localStorage.removeItem("DetalleUsuario");

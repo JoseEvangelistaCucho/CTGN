@@ -7,6 +7,7 @@ namespace Generacion.Application.ReporteDiarioGAS
     public interface IRegistroDatosGAS
     {
         Task<Respuesta<string>> GuardarDetalle(List<DetalleReporteGas> datos);
+        Task ActualizarHoja(string id);
         void guardarIdReporte(MReporteGAS reporteGAS);
 
     }

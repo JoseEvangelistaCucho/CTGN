@@ -321,7 +321,8 @@
                 <div>
                     <p1>Fecha</p1>
                     @{
-                        <p>@date.ToString("dd/MM/yyyy")</p>
+                        @*<p>@date.ToString("dd/MM/yyyy")</p>*@
+                        <p  id="fechaFormulario"></p>
                     }
 
                 </div>
@@ -2065,19 +2066,40 @@
     $(document).ready(function () {
         $("#accordionSidebar").addClass("toggled");
 
+        var fechaFormulario= document.getElementById("fechaFormulario");
+        var perfil = @Html.Raw(JsonConvert.SerializeObject(ViewBag.Perfil));
+
         var fechaSeleccionado = @Html.Raw(JsonConvert.SerializeObject(ViewBag.FechaSeleccionado));
         console.log("fechaSeleccionado : ", fechaSeleccionado);
-
-        if(fechaSeleccionado != null && fechaSeleccionado !=''){
-            var contenedor = document.getElementById('contendor-lecturaCampo');
+         var contenedor = document.getElementById('contendor-lecturaCampo');
             var inputs = contenedor.getElementsByTagName('input');
+
+        // if(fechaSeleccionado != null && fechaSeleccionado !=''){
+        //     for (var i = 0; i < inputs.length; i++) {
+        //         inputs[i].disabled = true;
+        //     }
+
+        //     var contenedor = document.getElementById('contenedor-botones-guardar');
+        //     contenedor.style.display = "none";
+        // }
+
+        if (perfil == 'op-3') {
+            fechaFormulario.innerText = @Html.Raw(JsonConvert.SerializeObject(ViewBag.FechaSeleccionado));
+
+        }else if(fechaSeleccionado != null){
+            
             for (var i = 0; i < inputs.length; i++) {
                 inputs[i].disabled = true;
             }
 
             var contenedor = document.getElementById('contenedor-botones-guardar');
             contenedor.style.display = "none";
+        
+            fechaFormulario.innerText = @Html.Raw(JsonConvert.SerializeObject(DateTime.Now.ToString("dd/MM/yyyy")));
         }
+
+
+
 
     });
 

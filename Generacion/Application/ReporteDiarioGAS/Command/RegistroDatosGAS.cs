@@ -21,6 +21,31 @@ namespace Generacion.Application.ReporteGAS.Command
             _function = function;
         }
 
+        public async Task ActualizarHoja(string id)
+        {
+            try
+            {
+                using (OracleConnection connection = _conexion.ObtenerConexion())
+                {
+                    connection.Open();
+
+                    using (OracleCommand command = new OracleCommand("UpdateNuevaHojaReporteGas", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+
+                        command.Parameters.Add("p_IdReporteGas", OracleDbType.Varchar2).Value = id;
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
+
         public async Task<Respuesta<string>> GuardarDetalle(List<DetalleReporteGas> datos)
         {
             Respuesta<string> respuesta = new Respuesta<string>();

@@ -1,0 +1,117 @@
+﻿:root {
+    --celeste: #BCF4F5;
+    --celadon: #B4EBCA;
+    --VerdeTe: #D9F2B4;
+    --VerdePast: #D3FAC7;
+    --RosaCherry: #455a64;
+    --Blanco: #FFFFFF;
+    --fuente: 'Bungee', cursive;
+}
+
+body {
+    font-family: var(--fuente);
+    background-image: url('/portalgeneracion/img/Fondo_Generacion.png');
+    display: flex;
+    align-items: center;
+    height: 100vh;
+    backdrop-filter: blur(5px) !important;
+    background-size: cover;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    background-position: center;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 1000px;
+    width: 95%;
+}
+
+
+.imagen-formulario::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.texto h2, .input label, .password a, .texto-formulario p {
+    color: var(--RosaCherry)
+}
+
+.texto-formulario p {
+    font-size: 22px;
+    text-align: center;
+}
+
+.input {
+    margin: 15px 0;
+}
+
+    .input label {
+        display: block;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 20px 0;
+    }
+
+    .input input {
+        width: 50vh;
+        padding: 10px 16px;
+        border-radius: 5px;
+        outline: none;
+        padding: 1px;
+        height: 50px;
+        box-shadow: 1px 4px 10px 1px gray;
+    }
+
+        .input input[type ="submit"] {
+            background-color: #2a9c60;
+            color: var(--Blanco);
+            font-size: 22px;
+            font-weight: bold;
+            border: none;
+            margin-top: 20px;
+            transition: background-color 3s ease-in-out;
+        }
+
+            .input input[type ="submit"]:hover {
+                cursor: pointer;
+                background-color: var(--celadon);
+            }
+
+.password a {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 22px;
+}
+
+img {
+    /*height: 65px;
+            margin: 0 0 0 46%;
+       */
+    margin-left: auto;
+    width: 145px;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+
+.container-login {
+    text-align: -webkit-center;
+}
+
+.container-form {
+    border: 2px solid white;
+    padding: 21px;
+    box-shadow: 0 0 10px black;
+    background-color: white;
+    border-radius: 5px;
+    width: 60vh;
+}
+
+.form-select-lg {
+    width: 50vh !important;
+}

@@ -331,6 +331,11 @@
         return $"{horas:00}:{minutos:00}:{segundos:00}";
     };
 
+    TimeSpan ParseOrDefault(string timeSpanValue)
+    {
+        return TimeSpan.TryParse(timeSpanValue, out TimeSpan result) ? result : TimeSpan.Zero;
+    }
+
 
 }
 
@@ -927,10 +932,15 @@
                                             <th></th>
                                         </tr>
 
-                                        externalTrips = externalTrips.Add(TimeSpan.Parse(registro.ExternalTrips));
+                                        @*externalTrips = externalTrips.Add(TimeSpan.Parse(registro.ExternalTrips));
                                         forcedMaint = forcedMaint.Add(TimeSpan.Parse(registro.ForcedMaint));
                                         plannedMaint = plannedMaint.Add(TimeSpan.Parse(registro.PlannedMaint));
-                                        StandBy = StandBy.Add(TimeSpan.Parse(registro.StandBy));
+                                        StandBy = StandBy.Add(TimeSpan.Parse(registro.StandBy));*@
+                                        externalTrips = externalTrips.Add(ParseOrDefault(registro.ExternalTrips));
+                                        forcedMaint = forcedMaint.Add(ParseOrDefault(registro.ForcedMaint));
+                                        plannedMaint = plannedMaint.Add(ParseOrDefault(registro.PlannedMaint));
+                                        StandBy = StandBy.Add(ParseOrDefault(registro.StandBy));
+
                                     }
                                     <tr class-atribute="totalEG1" class="detalle-calculado-horas">
                                         <td class-name="subtitulo" colspan="4">Total Tiempo de Parada Grupo N°1 (@(kvp.Key.ToString("MMMM")) @(kvp.Key.ToString("yyyy")))</td>
@@ -1000,10 +1010,15 @@
                                             <th></th>
                                         </tr>
 
-                                        externalTrips = externalTrips.Add(TimeSpan.Parse(registro.ExternalTrips));
+                                       @* externalTrips = externalTrips.Add(TimeSpan.Parse(registro.ExternalTrips));
                                         forcedMaint = forcedMaint.Add(TimeSpan.Parse(registro.ForcedMaint));
                                         plannedMaint = plannedMaint.Add(TimeSpan.Parse(registro.PlannedMaint));
-                                        StandBy = StandBy.Add(TimeSpan.Parse(registro.StandBy));
+                                        StandBy = StandBy.Add(TimeSpan.Parse(registro.StandBy));*@
+
+                                        externalTrips = externalTrips.Add(ParseOrDefault(registro.ExternalTrips));
+                                        forcedMaint = forcedMaint.Add(ParseOrDefault(registro.ForcedMaint));
+                                        plannedMaint = plannedMaint.Add(ParseOrDefault(registro.PlannedMaint));
+                                        StandBy = StandBy.Add(ParseOrDefault(registro.StandBy));
                                     }
                                     <tr class-atribute="totalEG2" class="detalle-calculado-horas">
                                         <td class-name="subtitulo" colspan="4">Total Tiempo de Parada Grupo N°2 (@(kvp.Key.ToString("MMMM")) @(kvp.Key.ToString("yyyy")))</td>
@@ -1430,9 +1445,14 @@
                                                             </tr>
                                                             <tr>
                                                                 @{
-                                                                    decimal valorAceiteAnadido1 = GenerateDataCellsAceite("añadidos", valoresPorMes[datos.Value]["nivelAceiteGalonGe1Acumulado"], 0);
-                                                                    decimal valorAceiteAnadido2 = GenerateDataCellsAceite("añadidos", valoresPorMes[datos.Value]["nivelAceiteGalonGe2Acumulado"], 0);
+                                                                    decimal valorAceiteAnadido1 = 0M;
+                                                                    decimal valorAceiteAnadido2 = 0M;
 
+                                                                    @if(valoresPorMes.ContainsKey(datos.Value)){
+                                                                         valorAceiteAnadido1 = GenerateDataCellsAceite("añadidos", valoresPorMes[datos.Value]["nivelAceiteGalonGe1Acumulado"], 0);
+                                                                         valorAceiteAnadido2 = GenerateDataCellsAceite("añadidos", valoresPorMes[datos.Value]["nivelAceiteGalonGe2Acumulado"], 0);
+                                                                    }
+                                                                    
                                                                 }
                                                                 <th>
                                                                     Gls añadidos en gr
@@ -1456,12 +1476,19 @@
                                                             </tr>
                                                             <tr>
                                                                 @{
-                                                                    decimal valorAceiteConsumoTotal1 = GenerateDataCellsAceite("consumo", valorAceiteTotal1, valoresPorMes[datos.Value]["totalPmuEng_01"]);
-                                                                    decimal valorAceiteConsumoTotal2 = GenerateDataCellsAceite("consumo", valorAceiteTotal2, valoresPorMes[datos.Value]["totalPmuEng_02"]);
+                                                                     decimal valorAceiteConsumoTotal1 = 0;
+                                                                    decimal valorAceiteConsumoTotal2 = 0;
 
-                                                                    decimal valorAceiteConsumoTotal = GenerateDataCellsAceite("consumo", valorAceiteTotal1 + valorAceiteTotal2, valoresPorMes[datos.Value]["totalPmuEng_01"] + valoresPorMes[datos.Value]["totalPmuEng_02"]);
+                                                                    decimal valorAceiteConsumoTotal =0;
 
-                                                                    valoresPorMes[datos.Value.ToLower()]["valorAceiteConsumoTotal"] = valorAceiteConsumoTotal;
+                                                                    @if(valoresPorMes.ContainsKey(datos.Value)){
+                                                                        valorAceiteConsumoTotal1 = GenerateDataCellsAceite("consumo", valorAceiteTotal1, valoresPorMes[datos.Value]["totalPmuEng_01"]);
+                                                                        valorAceiteConsumoTotal2 = GenerateDataCellsAceite("consumo", valorAceiteTotal2, valoresPorMes[datos.Value]["totalPmuEng_02"]);
+                                                                        valorAceiteConsumoTotal = GenerateDataCellsAceite("consumo", valorAceiteTotal1 + valorAceiteTotal2, valoresPorMes[datos.Value]["totalPmuEng_01"] + valoresPorMes[datos.Value]["totalPmuEng_02"]);
+                                                                        valoresPorMes[datos.Value.ToLower()]["valorAceiteConsumoTotal"] = valorAceiteConsumoTotal;
+                                                                    }
+
+                                                                   
                                                                 }
                                                                 <th>
                                                                     Consumo total gr/kWh
@@ -4149,7 +4176,7 @@
                                     <div><input posicion="5" class-name="@(datosCabecera["Max-Mg-RamOil"].IdTipoEngine)"></div>
                                     <div><input posicion="6" numeroGe="1" class-name="@(datosCabecera["Ag-RamOil"].IdTipoEngine)"></div>
                                     <div><input posicion="6" numeroGe="2" class-name="@(datosCabecera["Ag-RamOil"].IdTipoEngine)"></div>
-                                    <div><input posicion="6" class-name="@(datosCabecera["Max-RamOil"].IdTipoEngine)"></div>v>
+                                    <div><input posicion="6" class-name="@(datosCabecera["Max-RamOil"].IdTipoEngine)"></div>
                                     <div><input posicion="7" numeroGe="1" class-name="@(datosCabecera["Sil-ppm-RamOil"].IdTipoEngine)"></div>
                                     <div><input posicion="7" numeroGe="2" class-name="@(datosCabecera["Sil-ppm-RamOil"].IdTipoEngine)"></div>
                                     <div><input posicion="7" class-name="@(datosCabecera["Lim-Op-RamOil"].IdTipoEngine)"></div>
@@ -4669,170 +4696,248 @@
 
         var datosGraficosOil = @Html.Raw(JsonConvert.SerializeObject(datosGraficosOil));
         var fechasOilGraph = @Html.Raw(JsonConvert.SerializeObject(fechasOilGraph.ToArray()));
-
+        
+        /*
         console.log("datosGraficosOil : ", datosGraficosOil);
         console.log("fechasOilGraph : ", fechasOilGraph);
         console.log("Nit-Abs-RamOil 1 : ", datosGraficosOil[3][1]["Nit-Abs-RamOil"]);
         console.log("Nit-Abs-RamOil 2 : ", datosGraficosOil[3][2]["Nit-Abs-RamOil"]);
         console.log("Max-Abs-RamOil 0 : ", datosGraficosOil[3][0]["Max-Abs-RamOil"]);
+        */
 
-        GenerarGraficoLineaTriple("oil-viscocidad-graf", fechasOilGraph, datosGraficosOil[1][1]["Vis-100-RamOil"], "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Vis-100"].Detalle))), datosGraficosOil[1][2]["Vis-100-RamOil"], "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Vis-100"].Detalle))), datosGraficosOil[1][0]["OpPer-RamOil"], @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Vis-100"].Detalle))));
+       var datosCabecera = @(Html.Raw(JsonConvert.SerializeObject(datosCabecera)));
 
-        GenerarGraficoLineaTriple(
-            "oil-oxidacion-graf",
-            fechasOilGraph,
-            datosGraficosOil[2][1]["Ox-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ox-RamOil"].Detalle))),
-            datosGraficosOil[2][2]["Ox-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ox-RamOil"].Detalle))),
-            datosGraficosOil[2][0]["Max-Abs-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
-                            );
+    if(false){
+      
+        const configuracionesGraficos = [
+            { id: 1, grafico: "oil-viscocidad-graf", clave: "Vis-100-RamOil", extra: "OpPer-RamOil" },
+            { id: 2, grafico: "oil-oxidacion-graf", clave: "Ox-RamOil", extra: "Max-Abs-RamOil" },
+            { id: 3, grafico: "oil-nitracion-graf", clave: "Nit-Abs-RamOil", extra: "Max-Abs-RamOil" },
+            { id: 4, grafico: "oil-basico-graf", clave: "Bas-Mg-RamOil", extra: "Max-Abs-RamOil" },
+            { id: 5, grafico: "oil-acido-graf", clave: "Ac-Mg-RamOil", extra: "Max-Mg-RamOil" },
+            { id: 6, grafico: "oil-agua-graf", clave: "Ag-RamOil", extra: "Max-RamOil" },
+            { id: 7, grafico: "oil-silicio-graf", clave: "Sil-ppm-RamOil", extra: "Lim-Op-RamOil" },
+            { id: 8, grafico: "oil-sodio-graf", clave: "Sod-Ppm-RamOil", extra: "Lim-Op-RamOil" },
+            { id: 9, grafico: "oil-aluminio-graf", clave: "Al-ppm-RamOil", extra: "Lim-Op-RamOil" },
+            { id: 10, grafico: "oil-cobre-graf", clave: "Cob-ppm-RamOil", extra: "Lim-Op-RamOil" },
+            { id: 11, grafico: "oil-cromo-graf", clave: "Cro-ppm-RamOil", extra: "Lim-Op-RamOil" },
+            { id: 12, grafico: "oil-hierro-graf", clave: "Hierr-ppm-RamOil", extra: "Lim-Op-RamOil" },
+            { id: 13, grafico: "oil-plomo-graf", clave: "Plo-ppm-RamOil", extra: "Lim-Op-RamOil" }
+        ];
 
-        GenerarGraficoLineaTriple(
-            "oil-nitracion-graf",
-            fechasOilGraph,
-            datosGraficosOil[3][1]["Nit-Abs-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Nit-Abs-RamOil"].Detalle))),
-            datosGraficosOil[3][2]["Nit-Abs-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Nit-Abs-RamOil"].Detalle))),
-            datosGraficosOil[3][0]["Max-Abs-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
-                        );
-
-        GenerarGraficoLineaTriple(
-            "oil-basico-graf",
-            fechasOilGraph,
-            datosGraficosOil[4][1]["Bas-Mg-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Bas-Mg-RamOil"].Detalle))),
-            datosGraficosOil[4][2]["Bas-Mg-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Bas-Mg-RamOil"].Detalle))),
-            datosGraficosOil[4][0]["Max-Abs-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
-                        );
+        configuracionesGraficos.forEach(({ id, grafico, clave, extra }) => {
+            if (datosGraficosOil[id] !== undefined) {
+                GenerarGraficoLineaTriple(
+                    grafico,
+                    fechasOilGraph,
+                    datosGraficosOil[id][1][clave],
+                    "EG1 " + datosCabecera[clave].Detalle,
+                    datosGraficosOil[id][2][clave],
+                    "EG2 " + datosCabecera[clave].Detalle,
+                    datosGraficosOil[id][0][extra],
+                    datosCabecera[extra].Detalle
+                );
+            }
+        });
+    }
 
 
-        GenerarGraficoLineaTriple(
-            "oil-acido-graf",
-            fechasOilGraph,
-            datosGraficosOil[5][1]["Ac-Mg-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ac-Mg-RamOil"].Detalle))),
-            datosGraficosOil[5][2]["Ac-Mg-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ac-Mg-RamOil"].Detalle))),
-            datosGraficosOil[5][0]["Max-Mg-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Mg-RamOil"].Detalle)))
-                        );
+    if(true){
+       if(datosGraficosOil[1] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-viscocidad-graf", 
+                fechasOilGraph, 
+                datosGraficosOil[1][1]["Vis-100-RamOil"], 
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Vis-100"].Detalle))), 
+                datosGraficosOil[1][2]["Vis-100-RamOil"], 
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Vis-100"].Detalle))), 
+                datosGraficosOil[1][0]["OpPer-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Vis-100"].Detalle)))
+            );
+       }
+       
+       if(datosGraficosOil[2] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-oxidacion-graf",
+                fechasOilGraph,
+                datosGraficosOil[2][1]["Ox-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ox-RamOil"].Detalle))),
+                datosGraficosOil[2][2]["Ox-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ox-RamOil"].Detalle))),
+                datosGraficosOil[2][0]["Max-Abs-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-agua-graf",
-            fechasOilGraph,
-            datosGraficosOil[6][1]["Ag-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ag-RamOil"].Detalle))),
-            datosGraficosOil[6][2]["Ag-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ag-RamOil"].Detalle))),
-            datosGraficosOil[6][0]["Max-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[3] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-nitracion-graf",
+                fechasOilGraph,
+                datosGraficosOil[3][1]["Nit-Abs-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Nit-Abs-RamOil"].Detalle))),
+                datosGraficosOil[3][2]["Nit-Abs-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Nit-Abs-RamOil"].Detalle))),
+                datosGraficosOil[3][0]["Max-Abs-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-silicio-graf",
-            fechasOilGraph,
-            datosGraficosOil[7][1]["Sil-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sil-ppm-RamOil"].Detalle))),
-            datosGraficosOil[7][2]["Sil-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sil-ppm-RamOil"].Detalle))),
-            datosGraficosOil[7][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[4] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-basico-graf",
+                fechasOilGraph,
+                datosGraficosOil[4][1]["Bas-Mg-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Bas-Mg-RamOil"].Detalle))),
+                datosGraficosOil[4][2]["Bas-Mg-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Bas-Mg-RamOil"].Detalle))),
+                datosGraficosOil[4][0]["Max-Abs-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
+             );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-sodio-graf",
-            fechasOilGraph,
-            datosGraficosOil[8][1]["Sod-Ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sod-Ppm-RamOil"].Detalle))),
-            datosGraficosOil[8][2]["Sod-Ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sod-Ppm-RamOil"].Detalle))),
-            datosGraficosOil[8][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[5] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-acido-graf",
+                fechasOilGraph,
+                datosGraficosOil[5][1]["Ac-Mg-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ac-Mg-RamOil"].Detalle))),
+                datosGraficosOil[5][2]["Ac-Mg-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ac-Mg-RamOil"].Detalle))),
+                datosGraficosOil[5][0]["Max-Mg-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Mg-RamOil"].Detalle)))
+             );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-aluminio-graf",
-            fechasOilGraph,
-            datosGraficosOil[9][1]["Al-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
-            datosGraficosOil[9][2]["Al-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
-            datosGraficosOil[9][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[6] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-agua-graf",
+                fechasOilGraph,
+                datosGraficosOil[6][1]["Ag-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ag-RamOil"].Detalle))),
+                datosGraficosOil[6][2]["Ag-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Ag-RamOil"].Detalle))),
+                datosGraficosOil[6][0]["Max-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-cobre-graf",
-            fechasOilGraph,
-            datosGraficosOil[10][1]["Cob-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
-            datosGraficosOil[10][2]["Cob-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
-            datosGraficosOil[10][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[7] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-silicio-graf",
+                fechasOilGraph,
+                datosGraficosOil[7][1]["Sil-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sil-ppm-RamOil"].Detalle))),
+                datosGraficosOil[7][2]["Sil-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sil-ppm-RamOil"].Detalle))),
+                datosGraficosOil[7][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-cromo-graf",
-            fechasOilGraph,
-            datosGraficosOil[11][1]["Cro-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cob-ppm-RamOil"].Detalle))),
-            datosGraficosOil[11][2]["Cro-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cob-ppm-RamOil"].Detalle))),
-            datosGraficosOil[11][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[8] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-sodio-graf",
+                fechasOilGraph,
+                datosGraficosOil[8][1]["Sod-Ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sod-Ppm-RamOil"].Detalle))),
+                datosGraficosOil[8][2]["Sod-Ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Sod-Ppm-RamOil"].Detalle))),
+                datosGraficosOil[8][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-hierro-graf",
-            fechasOilGraph,
-            datosGraficosOil[12][1]["Hierr-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cro-ppm-RamOil"].Detalle))),
-            datosGraficosOil[12][2]["Hierr-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cro-ppm-RamOil"].Detalle))),
-            datosGraficosOil[12][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[9] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-aluminio-graf",
+                fechasOilGraph,
+                datosGraficosOil[9][1]["Al-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
+                datosGraficosOil[9][2]["Al-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
+                datosGraficosOil[9][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-plomo-graf",
-            fechasOilGraph,
-            datosGraficosOil[13][1]["Plo-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Hierr-ppm-RamOil"].Detalle))),
-            datosGraficosOil[13][2]["Plo-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Hierr-ppm-RamOil"].Detalle))),
-            datosGraficosOil[13][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if(datosGraficosOil[10] !== undefined){
+            GenerarGraficoLineaTriple(
+                "oil-cobre-graf",
+                fechasOilGraph,
+                datosGraficosOil[10][1]["Cob-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
+                datosGraficosOil[10][2]["Cob-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Al-ppm-RamOil"].Detalle))),
+                datosGraficosOil[10][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+       }
 
-        GenerarGraficoLineaTriple(
-            "oil-estaño-graf",
-            fechasOilGraph,
-            datosGraficosOil[14][1]["Est-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Plo-ppm-RamOil"].Detalle))),
-            datosGraficosOil[14][2]["Est-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Plo-ppm-RamOil"].Detalle))),
-            datosGraficosOil[14][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
-                        );
+       if (datosGraficosOil[11] !== undefined) {
+            GenerarGraficoLineaTriple(
+                "oil-cromo-graf",
+                fechasOilGraph,
+                datosGraficosOil[11][1]["Cro-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cob-ppm-RamOil"].Detalle))),
+                datosGraficosOil[11][2]["Cro-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cob-ppm-RamOil"].Detalle))),
+                datosGraficosOil[11][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+        }
 
-        GenerarGraficoLineaTriple(
-            "oil-niquel-graf",
-            fechasOilGraph,
-            datosGraficosOil[15][1]["Niq-ppm-RamOil"],
-            "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Niq-ppm-RamOil"].Detalle))),
-            datosGraficosOil[15][2]["Niq-ppm-RamOil"],
-            "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Niq-ppm-RamOil"].Detalle))),
-            datosGraficosOil[15][0]["Lim-Op-RamOil"],
-    @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
-                        );
+       if (datosGraficosOil[12] !== undefined) {
+            GenerarGraficoLineaTriple(
+                "oil-hierro-graf",
+                fechasOilGraph,
+                datosGraficosOil[12][1]["Hierr-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cro-ppm-RamOil"].Detalle))),
+                datosGraficosOil[12][2]["Hierr-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Cro-ppm-RamOil"].Detalle))),
+                datosGraficosOil[12][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+       }
 
+       if (datosGraficosOil[13] !== undefined) {
+            GenerarGraficoLineaTriple(
+                "oil-plomo-graf",
+                fechasOilGraph,
+                datosGraficosOil[13][1]["Plo-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Hierr-ppm-RamOil"].Detalle))),
+                datosGraficosOil[13][2]["Plo-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Hierr-ppm-RamOil"].Detalle))),
+                datosGraficosOil[13][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+       }
+
+       if (datosGraficosOil[14] !== undefined) {
+            GenerarGraficoLineaTriple(
+                "oil-estaño-graf",
+                fechasOilGraph,
+                datosGraficosOil[14][1]["Est-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Plo-ppm-RamOil"].Detalle))),
+                datosGraficosOil[14][2]["Est-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Plo-ppm-RamOil"].Detalle))),
+                datosGraficosOil[14][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Max-Abs-RamOil"].Detalle)))
+            );
+       }
+
+       if (datosGraficosOil[15] !== undefined) {
+            GenerarGraficoLineaTriple(
+                "oil-niquel-graf",
+                fechasOilGraph,
+                datosGraficosOil[15][1]["Niq-ppm-RamOil"],
+                "EG1 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Niq-ppm-RamOil"].Detalle))),
+                datosGraficosOil[15][2]["Niq-ppm-RamOil"],
+                "EG2 " + @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Niq-ppm-RamOil"].Detalle))),
+                datosGraficosOil[15][0]["Lim-Op-RamOil"],
+                @(Html.Raw(JsonConvert.SerializeObject(datosCabecera["Lim-Op-RamOil"].Detalle)))
+            );
+        }
+    }
 
         function GenerarGraficoLineaTriple(ctx, labels, datos1, leyenda1, datos2, leyenda2, datos3, leyenda3) {
 

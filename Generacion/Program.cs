@@ -1,5 +1,3 @@
-
-
 using Generacion.Application.DataBase;
 
 namespace Generacion

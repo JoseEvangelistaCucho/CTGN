@@ -12,10 +12,12 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
     {
         private readonly IConexionBD _conexion;
         private readonly Function _function;
-        public RegistroDatosBessLlipata(IConexionBD conexion, Function function)
+        private readonly Logger _logger;
+        public RegistroDatosBessLlipata(IConexionBD conexion, Function function,Logger logger)
         {
             _function = function;
             _conexion = conexion;
+            _logger = logger;
         }
         public async Task<Respuesta<string>> GuardarDatosReporte(DBBessLlipata datos)
         {
@@ -78,6 +80,7 @@ namespace Generacion.Application.BessLlipata.ReporteProduccion.Command
             {
                 respuesta.IdRespuesta = 99;
                 respuesta.Mensaje = "Error al ejecutar el procedimiento almacenado";
+                _logger.LogError("Error GuardarDatosReporte : " + ex.Message.ToString());
             }
             return respuesta;
         }

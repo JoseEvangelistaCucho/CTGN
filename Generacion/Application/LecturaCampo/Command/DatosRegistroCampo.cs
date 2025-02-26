@@ -38,7 +38,7 @@ namespace Generacion.Application.LecturaCampo.Command
                         command.Parameters.Add("p_Observaciones1", OracleDbType.Varchar2).Value = string.Empty;
                         command.Parameters.Add("p_Observaciones2", OracleDbType.Varchar2).Value = string.Empty;
                         command.Parameters.Add("p_Fecha", OracleDbType.Varchar2).Value = registo.Fecha;
-                        command.Parameters.Add("p_IdSitio", OracleDbType.Varchar2).Value = datosOperario.IdOperario;
+                        command.Parameters.Add("p_IdSitio", OracleDbType.Varchar2).Value = datosOperario.IdSitio;
 
                         command.Parameters.Add("p_resultado", OracleDbType.Decimal).Direction = ParameterDirection.Output;
 

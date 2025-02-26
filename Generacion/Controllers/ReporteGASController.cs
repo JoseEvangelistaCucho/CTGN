@@ -39,6 +39,16 @@ namespace Generacion.Controllers
                 detalleReporte = await _obtenerDatosReporteGAS.ObtenerDetallesReporte(idReporteGas.Detalle.IdReporteGas);
             }
 
+            if (detalleReporte.Detalle != null)
+            {
+                int total = detalleReporte.Detalle["18"].Count + detalleReporte.Detalle["6"].Count;
+                if (total > 14)
+                {
+                    detalleReporte.Detalle = new Dictionary<string, List<DetalleReporteGas>>();
+                    idReporteGas.Detalle = new MReporteGAS();
+                }
+            }
+
             ViewData["detalleReporte"] = detalleReporte.Detalle;
             ViewData["idReporteGas"] = idReporteGas.Detalle ?? new MReporteGAS();
 
@@ -62,6 +72,14 @@ namespace Generacion.Controllers
             _registroDatosGAS.guardarIdReporte(reporteGAS);
 
             return Json(new { respuesta = respuesta });
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> NuevaHoja([FromBody] string datos)
+        {
+            await _registroDatosGAS.ActualizarHoja(datos);
+
+            return Json(new { respuesta = "" });
         }
     }
 }
