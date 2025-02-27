@@ -1,8 +1,10 @@
 ﻿using Generacion.Application.DataBase;
 using Generacion.Models;
+using Generacion.Models.Session;
 using Generacion.Models.Usuario;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
+using System.Data;
 
 namespace Generacion.Application.Usuario.Command
 {
@@ -132,6 +134,44 @@ namespace Generacion.Application.Usuario.Command
             }
 
             return respuesta;
+        }
+
+        public bool VerificaUsuarioEnHomologador(UsuarioSession usuario)
+        {
+            try
+            {
+                using var connection = new OracleConnection(_conexion.ObtenerConexion().ConnectionString);
+                using var command = new OracleCommand()
+                {
+                    Connection = connection,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "GTI_ADMUSUARIOS.ADM_VALUSUARIO"
+                };
+                connection.Open();
+
+                command.Parameters.Add("iusuario", OracleDbType.NVarchar2).Value = usuario.UsuarioRed;
+                command.Parameters.Add("iempresa", OracleDbType.NVarchar2).Value = usuario.Company;
+                command.Parameters.Add("iclave", OracleDbType.NVarchar2).Value = usuario.Clave;
+                command.Parameters.Add("iapp", OracleDbType.NVarchar2).Value = 48; // TODO: Agregar el ID aplicacion en el appsettings.json o ConstantsOptions.json 
+                command.Parameters.Add("orespuesta", OracleDbType.NVarchar2, 32000).Direction = ParameterDirection.Output;
+                command.Parameters.Add("operfil", OracleDbType.NVarchar2, 32000).Direction = ParameterDirection.Output;
+                command.Parameters.Add("onombre", OracleDbType.NVarchar2, 32000).Direction = ParameterDirection.Output;
+                command.Parameters.Add("opuesto", OracleDbType.NVarchar2, 32000).Direction = ParameterDirection.Output;
+                command.Parameters.Add("ogerencia", OracleDbType.NVarchar2, 32000).Direction = ParameterDirection.Output;
+
+                command.ExecuteNonQuery();
+
+                var response = command.Parameters["orespuesta"].Value.ToString();
+                var success = !string.IsNullOrWhiteSpace(response) && response.Equals("SI");
+
+#pragma warning disable CS8602 // Desreferencia de una referencia posiblemente NULL.
+                return success;
+#pragma warning restore CS8602 // Desreferencia de una referencia posiblemente NULL.
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

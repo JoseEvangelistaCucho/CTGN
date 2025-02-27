@@ -1,4 +1,5 @@
 ﻿using Generacion.Models;
+using Generacion.Models.Session;
 using Generacion.Models.Usuario;
 
 namespace Generacion.Application.Usuario
@@ -7,5 +8,6 @@ namespace Generacion.Application.Usuario
     {
         Task<Respuesta<List<HistorialUsuario>>> GuardarHistorial(List<HistorialUsuario> historialUsuario , string idOperario);
         Task<Respuesta<DetalleOperario>> ObtenerDatosOperario(string idOperario);
+        bool VerificaUsuarioEnHomologador(UsuarioSession usuario);
     }
 }
