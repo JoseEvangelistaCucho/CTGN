@@ -29,7 +29,7 @@ namespace Generacion.Application.ValidationSession.Login
 
             try
             {
-                bool respuestaClaveRed = true;//_activeDirectoryProvider.ValidateUserCredentials(usuario);
+                bool respuestaClaveRed = true; // _activeDirectoryProvider.ValidateUserCredentials(usuario) && _usuario.VerificaUsuarioEnHomologador(usuario);
                 if (respuestaClaveRed)
                 {
                     respuesta = await _usuario.ObtenerDatosOperario(usuario.UsuarioRed);

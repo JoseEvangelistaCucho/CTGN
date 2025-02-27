@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace Generacion.Models.Session
 {
@@ -21,6 +22,10 @@ namespace Generacion.Models.Session
         {
             get; set;
         }
+
+        [JsonIgnore]
+        [DisplayName("Seleccione la red.")]
+        public string Company { get; set; }
 
 
         public string ValidarPropiedadesNulasOVacias()
